@@ -1,0 +1,635 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Activity;
+use App\Models\ActivityResult;
+use App\Models\nilai;
+use App\Models\Question;
+use App\Models\Settings;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use App\Models\ActivityAnswer;
+
+
+class aktivitasController extends Controller
+{
+    public function aktivitasSiswa()
+    {
+        $user = Auth::user();
+
+        // 🔹 Ambil data badge
+        $badge = DB::table('user_badge')
+            ->join('badge', 'user_badge.id_badge', '=', 'badge.id')
+            ->where('user_badge.id_student', $user->id)
+            ->select('badge.name', 'badge.description')
+            ->first();
+
+        // 🔹 Ambil daftar kelas siswa
+        $kelasList = DB::table('student_classes')
+            ->join('classes', 'student_classes.id_class', '=', 'classes.id')
+            ->where('student_classes.id_student', $user->id)
+            ->select('classes.id', 'classes.name', 'classes.level', 'classes.token')
+            ->get();
+
+        // 🔹 Ambil aktivitas + nilai
+        $rawActivities = DB::table('activities')
+            ->join('topics', 'activities.id_topic', '=', 'topics.id')
+            ->join('subject', 'topics.id_subject', '=', 'subject.id')
+            ->join('classes', 'subject.id_class', '=', 'classes.id')
+            ->join('student_classes', 'classes.id', '=', 'student_classes.id_class')
+            ->join('users', 'student_classes.id_student', '=', 'users.id')
+            ->leftJoin('activity_result', function ($join) use ($user) {
+                $join->on('activities.id', '=', 'activity_result.id_activity')
+                    ->where('activity_result.id_user', '=', $user->id);
+            })
+            ->where('users.id', $user->id)
+            ->whereIn('classes.token', $kelasList->pluck('token'))
+            ->select(
+                'activities.id as id_activity',
+                'activities.id_topic',
+                'activities.title as aktivitas',
+                'activities.status',
+                'topics.title as topik',
+                'subject.name as mapel',
+                'classes.id as id_class',
+                'classes.name as nama_kelas',
+                'classes.level as level_kelas',
+                'activities.created_at',
+                // 🔹 pastikan kolom deadline ini ada, kalau beda nama ganti di sini
+                'activities.deadline',
+                DB::raw('COALESCE(activity_result.nilai_akhir, "-") as result'),
+                DB::raw('COALESCE(activity_result.result_status, "Belum Dikerjakan") as result_status')
+            )
+            ->get();
+
+        // 🔹 List paling atas: semua yang Belum Dikerjakan, urut deadline terdekat
+        $belumDikerjakan = $rawActivities
+            ->where('result_status', 'Belum Dikerjakan')
+            ->sortBy(function ($item) {
+                return $item->deadline ?? $item->created_at;
+            })
+            ->values();
+
+        // 🔹 Activities per kelas
+        $activitiesByClass = $rawActivities
+            ->groupBy('id_class')
+            ->map(function ($group) {
+                // urutkan di dalam kelas:
+                // 1) Belum Dikerjakan
+                // 2) Remedial
+                // 3) Pass
+                // 4) lainnya
+                $sortedList = $group->sortBy(function ($item) {
+                    $status = $item->result_status;
+
+                    if ($status === 'Belum Dikerjakan') {
+                        $order = 0;
+                    } elseif ($status === 'Remedial') {
+                        $order = 1;
+                    } elseif ($status === 'Pass') {
+                        $order = 2;
+                    } else {
+                        $order = 3;
+                    }
+
+                    $tanggal = $item->deadline ?? $item->created_at;
+
+                    return $order . '|' . $tanggal;
+                })->values();
+
+                return (object) [
+                    'id_class' => $group->first()->id_class,
+                    'nama_kelas' => $group->first()->nama_kelas,
+                    'level_kelas' => $group->first()->level_kelas,
+                    'list' => $sortedList,
+                ];
+            })
+            // urutkan kelas: level lalu nama
+            ->sortBy(function ($kelas) {
+                return $kelas->level_kelas . '|' . $kelas->nama_kelas;
+            })
+            ->values();
+
+        // 🔹 Statistik
+        $jumlahAktivitas = $rawActivities->count();
+        $jumlahRemedial = $rawActivities->where('result_status', 'Remedial')->count();
+
+        // 🔹 Kirim ke view
+        return view('siswa.aktivitas', [
+            'user' => $user,
+            'badge' => $badge,
+            'kelasList' => $kelasList,
+            'belumDikerjakan' => $belumDikerjakan,
+            'activitiesByClass' => $activitiesByClass,
+            'jumlahAktivitas' => $jumlahAktivitas,
+            'jumlahRemedial' => $jumlahRemedial
+        ]);
+    }
+
+
+
+    public function show($id)
+    {
+        $activity = Activity::findOrFail($id);
+
+        // Ambil relasi lengkap berdasarkan id_topic
+        $info = DB::table('topics')
+            ->join('subject', 'topics.id_subject', '=', 'subject.id')
+            ->join('classes', 'subject.id_class', '=', 'classes.id')
+            ->where('topics.id', $activity->id_topic)
+            ->select(
+                'topics.title as topik',
+                'subject.name as mapel',
+                'classes.name as kelas'
+            )
+            ->first();
+
+        return view('siswa.menjawabSoal', [
+            'judul' => $activity->title,
+            'kelas' => $info->kelas,
+            'mapel' => $info->mapel,
+            'topik' => $info->topik,
+            'id_activity' => $activity->id,
+            'addaptive' => $activity->addaptive,
+            'durasi' => $activity->durasi_pengerjaan,
+            'jumlah_soal' => $activity->jumlah_soal,
+        ]);
+    }
+
+    public function start($id)
+    {
+        // 1️⃣ reset session lama
+        session()->forget("activity.$id");
+
+        $activity = Activity::findOrFail($id);
+
+        // 2️⃣ hitung total soal real di DB
+        $totalDB = $activity->questions()->count();
+
+        if ($totalDB === 0) {
+            return response()->json([
+                'totalQuestions' => 0,
+                'message' => 'Soal belum tersedia'
+            ], 422);
+        }
+
+        // 3️⃣ mode adaptive?
+        $adaptive = ($activity->addaptive === 'yes');
+
+        // 4️⃣ tentukan jumlah soal yang akan dipakai
+        $jumlahSoal = $activity->jumlah_soal !== null
+            ? (int) $activity->jumlah_soal
+            : $totalDB;
+
+        // proteksi tambahan
+        if ($jumlahSoal <= 0) {
+            return response()->json([
+                'totalQuestions' => 0,
+                'message' => 'Jumlah soal tidak valid'
+            ], 422);
+        }
+
+        // batasi agar tidak melebihi soal tersedia
+        $jumlahSoal = min($jumlahSoal, $totalDB);
+
+        // 5️⃣ inisialisasi session (BARU dibuat setelah valid)
+        session([
+            "activity.$id.current" => 0,
+            "activity.$id.streak_correct" => 0,
+            "activity.$id.streak_wrong" => 0,
+            "activity.$id.difficulty" => "sedang",
+            "activity.$id.totalQuestions" => $jumlahSoal,
+            "activity.$id.used_questions" => [],
+            "activity.$id.total_correct" => 0,
+            "activity.$id.total_base_point" => 0,
+            "activity.$id.total_real_point" => 0
+        ]);
+
+        // 6️⃣ simpan waktu mulai
+        $startTime = Carbon::now();
+        session(["activity.$id.start_time" => $startTime->toDateTimeString()]);
+
+        // 7️⃣ simpan / update result
+        $userId = auth()->id();
+        ActivityResult::updateOrCreate(
+            ['id_activity' => $id, 'id_user' => $userId],
+            [
+                'start_time' => $startTime,
+                'waktu_mengerjakan' => null,
+                'end_time' => null,
+                'total_benar' => null
+            ]
+        );
+
+        // 8️⃣ durasi
+        $durasiMenit = $activity->durasi_pengerjaan
+            ? (int) $activity->durasi_pengerjaan
+            : null;
+
+        // 9️⃣ response sukses
+        return response()->json([
+            'mode' => $adaptive ? 'adaptive' : 'normal',
+            'level' => session("activity.$id.difficulty"),
+            'totalQuestions' => $jumlahSoal,
+            'started_at' => $startTime->toDateTimeString(),
+            'durasi_pengerjaan' => $durasiMenit
+        ]);
+    }
+
+
+
+    public function getQuestion(Request $req, $id)
+    {
+        $activity = Activity::findOrFail($id);
+        $adaptive = $activity->addaptive === 'yes';
+        $index = $req->query('index');
+
+        // Ambil daftar soal yang sudah digunakan
+        $used = session("activity.$id.used_questions", []);
+
+        if ($adaptive) {
+
+            $difficulty = session("activity.$id.difficulty", "sedang");
+
+            // Ambil soal sesuai difficulty yang belum pernah dipakai
+            $question = $activity->questions()
+                ->where('difficulty', $difficulty)
+                ->whereNotIn('id', $used)
+                ->inRandomOrder()
+                ->first();
+
+            // Jika soal untuk difficulty ini habis → fallback difficulty lain
+            if (!$question) {
+                $question = $activity->questions()
+                    ->whereNotIn('id', $used)
+                    ->inRandomOrder()
+                    ->first();
+            }
+
+        } else {
+            // Mode normal urut biasa
+            $question = $activity->questions()
+                ->orderBy('id')
+                ->skip($index)
+                ->first();
+        }
+
+        // Jika benar-benar habis (seharusnya jarang terjadi)
+        if (!$question) {
+            return response()->json([
+                'end' => true,
+                'message' => 'Tidak ada soal tersisa.'
+            ]);
+        }
+
+        // ========================
+        // HANYA ADAPTIVE yang pakai used_questions
+        // ========================
+        if ($adaptive) {
+            $used[] = $question->id;
+            session(["activity.$id.used_questions" => $used]);
+        }
+
+        return response()->json([
+            'question_id' => $question->id,
+            'type' => $question->type,
+            'difficulty' => $question->difficulty,
+            'question' => json_decode($question->question),
+            'options' => json_decode($question->MC_option),
+        ]);
+
+    }
+
+    public function submitAnswer(Request $req, $id)
+    {
+        $question = Question::findOrFail($req->question_id);
+        $adaptive = Activity::find($id)->addaptive === 'yes';
+
+        // =======================
+        // CEK KEBENARAN JAWABAN
+        // =======================
+        $correct = false;
+
+        if ($question->type === 'MultipleChoice') {
+            $correct = strtolower($req->user_answer) === strtolower($question->MC_answer);
+
+        } else if ($question->type === 'ShortAnswer') {
+
+            $answersRaw = $question->SA_answer;
+
+            if (is_string($answersRaw)) {
+                $answers = json_decode($answersRaw, true);
+            } else {
+                $answers = $answersRaw;
+            }
+
+            if (!is_array($answers)) {
+                $answers = [];
+            }
+
+            $user = strtolower(trim($req->user_answer));
+            $correct = in_array($user, array_map('strtolower', $answers));
+        }
+
+        // =======================
+        // SIMPAN JAWABAN SISWA
+        // =======================
+        ActivityAnswer::updateOrCreate(
+            [
+                'id_activity' => $id,
+                'id_user' => auth()->id(),
+                'id_question' => $question->id,
+            ],
+            [
+                'user_answer' => $req->user_answer,
+                'is_correct' => $correct,
+            ]
+        );
+
+        // Hitung total jawaban benar (akumulasi)
+        $prevCorrect = session("activity.$id.total_correct", 0);
+        if ($correct) {
+            session(["activity.$id.total_correct" => $prevCorrect + 1]);
+        }
+
+        // =======================
+        // LOGIKA ADAPTIVE (LEVEL)
+        // =======================
+        if ($adaptive) {
+
+            $correctStreak = session("activity.$id.streak_correct", 0);
+            $wrongStreak = session("activity.$id.streak_wrong", 0);
+            $level = session("activity.$id.difficulty", "sedang");
+
+            if ($correct) {
+                $correctStreak++;
+                $wrongStreak = 0;
+            } else {
+                $wrongStreak++;
+                $correctStreak = 0;
+            }
+
+            if ($level === 'sedang') {
+                if ($correctStreak >= 2) {
+                    $level = 'sulit';
+                }
+                if ($wrongStreak >= 2) {
+                    $level = 'mudah';
+                }
+            } else if ($level === 'mudah') {
+                if ($correctStreak >= 2) {
+                    $level = 'sedang';
+                }
+            } else if ($level === 'sulit') {
+                if ($wrongStreak >= 2) {
+                    $level = 'sedang';
+                }
+            }
+
+            session([
+                "activity.$id.difficulty" => $level,
+                "activity.$id.streak_correct" => $correctStreak,
+                "activity.$id.streak_wrong" => $wrongStreak,
+            ]);
+        }
+
+        // =======================
+        // HITUNG POIN SOAL INI (HANYA ADAPTIF)
+        // =======================
+
+        if ($adaptive) {
+
+            $pointEasy = (int) Settings::where('name', 'soal_mudah')->value('value');
+            $pointMedium = (int) Settings::where('name', 'soal_sedang')->value('value');
+            $pointHard = (int) Settings::where('name', 'soal_sulit')->value('value');
+
+            $difficulty = $question->difficulty;
+
+            $basePoint =
+                $difficulty === 'mudah' ? $pointEasy :
+                ($difficulty === 'sedang' ? $pointMedium : $pointHard);
+
+            if (!$correct) {
+                $basePoint = 0;
+            }
+
+            // simpan akumulasi base point
+            $prevBase = session("activity.$id.total_base_point", 0);
+            session(["activity.$id.total_base_point" => $prevBase + $basePoint]);
+
+            // =======================
+            // BONUS STREAK (ADAPTIF)
+            // =======================
+            $correctStreak = session("activity.$id.streak_correct", 0);
+
+            $bonus = 0;
+            if ($correct) {
+                if ($correctStreak == 2)
+                    $bonus = 5;
+                else if ($correctStreak == 3)
+                    $bonus = 10;
+                else if ($correctStreak >= 4)
+                    $bonus = 15;
+            }
+
+            $prevReal = session("activity.$id.total_real_point", 0);
+            session([
+                "activity.$id.total_real_point" => $prevReal + ($basePoint + $bonus)
+            ]);
+        }
+
+        $saOptions = [];
+
+        if ($question->type === 'ShortAnswer') {
+            $saOptions = is_array($question->SA_answer)
+                ? $question->SA_answer
+                : json_decode($question->SA_answer, true);
+
+            if (!is_array($saOptions)) {
+                $saOptions = [];
+            }
+        }
+
+        return response()->json([
+            'correct' => $correct,
+            'correct_answer' => $question->type === 'MultipleChoice'
+                ? strtoupper($question->MC_answer)
+                : implode(', ', $saOptions),
+            'explanation' => $question->explanation ?? null,
+            'new_level' => session("activity.$id.difficulty"),
+            'streak_correct' => session("activity.$id.streak_correct")
+        ]);
+
+
+    }
+
+    public function finishTest(Request $req, $id)
+    {
+        $userId = auth()->id();
+
+        $totalBase = session("activity.$id.total_base_point", 0);  // nilai dasar
+        $totalReal = session("activity.$id.total_real_point", 0);  // nilai total (dasar+bonus)
+
+        // Bonus = totalReal - totalBase
+        $bonusPoint = $totalReal - $totalBase;
+
+        $activity = Activity::findOrFail($id);
+
+
+
+        // Ambil start_time dari DB jika ada, kalau tidak ambil dari session
+        $activityResult = ActivityResult::where('id_activity', $id)
+            ->where('id_user', $userId)
+            ->first();
+
+        if ($activityResult && $activityResult->start_time) {
+            $start = Carbon::parse($activityResult->start_time);
+        } else {
+            $startString = session("activity.$id.start_time", null);
+            $start = $startString ? Carbon::parse($startString) : Carbon::now();
+        }
+
+        $end = Carbon::now();
+
+        // hitung durasi dalam detik
+        $durationSeconds = max(0, $end->getTimestamp() - $start->getTimestamp());
+        $totalCorrect = session("activity.$id.total_correct", 0);
+
+        // ====== DAPATKAN JUMLAH SOAL YANG DIPAKAI ======
+        // Prioritaskan nilai yang disimpan di session saat start() (adaptive/normal)
+        $jumlahSoal = session("activity.$id.totalQuestions", null);
+
+        if ($jumlahSoal === null) {
+            // fallback: hitung dari relasi questions (pastikan ini merepresentasikan soal yang dipakai)
+            $activity = Activity::find($id);
+            $jumlahSoal = $activity ? $activity->questions()->count() : 0;
+        } else {
+            // pastikan integer
+            $jumlahSoal = (int) $jumlahSoal;
+            // dan ambil activity juga untuk penggunaan selanjutnya
+            $activity = Activity::find($id);
+        }
+
+        // tentukan statusBenar: true jika totalCorrect sama persis dengan jumlahSoal
+        $statusBenar = ($totalCorrect === $jumlahSoal) ? true : false;
+
+        // =============== HITUNG BEST CASE (REVISI) ===============
+        // ambil poin dari settings (cast ke float supaya aman)
+        $pointEasy = (float) (Settings::where('name', 'soal_mudah')->value('value') ?? 0);
+        $pointMedium = (float) (Settings::where('name', 'soal_sedang')->value('value') ?? 0);
+        $pointHard = (float) (Settings::where('name', 'soal_sulit')->value('value') ?? 0);
+
+        // pastikan $jumlahSoal integer (sudah di-cast di atas)
+        $jumlahSoal = (int) $jumlahSoal;
+
+        if ($activity && $activity->addaptive === 'yes') {
+            // REVISI: best-case adaptive = 2 medium (maks) + sisa = hard
+            $mediumBest = min(2, $jumlahSoal);                // paling banyak 2 medium
+            $hardBest = max(0, $jumlahSoal - $mediumBest);  // sisanya hard
+            $easyBest = 0;
+
+            $bestCase = ($easyBest * $pointEasy) + ($mediumBest * $pointMedium) + ($hardBest * $pointHard);
+        } else {
+            // NON-ADAPTIVE: best-case = komposisi soal yang ada di DB (semua benar)
+            if ($activity) {
+                $easyCount = $activity->questions()->where('difficulty', 'mudah')->count();
+                $mediumCount = $activity->questions()->where('difficulty', 'sedang')->count();
+                $hardCount = $activity->questions()->where('difficulty', 'sulit')->count();
+            } else {
+                $easyCount = $mediumCount = $hardCount = 0;
+            }
+
+            $bestCase = ($easyCount * $pointEasy) + ($mediumCount * $pointMedium) + ($hardCount * $pointHard);
+        }
+
+        // hindari pembagian dengan 0 -> kalau bestCase 0 set 1 supaya nilai_akhir jadi 0 ketika totalReal 0
+        if ($bestCase <= 0) {
+            $bestCase = 1;
+        }
+
+        // ======================
+        // HITUNG NILAI AKHIR
+        // ======================
+
+        if ($activity->addaptive === 'yes') {
+
+            // ===== ADAPTIF (TETAP PAKAI BEST CASE) =====
+            if ($bestCase <= 0) {
+                $bestCase = 1;
+            }
+
+            $nilaiAkhir = round(($totalBase / $bestCase) * 100, 2);
+
+        } else {
+
+            // ===== NON-ADAPTIF (RESCALE) =====
+            // Rumus: (jumlah benar / jumlah soal) × 100
+            if ($jumlahSoal > 0) {
+                $nilaiAkhir = round(($totalCorrect / $jumlahSoal) * 100, 2);
+            } else {
+                $nilaiAkhir = 0;
+            }
+        }
+
+        // Status kelulusan (angka)
+        $status = $nilaiAkhir >= $activity->kkm ?? 70 ? 'Pass' : 'Remedial';
+        // ====================== SIMPAN KE DB ======================
+        ActivityResult::updateOrCreate(
+            [
+                'id_activity' => $id,
+                'id_user' => $userId,
+            ],
+            [
+                'result' => $totalReal,
+                'bonus_poin' => $bonusPoint,
+                'real_poin' => $totalBase,
+                'result_status' => $status,
+                'waktu_mengerjakan' => $durationSeconds,
+                'total_benar' => $totalCorrect,
+                'start_time' => $start,
+                'end_time' => $end,
+                'status_benar' => $statusBenar,
+                'nilai_akhir' => $nilaiAkhir,
+            ]
+        );
+
+        // Ambil record lagi dari DB untuk dikembalikan ke frontend (source of truth)
+        $activityResult = ActivityResult::where('id_activity', $id)
+            ->where('id_user', $userId)
+            ->first();
+
+        // bersihkan session
+        session()->forget("activity.$id");
+        session()->forget("activity.$id.total_correct");
+
+        return response()->json([
+            'status' => 'saved',
+            // ringkasan cepat
+            'duration_seconds' => $durationSeconds,
+            'total_correct' => $totalCorrect,
+            'jumlah_soal' => $jumlahSoal,
+            // data dari DB (string/angka/timestamp)
+            'result_db' => $activityResult ? [
+                'result' => $activityResult->result,
+                'bonus_poin' => $activityResult->bonus_poin,
+                'real_poin' => $activityResult->real_poin,
+                'result_status' => $activityResult->result_status,
+                'waktu_mengerjakan' => $activityResult->waktu_mengerjakan,
+                'total_benar' => $activityResult->total_benar,
+                'start_time' => optional($activityResult->start_time)->toDateTimeString(),
+                'end_time' => optional($activityResult->end_time)->toDateTimeString(),
+                'status_benar' => (bool) $activityResult->status_benar,
+                'nilai_akhir' => $activityResult->nilai_akhir,
+            ] : null,
+        ]);
+    }
+
+
+
+
+
+
+}
