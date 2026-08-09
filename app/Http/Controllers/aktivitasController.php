@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\ActivityAnswer;
+use App\Models\ActivityGroup;
 
 
 class aktivitasController extends Controller
@@ -52,6 +53,7 @@ class aktivitasController extends Controller
                 'activities.id_topic',
                 'activities.title as aktivitas',
                 'activities.status',
+                'activities.is_group_activity',
                 'topics.title as topik',
                 'subject.name as mapel',
                 'classes.id as id_class',
@@ -158,6 +160,35 @@ class aktivitasController extends Controller
             'jumlah_soal' => $activity->jumlah_soal,
         ]);
     }
+    public function group($id)
+{
+    $user = Auth::user();
+
+    $activity = Activity::findOrFail($id);
+
+    // Pastikan aktivitas memang aktivitas kelompok
+    if ($activity->is_group_activity !== 'yes') {
+        abort(403, 'Aktivitas ini bukan aktivitas kelompok.');
+    }
+
+    // Cari kelompok siswa pada aktivitas ini
+    $group = ActivityGroup::with('members.user')
+        ->where('id_activity', $activity->id)
+        ->whereHas('members', function ($query) use ($user) {
+            $query->where('id_user', $user->id);
+        })
+        ->first();
+
+    // Jika siswa belum masuk kelompok
+    if (!$group) {
+        abort(403, 'Kamu belum terdaftar dalam kelompok aktivitas ini.');
+    }
+
+    return view('siswa.activity-group', [
+        'activity' => $activity,
+        'group' => $group,
+    ]);
+}
 
     public function start($id)
     {

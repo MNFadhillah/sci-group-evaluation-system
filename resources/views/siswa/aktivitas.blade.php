@@ -156,7 +156,7 @@
         <div class="d-flex align-items-start justify-content-between mb-4 page-title">
             <div>
                 <h1 class="h3 fw-bold text-primary mb-1 d-flex align-items-center gap-2">
-                    <i class="bi bi-journal-check"></i> Evaluasi Kamu
+    <i class="bi bi-journal-check"></i> Aktivitas
 
                     <button class="btn btn-sm btn-outline-primary rounded-circle" data-bs-toggle="modal"
                         data-bs-target="#modalInfoAktivitas" title="Informasi Evaluasi">
@@ -212,21 +212,43 @@
                                 <div class="card-body">
                                     <h5 class="mb-1 text-primary fw-bold" title="{{ $sub->aktivitas }}">{{ $sub->aktivitas }}</h5>
 
-                                    <div class="badges">
-                                        <span class="badge bg-primary text-white"
-                                            title="{{ $sub->mapel ?? '' }}">{{ $sub->mapel ?? '-' }}</span>
-                                        <span class="badge bg-info text-white"
-                                            title="{{ $sub->topik ?? '' }}">{{ $sub->topik ?? '-' }}</span>
-                                        <span class="badge bg-warning text-dark" title="Kelas {{ $sub->nama_kelas ?? '' }}">Kls
-                                            {{ $sub->nama_kelas ?? '-' }}</span>
-                                        <span class="badge bg-secondary text-white"
-                                            title="{{ ucfirst($status) }}">{{ ucfirst($status) }}</span>
-                                    </div>
+                                    <div class="mb-2">
+    <div class="meta-line">
+        <i class="bi bi-book me-1"></i>
+        Mata Pelajaran:
+        <span class="meta-strong ms-1">{{ $sub->mapel ?? '-' }}</span>
+    </div>
 
-                                    <div class="meta-line">
-                                        <i class="bi bi-collection me-1"></i>
-                                        Status: <span class="meta-strong">{{ ucfirst($status) }}</span>
-                                    </div>
+    <div class="meta-line">
+        <i class="bi bi-bookmark me-1"></i>
+        Topik:
+        <span class="meta-strong ms-1">{{ $sub->topik ?? '-' }}</span>
+    </div>
+
+    <div class="meta-line">
+        <i class="bi bi-people me-1"></i>
+        Kelas:
+        <span class="meta-strong ms-1">{{ $sub->nama_kelas ?? '-' }}</span>
+    </div>
+
+    <div class="meta-line">
+        <i class="bi bi-person-workspace me-1"></i>
+        Pengerjaan:
+        @if($sub->is_group_activity === 'yes')
+            <span class="badge bg-primary ms-1">
+                <i class="bi bi-people-fill me-1"></i>
+                Kelompok
+            </span>
+        @else
+            <span class="badge bg-secondary ms-1">
+                <i class="bi bi-person-fill me-1"></i>
+                Individu
+            </span>
+        @endif
+    </div>
+</div>
+
+                                   
 
                                     <div class="meta-line">
                                         <i class="bi bi-calendar-event me-1"></i>
@@ -241,10 +263,13 @@
                                     <div class="d-flex flex-column gap-2 mt-2">
                                         <div class="d-flex align-items-center">
                                             <div>
-                                                <div class="text-muted" style="font-size:.92rem;"><strong>Nilai:</strong></div>
-                                                <div class="fw-bold" style="font-size:1rem;">
-                                                    {!! $nilai !== null ? "<span>$nilai</span>" : '<span class="text-muted">Belum Ada</span>' !!}
-                                                </div>
+                                                <div class="text-muted" style="font-size:.92rem;">
+    <strong>Status:</strong>
+</div>
+
+<div class="fw-bold" style="font-size:1rem;">
+    {{ ucfirst($status) }}
+</div>
                                             </div>
 
                                             <div class="ms-auto d-flex align-items-center gap-2">
@@ -274,7 +299,7 @@
                                             </button>
                                         @else
                                             <button class="btn btn-success w-100 action-btn"
-                                                onclick="mulaiAktivitas('{{ $sub->id_activity }}')">
+                                                onclick="mulaiAktivitas('{{ $sub->id_activity }}', '{{ $sub->is_group_activity }}')">
                                                 <i class="bi bi-play-fill me-1"></i> Kerjakan Sekarang
                                             </button>
                                         @endif
@@ -378,7 +403,7 @@
                                             </button>
                                         @else
                                             <button class="btn btn-success w-100 action-btn"
-                                                onclick="mulaiAktivitas('{{ $sub->id_activity }}')">
+                                                onclick="mulaiAktivitas('{{ $sub->id_activity }}', '{{ $sub->is_group_activity }}')">
                                                 <i class="bi bi-play-fill me-1"></i> Kerjakan Sekarang
                                             </button>
                                         @endif
@@ -553,20 +578,26 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function mulaiAktivitas(id) {
-            Swal.fire({
-                icon: 'info',
-                title: 'Mulai Aktivitas',
-                html: 'Kamu akan memulai aktivitas dengan ID: <strong>' + id + '</strong>',
-                showCancelButton: true,
-                confirmButtonText: 'Lanjut',
-                cancelButtonText: 'Batal',
-                confirmButtonColor: '#198754'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = `/activity/${id}`;
-                }
-            });
+        function mulaiAktivitas(id, jenisPengerjaan) {
+    Swal.fire({
+        icon: 'info',
+        title: 'Mulai Aktivitas',
+        html: 'Kamu akan memulai aktivitas dengan ID: <strong>' + id + '</strong>',
+        showCancelButton: true,
+        confirmButtonText: 'Lanjut',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#198754'
+    }).then((result) => {
+        if (result.isConfirmed) {
+
+            if (jenisPengerjaan === 'yes') {
+    window.location.href = `/activity/${id}/group/answer`;
+} else {
+    window.location.href = `/activity/${id}`;
+}
+
         }
+    });
+}
     </script>
 @endpush

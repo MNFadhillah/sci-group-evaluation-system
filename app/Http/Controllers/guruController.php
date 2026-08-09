@@ -554,6 +554,7 @@ class guruController extends Controller
                     'semester' => $semester,
                     'durasi_pengerjaan' => $a->durasi_pengerjaan,
                     'created_at' => $a->created_at,
+                    'is_group_activity' => $a->is_group_activity,
                 ]);
             }
         }
@@ -634,6 +635,7 @@ class guruController extends Controller
 
             // kkm wajib
             'kkm' => ['required', 'integer', 'min:0', 'max:100'],
+            'is_group_activity' => ['required', 'in:yes,no'],
         ], [
             // 🔴 Pesan error custom (opsional tapi direkomendasikan)
             'title.required' => 'Judul aktivitas wajib diisi.',
@@ -651,6 +653,7 @@ class guruController extends Controller
             'addaptive' => $request->addaptive,
             'durasi_pengerjaan' => $request->durasi_pengerjaan,
             'kkm' => $request->kkm,
+            'is_group_activity' => $request->is_group_activity,
         ]);
 
         return redirect()
