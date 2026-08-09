@@ -3,7 +3,7 @@
 @section('content')
     <div class="container mt-4">
         <div class="d-flex align-items-center gap-2 mb-4">
-            <h3 class="fw-bold mb-0">Data Evaluasi Berdasarkan Topik</h3>
+            <h3 class="fw-bold mb-0">Aktivitas</h3>
 
             <button type="button"
                 class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
@@ -13,7 +13,7 @@
             </button>
         </div>
 
-        @if(session('success'))
+        @if (session('success'))
             <div class="alert alert-success text-center shadow-sm">{{ session('success') }}</div>
         @endif
 
@@ -53,7 +53,7 @@
                                 <label class="form-label fw-semibold">Topik</label>
                                 <select name="id_topic" class="form-select shadow-sm" required>
                                     <option value="">Pilih Topik</option>
-                                    @foreach(\App\Models\Topic::with('subject')->where('created_by', Auth::id())->get() as $topicOption)
+                                    @foreach (\App\Models\Topic::with('subject')->where('created_by', Auth::id())->get() as $topicOption)
                                         <option value="{{ $topicOption->id }}">
                                             {{ $topicOption->title }} ({{ $topicOption->subject->name ?? 'Tanpa Subject' }})
                                         </option>
@@ -74,8 +74,8 @@
                                 {{-- Row 1: Durasi (kiri) & Adaptive (kanan) --}}
                                 <div class="col-6">
                                     <label class="form-label fw-semibold">Durasi (menit)</label>
-                                    <input type="number" name="durasi_pengerjaan" class="form-control shadow-sm" min="1"
-                                        placeholder="30" required>
+                                    <input type="number" name="durasi_pengerjaan" class="form-control shadow-sm"
+                                        min="1" placeholder="30" required>
                                     @error('durasi_pengerjaan')
                                         <div class="invalid-feedback">
                                             {{ $message }}
@@ -100,22 +100,45 @@
                                 <!-- kkm -->
                                 <div class="col-6">
                                     <label class="form-label fw-semibold">KKM</label>
-                                    <input type="number" name="kkm" class="form-control shadow-sm" min="0" max="100"
-                                        placeholder="70" required>
+                                    <input type="number" name="kkm" class="form-control shadow-sm" min="0"
+                                        max="100" placeholder="70" required>
                                     @error('kkm')
                                         <div class="invalid-feedback">
                                             {{ $message }}
                                         </div>
                                     @enderror
                                 </div>
-                                {{-- Row 2: (kosong / spacing) --}}
-                                <div class="col-6">
-                                    {{-- could put an extra small field / info if needed; left intentionally blank for
-                                    spacing --}}
+                                {{-- Jenis Pengerjaan --}}
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">
+                                        Jenis Pengerjaan
+                                    </label>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="is_group_activity"
+                                            id="individual_activity_add" value="no" checked>
+
+                                        <label class="form-check-label" for="individual_activity_add">
+                                            Individu
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="is_group_activity"
+                                            id="group_activity_add" value="yes">
+
+                                        <label class="form-check-label" for="group_activity_add">
+                                            Kelompok
+                                        </label>
+                                    </div>
+
+                                    @error('is_group_activity')
+                                        <div class="text-danger small">
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
                                 </div>
-                                <div class="col-6">
-                                    {{-- space --}}
-                                </div>
+
 
                                 {{-- Row 3: tombol Simpan (span 2 kolom) --}}
                                 <div class="col-12 d-grid">
@@ -151,11 +174,12 @@
                                     <th>Mapel</th>
                                     <th>Kelas</th>
                                     <th>Semester</th>
-                                    <th style="width:260px">Aksi</th>
+                                    <th>Jenis Pengerjaan</th>
+                                    <th style="width:320px">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($rows as $r)
+                                @foreach ($rows as $r)
                                     <tr>
                                         {{-- nomor dikosongkan, DataTables isi --}}
                                         <td class="text-center align-middle"></td>
@@ -166,7 +190,7 @@
                                         </td>
 
                                         <td class="align-middle text-center">
-                                            @if($r->addaptive === 'yes')
+                                            @if ($r->addaptive === 'yes')
                                                 <span class="badge bg-success">Ya</span>
                                             @else
                                                 <span class="badge bg-secondary">Tidak</span>
@@ -174,7 +198,8 @@
                                         </td>
 
                                         <td class="align-middle col-title">
-                                            <div class="cell-inner" title="{{ $r->title }}">{{ $r->title }}</div>
+                                            <div class="cell-inner" title="{{ $r->title }}">{{ $r->title }}
+                                            </div>
                                         </td>
 
                                         <td class="align-middle col-subject hide-sm">
@@ -188,8 +213,8 @@
                                                 {{ $r->class_name ?? '-' }}
                                             </div>
                                         </td>
-                                        <td class="align-middle">
-                                            @if($r->semester === 'odd')
+                                        <td class="align-middle text-center">
+                                            @if ($r->semester === 'odd')
                                                 <span class="badge bg-info text-dark">Ganjil</span>
                                             @elseif($r->semester === 'even')
                                                 <span class="badge bg-secondary">Genap</span>
@@ -198,44 +223,67 @@
                                             @endif
                                         </td>
 
-
                                         <td class="align-middle text-center">
-                                            <div class="action-group" role="group" aria-label="Aksi aktivitas">
-                                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                                    data-bs-target="#modalEdit{{ $r->id }}" title="Edit" aria-label="Edit">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-
-                                                <button type="button" class="btn btn-success btn-sm btn-create-package"
-                                                    data-url="{{ route('activity.package.create', $r->id) }}"
-                                                    title="Buat Paket Soal">
-                                                    <i class="bi bi-archive"></i>
-                                                </button>
-
-
-                                                <a href="{{ url('/guru/aktivitas/' . $r->id . '/atur-soal?topic=' . $r->topic_id) }}"
-                                                    class="btn btn-warning btn-sm" title="Atur Soal" aria-label="Atur Soal">
-                                                    <i class="bi bi-gear"></i>
-                                                </a>
-
-                                                <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal"
-                                                    data-bs-target="#lihatSoal{{ $r->id }}" title="Lihat Soal"
-                                                    aria-label="Lihat Soal">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                                <form action="{{ route('guru.aktivitas.hapus', $r->id) }}" method="POST"
-                                                    class="d-inline delete-form">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="btn btn-danger btn-sm btn-delete" title="Hapus"
-                                                        aria-label="Hapus">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
-
-                                            </div>
+                                            @if ($r->is_group_activity === 'yes')
+                                                <span class="badge bg-primary">
+                                                    <i class="bi bi-people-fill me-1"></i>
+                                                    Kelompok
+                                                </span>
+                                            @else
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-person-fill me-1"></i>
+                                                    Individu
+                                                </span>
+                                            @endif
                                         </td>
-                                    </tr>
+                                        
+
+
+                                <td class="align-middle text-center">
+                                    <div class="action-group" role="group" aria-label="Aksi aktivitas">
+                                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#modalEdit{{ $r->id }}" title="Edit"
+                                            aria-label="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+
+                                        <button type="button" class="btn btn-success btn-sm btn-create-package"
+                                            data-url="{{ route('activity.package.create', $r->id) }}"
+                                            title="Buat Paket Soal">
+                                            <i class="bi bi-archive"></i>
+                                        </button>
+
+
+                                        <a href="{{ url('/guru/aktivitas/' . $r->id . '/atur-soal?topic=' . $r->topic_id) }}"
+                                            class="btn btn-warning btn-sm" title="Atur Soal" aria-label="Atur Soal">
+                                            <i class="bi bi-gear"></i>
+                                        </a>
+                                        @if ($r->is_group_activity === 'yes')
+                                            <a href="{{ route('guru.activity.groups', $r->id) }}"
+                                                class="btn btn-primary btn-sm" title="Kelola Kelompok"
+                                                aria-label="Kelola Kelompok">
+                                                <i class="bi bi-people-fill"></i>
+                                            </a>
+                                        @endif
+
+                                        <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal"
+                                            data-bs-target="#lihatSoal{{ $r->id }}" title="Lihat Soal"
+                                            aria-label="Lihat Soal">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <form action="{{ route('guru.aktivitas.hapus', $r->id) }}" method="POST"
+                                            class="d-inline delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                                title="Hapus" aria-label="Hapus">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+
+                                    </div>
+                                </td>
+                                </tr>
                                 @endforeach
                             </tbody>
                         </table>
@@ -247,7 +295,7 @@
         </div>
         <div class="d-block d-md-none">
 
-            @foreach($rows as $r)
+            @foreach ($rows as $r)
                 <div class="card shadow-sm mb-3 border-0">
                     <div class="card-body">
 
@@ -285,18 +333,27 @@
 
                         <!-- Badge adaptif + semester -->
                         <div class="d-flex gap-2 mb-3">
-                            @if($r->addaptive === 'yes')
+                            @if ($r->addaptive === 'yes')
                                 <span class="badge bg-success">Adaptif</span>
                             @else
                                 <span class="badge bg-secondary">Non-adaptif</span>
                             @endif
 
-                            @if($r->semester === 'odd')
+                            @if ($r->semester === 'odd')
                                 <span class="badge bg-info text-dark">Ganjil</span>
                             @elseif($r->semester === 'even')
                                 <span class="badge bg-secondary">Genap</span>
                             @endif
                         </div>
+                        @if ($r->is_group_activity === 'yes')
+                            <span class="badge bg-primary">
+                                <i class="bi bi-people-fill me-1"></i> Kelompok
+                            </span>
+                        @else
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-person-fill me-1"></i> Individu
+                            </span>
+                        @endif
 
                         <!-- Aksi -->
                         <div class="d-flex flex-wrap gap-2">
@@ -315,6 +372,11 @@
                                 class="btn btn-warning btn-sm">
                                 <i class="bi bi-gear"></i> Soal
                             </a>
+                            @if ($r->is_group_activity === 'yes')
+                                <a href="{{ route('guru.activity.groups', $r->id) }}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-people-fill"></i> Kelompok
+                                </a>
+                            @endif
 
                             <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal"
                                 data-bs-target="#lihatSoal{{ $r->id }}">
@@ -341,7 +403,7 @@
         {{-- Modal Edit --}}
 
         {{-- ================= GLOBAL MODALS ================= --}}
-        @foreach($rows as $r)
+        @foreach ($rows as $r)
 
             {{-- MODAL EDIT --}}
             <div class="modal fade" id="modalEdit{{ $r->id }}" tabindex="-1" aria-hidden="true">
@@ -357,7 +419,8 @@
                             <div class="modal-body">
                                 <div class="mb-3">
                                     <label class="form-label">Judul</label>
-                                    <input type="text" name="title" class="form-control" value="{{ $r->title }}" required>
+                                    <input type="text" name="title" class="form-control"
+                                        value="{{ $r->title }}" required>
                                 </div>
 
                                 <div class="mb-3">
@@ -372,15 +435,43 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">KKM</label>
-                                    <input type="number" name="kkm" class="form-control" value="{{ $r->kkm }}" min="0" max="100"
-                                        required>
+                                    <input type="number" name="kkm" class="form-control"
+                                        value="{{ $r->kkm }}" min="0" max="100" required>
+                                </div>
+                                {{-- Jenis Pengerjaan --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">
+                                        Jenis Pengerjaan
+                                    </label>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="is_group_activity"
+                                            id="individual_activity_{{ $r->id }}" value="no"
+                                            {{ $r->is_group_activity === 'no' ? 'checked' : '' }}>
+
+                                        <label class="form-check-label" for="individual_activity_{{ $r->id }}">
+                                            Individu
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="is_group_activity"
+                                            id="group_activity_{{ $r->id }}" value="yes"
+                                            {{ $r->is_group_activity === 'yes' ? 'checked' : '' }}>
+
+                                        <label class="form-check-label" for="group_activity_{{ $r->id }}">
+                                            Kelompok
+                                        </label>
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
                                     <label class="form-label">Topik</label>
                                     <select name="id_topic" class="form-select" required>
-                                        @foreach(\App\Models\Topic::with('subject')->where('created_by', Auth::id())->get() as $topicOpt)
-                                            <option value="{{ $topicOpt->id }}" {{ $topicOpt->id === $r->topic_id ? 'selected' : '' }}> {{ $topicOpt->title }} ({{ $topicOpt->subject->name ?? 'Tanpa Subject' }})
+                                        @foreach (\App\Models\Topic::with('subject')->where('created_by', Auth::id())->get() as $topicOpt)
+                                            <option value="{{ $topicOpt->id }}"
+                                                {{ $topicOpt->id === $r->topic_id ? 'selected' : '' }}>
+                                                {{ $topicOpt->title }} ({{ $topicOpt->subject->name ?? 'Tanpa Subject' }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -388,7 +479,8 @@
 
                                 <div class="form-check mb-1">
                                     <input type="hidden" name="addaptive" value="no">
-                                    <input class="form-check-input" type="checkbox" name="addaptive" value="yes" {{ $r->addaptive === 'yes' ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="addaptive" value="yes"
+                                        {{ $r->addaptive === 'yes' ? 'checked' : '' }}>
                                     <label class="form-check-label">adaptif</label>
                                 </div>
                             </div>
@@ -417,7 +509,7 @@
                                 $selectedQuestions = $questionsMap[$r->id] ?? collect();
                             @endphp
 
-                            @if($selectedQuestions->isEmpty())
+                            @if ($selectedQuestions->isEmpty())
                                 <div class="text-center text-muted py-4">
                                     <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
                                     Belum ada soal untuk aktivitas ini.
@@ -438,9 +530,10 @@
                                                 @php $sData = json_decode($s->question); @endphp
                                                 <tr>
                                                     <td class="text-center fw-bold">{{ $loop->iteration }}</td>
-                                                    <td class="text-center"><span class="badge bg-primary">{{ $s->type }}</span></td>
+                                                    <td class="text-center"><span
+                                                            class="badge bg-primary">{{ $s->type }}</span></td>
                                                     <td class="text-center">
-                                                        @if(in_array($s->difficulty, ['easy', 'mudah']))
+                                                        @if (in_array($s->difficulty, ['easy', 'mudah']))
                                                             <span class="badge bg-success">Mudah</span>
                                                         @elseif(in_array($s->difficulty, ['medium', 'sedang']))
                                                             <span class="badge bg-warning text-dark">Sedang</span>
@@ -594,7 +687,7 @@
 
                             <hr>
 
-                            <!-- PENILAIAN -->
+
                             <!-- PENILAIAN -->
                             <section class="mb-4">
                                 <h6 class="fw-bold text-primary mb-2">
@@ -665,6 +758,11 @@
                                         <strong>Atur Soal</strong> – Menentukan soal yang digunakan
                                     </li>
                                     <li>
+                                        <i class="bi bi-people text-primary me-1"></i>
+                                        <strong>Kelompok</strong> – Mengatur pembagian dan anggota kelompok
+                                        pada aktivitas kelompok
+                                    </li>
+                                    <li>
                                         <i class="bi bi-eye text-info me-1"></i>
                                         <strong>Lihat Soal</strong> – Melihat daftar soal
                                     </li>
@@ -710,7 +808,7 @@
 
 
 
-@endsection
+    @endsection
     @push('styles')
         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
         <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
@@ -805,12 +903,12 @@
         <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
 
                 // semua tombol delete
                 document.querySelectorAll('.btn-delete').forEach(btn => {
 
-                    btn.addEventListener('click', function (e) {
+                    btn.addEventListener('click', function(e) {
                         e.preventDefault();
 
                         let form = this.closest('form');
@@ -838,7 +936,7 @@
 
 
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 // DataTable with horizontal scroll and responsive details
                 var table = $('#activitiesTable').DataTable({
                     responsive: {
@@ -851,37 +949,58 @@
                     autoWidth: false,
                     lengthChange: true,
                     pageLength: 10,
-                    order: [[1, 'asc']],
-                    columnDefs: [
-                        { orderable: false, targets: [0, 8] },
-                        { searchable: false, targets: 0 },
+                    order: [
+                        [1, 'asc']
+                    ],
+                    columnDefs: [{
+                            orderable: false,
+                            targets: [0, 9]
+                        },
+                        {
+                            searchable: false,
+                            targets: 0
+                        },
                         // make the last column (Aksi) not responsive-detail toggler
-                        { responsivePriority: 1, targets: 1 }, // Judul paling penting
-                        { responsivePriority: 2, targets: 7 }  // Aksi tetap penting
+                        {
+                            responsivePriority: 1,
+                            targets: 1
+                        }, // Judul paling penting
+                        {
+                            responsivePriority: 2,
+                            targets: 9
+                        } // Aksi tetap penting
                     ],
                     language: {
                         search: "_INPUT_",
                         searchPlaceholder: "Cari aktivitas, topik, subject, atau kelas...",
                         lengthMenu: "Tampilkan _MENU_ entri",
-                        paginate: { previous: "Sebelumnya", next: "Selanjutnya" }
+                        paginate: {
+                            previous: "Sebelumnya",
+                            next: "Selanjutnya"
+                        }
                     },
-                    drawCallback: function () {
+                    drawCallback: function() {
                         // Aktifkan tooltip untuk semua cell yang punya title
                         var tlist = [].slice.call(document.querySelectorAll('[title]'));
-                        tlist.map(function (el) { return new bootstrap.Tooltip(el); });
+                        tlist.map(function(el) {
+                            return new bootstrap.Tooltip(el);
+                        });
                     }
                 });
 
                 // nomor dinamis
-                table.on('order.dt search.dt draw.dt', function () {
-                    table.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
+                table.on('order.dt search.dt draw.dt', function() {
+                    table.column(0, {
+                        search: 'applied',
+                        order: 'applied'
+                    }).nodes().each(function(cell, i) {
                         cell.innerHTML = i + 1;
                     });
                 }).draw();
 
                 // optional: tombol Lihat -> modal show detail row
                 // delegasi: ketika tombol lihat diklik ambil data baris dan tampilkan
-                $(document).on('click', '.btn-view-row', function (e) {
+                $(document).on('click', '.btn-view-row', function(e) {
                     e.preventDefault();
                     var $btn = $(this);
                     var $tr = $btn.closest('tr');
@@ -891,12 +1010,18 @@
                     var rowData = table.row($tr).data(); // array cells
                     // rowData indeks: 0=No,1=Judul,2=Deadline,3=Adaptive,4=Topik,5=Subject,6=Kelas,7=Aksi
                     var html = '<dl class="row">';
-                    html += '<dt class="col-sm-3">Judul</dt><dd class="col-sm-9">' + $('<div>').text(rowData[1]).html() + '</dd>';
-                    html += '<dt class="col-sm-3">Deadline</dt><dd class="col-sm-9">' + $('<div>').text(rowData[2]).html() + '</dd>';
-                    html += '<dt class="col-sm-3">Adaptif</dt><dd class="col-sm-9">' + $('<div>').text(rowData[3]).html() + '</dd>';
-                    html += '<dt class="col-sm-3">Topik</dt><dd class="col-sm-9">' + $('<div>').text(rowData[4]).html() + '</dd>';
-                    html += '<dt class="col-sm-3">Subject</dt><dd class="col-sm-9">' + $('<div>').text(rowData[5]).html() + '</dd>';
-                    html += '<dt class="col-sm-3">Kelas</dt><dd class="col-sm-9">' + $('<div>').text(rowData[6]).html() + '</dd>';
+                    html += '<dt class="col-sm-3">Judul</dt><dd class="col-sm-9">' + $('<div>').text(rowData[1])
+                        .html() + '</dd>';
+                    html += '<dt class="col-sm-3">Deadline</dt><dd class="col-sm-9">' + $('<div>').text(rowData[
+                        2]).html() + '</dd>';
+                    html += '<dt class="col-sm-3">Adaptif</dt><dd class="col-sm-9">' + $('<div>').text(rowData[
+                        3]).html() + '</dd>';
+                    html += '<dt class="col-sm-3">Topik</dt><dd class="col-sm-9">' + $('<div>').text(rowData[4])
+                        .html() + '</dd>';
+                    html += '<dt class="col-sm-3">Subject</dt><dd class="col-sm-9">' + $('<div>').text(rowData[
+                        5]).html() + '</dd>';
+                    html += '<dt class="col-sm-3">Kelas</dt><dd class="col-sm-9">' + $('<div>').text(rowData[6])
+                        .html() + '</dd>';
                     html += '</dl>';
                     $('#rowDetailModal .modal-body').html(html);
                     var modal = new bootstrap.Modal(document.getElementById('rowDetailModal'));
@@ -904,17 +1029,18 @@
                 });
 
             });
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
-                tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
+                tooltipTriggerList.map(function(el) {
+                    return new bootstrap.Tooltip(el);
+                });
             });
-
         </script>
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
 
                 document.querySelectorAll('.btn-create-package').forEach(btn => {
-                    btn.addEventListener('click', function () {
+                    btn.addEventListener('click', function() {
 
                         let url = this.dataset.url;
 
@@ -937,17 +1063,19 @@
                             });
 
                             fetch(url, {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                    'Accept': 'application/json'
-                                }
-                            })
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': document.querySelector(
+                                            'meta[name="csrf-token"]').content,
+                                        'Accept': 'application/json'
+                                    }
+                                })
                                 .then(res => res.json())
                                 .then(res => {
 
                                     if (!res.success) {
-                                        throw new Error(res.message ?? 'Gagal membuat paket');
+                                        throw new Error(res.message ??
+                                            'Gagal membuat paket');
                                     }
 
                                     Swal.fire({

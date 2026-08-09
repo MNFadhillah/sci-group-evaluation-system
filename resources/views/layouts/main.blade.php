@@ -192,77 +192,68 @@
             <hr class="sidebar-divider my-0">
 
             @if(Auth::user()->role === 'student')
-                <li class="nav-item">
-                    <a class="nav-link @yield('dashboard')" href="{{ url('/dashboardsiswa') }}">
-                        <i class="fas fa-fw fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @yield('aktivitas')" href="{{ url('/aktivitassiswa') }}">
-                        <i class="fas fa-fw fa-clipboard"></i>
-                        <span>Aktivitas</span>
-                    </a>
-                </li>
-            @endif
+
+    {{-- Dashboard --}}
+    <li class="nav-item">
+        <a class="nav-link @yield('dashboardSiswa')" href="{{ url('/dashboardsiswa') }}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+    </li>
+
+    {{-- Aktivitas --}}
+    <li class="nav-item">
+        <a class="nav-link @yield('aktivitasSiswa')" href="{{ url('/aktivitassiswa') }}">
+            <i class="fas fa-fw fa-tasks"></i>
+            <span>Aktivitas</span>
+        </a>
+    </li>
+
+@endif
 
             @if (Auth::user()->role === 'teacher')
-                <li class="nav-item">
-                    <a class="nav-link @yield('dashboardGuru')" href="{{ url('/dashboardguru') }}">
-                        <i class="fas fa-fw fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @yield('dataSiswa')" href="{{ url('/datasiswa') }}">
-                        <i class="fas fa-fw fa-user-graduate"></i>
-                        <span>Data Siswa</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @yield('dataNilai')" href="{{ route('data.nilai') }}">
-                        <i class="fas fa-fw fa-chart-bar"></i>
-                        <span>Data Nilai</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @yield('dataKelas')" href="{{ url('/datakelas') }}">
-                        <i class="fas fa-fw fa-school"></i>
-                        <span>Data Kelas</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @yield('dataSubject')" href="{{ url('/datamatapelajaran') }}">
-                        <i class="fas fa-fw fa-book"></i>
-                        <span>Data Mata Pelajaran</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @yield('dataTopic')" href="{{  url('/datatopik') }}">
-                        <i class="fas fa-fw fa-tags"></i>
-                        <span>Data Topik</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @yield('dataSoal')" href="{{ url('/datasoal') }}">
-                        <i class="fas fa-fw fa-question-circle"></i>
-                        <span>Data Soal</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @yield('dataAktivitas')" href="{{  url('/dataaktivitas') }}">
-                        <i class="fas fa-fw fa-tasks"></i>
-                        <span>Data Evaluasi</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @yield('dataMatrix')" href="{{ route('activity.matrix.list') }}">
-                        <i class="fas fa-fw fa-table"></i>
-                        <span>Matriks Aktivitas</span>
-                    </a>
-                </li>
 
-            @endif
+    {{-- Dashboard --}}
+    <li class="nav-item">
+        <a class="nav-link @yield('dashboardGuru')" href="{{ url('/dashboardguru') }}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+    </li>
+
+    {{-- Kelas --}}
+    <li class="nav-item">
+        <a class="nav-link @yield('dataKelas')" href="{{ url('/datakelas') }}">
+            <i class="fas fa-fw fa-school"></i>
+            <span>Kelas</span>
+        </a>
+    </li>
+
+    {{-- Bank Soal --}}
+    <li class="nav-item">
+        <a class="nav-link @yield('dataSoal')" href="{{ url('/datasoal') }}">
+            <i class="fas fa-fw fa-question-circle"></i>
+            <span>Bank Soal</span>
+        </a>
+    </li>
+
+    {{-- Aktivitas --}}
+    <li class="nav-item">
+        <a class="nav-link @yield('dataAktivitas')" href="{{ url('/dataaktivitas') }}">
+            <i class="fas fa-fw fa-tasks"></i>
+            <span>Aktivitas</span>
+        </a>
+    </li>
+
+    {{-- Nilai --}}
+    <li class="nav-item">
+        <a class="nav-link @yield('dataNilai')" href="{{ route('data.nilai') }}">
+            <i class="fas fa-fw fa-chart-bar"></i>
+            <span>Nilai</span>
+        </a>
+    </li>
+
+@endif
 
             <hr class="sidebar-divider d-none d-md-block">
 

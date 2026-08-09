@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Activity extends Model
 {
@@ -11,16 +12,17 @@ class Activity extends Model
 
     protected $table = 'activities';
     protected $fillable = [
-        'title',
-        'status',
-        'type',
-        'deadline',
-        'id_topic',
-        'addaptive',
-        'durasi_pengerjaan',
-        'jumlah_soal',
-        'kkm'
-    ];
+    'title',
+    'status',
+    'type',
+    'deadline',
+    'id_topic',
+    'addaptive',
+    'durasi_pengerjaan',
+    'jumlah_soal',
+    'kkm',
+    'is_group_activity',
+];
 
     protected $casts = [
         'deadline' => 'datetime',
@@ -51,4 +53,11 @@ class Activity extends Model
     {
         return $this->hasMany(ActivityAnswer::class, 'id_activity');
     }
+    public function groups(): HasMany
+{
+    return $this->hasMany(
+        ActivityGroup::class,
+        'id_activity'
+    );
+}
 }
