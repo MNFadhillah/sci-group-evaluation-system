@@ -8,144 +8,119 @@
         border-radius: 16px;
         transition: all .25s ease;
         cursor: pointer;
+        background: #fff;
     }
 
     .stat-card:hover {
         transform: translateY(-6px);
-        box-shadow: 0 12px 30px rgba(0,0,0,.08);
+        box-shadow: 0 12px 30px rgba(0,0,0,.08) !important;
     }
 
     .stat-icon {
-        width: 56px;
-        height: 56px;
+        width: 50px;
+        height: 50px;
         border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.6rem;
+        font-size: 1.4rem;
         color: #fff;
+        flex-shrink: 0;
     }
 
     .quick-btn {
         border-radius: 14px;
-        padding: 1rem;
+        padding: 1.2rem;
         transition: all .2s ease;
         background: #f8f9fa;
+        border: 1px solid #e9ecef;
     }
 
     .quick-btn:hover {
         background: #eef2f7;
         transform: translateY(-3px);
+        border-color: #dee2e6;
     }
 </style>
 
 <div class="container py-4">
 
-    {{-- HERO --}}
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body text-center py-4">
-            <h2 class="fw-bold text-primary mb-1">
-                Selamat Datang, {{ Auth::user()->nama }} 👋
-            </h2>
-            <p class="text-muted mb-0">
-                Anda berada di <strong>Dashboard Guru</strong>. Kelola kelas, soal, dan aktivitas dengan mudah.
-            </p>
+    {{-- HERO SECTION --}}
+    <div class="card border-0 shadow-sm mb-4 rounded-4" style="background: linear-gradient(135deg, #4e73df 0%, #36b9cc 100%);">
+        <div class="card-body py-4 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3 text-white">
+            <div>
+                <h3 class="fw-bold mb-1">
+                    Selamat Datang, {{ Auth::user()->nama ?? Auth::user()->name }} 👋
+                </h3>
+                <p class="mb-0 opacity-75" style="font-size: 0.95rem;">
+                    Anda berada di <strong>Dashboard Guru</strong>. Pantau aktivitas belajar dan kelola kelas Anda dengan mudah.
+                </p>
+            </div>
+            <div class="d-none d-md-block text-end">
+                <div class="bg-white bg-opacity-25 px-3 py-2 rounded-3 fw-bold small">
+                    <i class="fas fa-calendar-alt me-2"></i> {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
+                </div>
+            </div>
         </div>
     </div>
 
-    {{-- STATISTIK --}}
-    <div class="row g-4 mb-4">
-
-        <div class="col-md-4 col-lg-3">
-            <a href="{{ route('dataSiswa') }}" class="text-decoration-none text-dark">
-                <div class="card stat-card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="stat-icon bg-primary">
-                            <i class="fas fa-user-graduate"></i>
-                        </div>
-                        <div>
-                            <div class="fw-bold">Data Siswa</div>
-                            <small class="text-muted">Kelola siswa</small>
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col-md-4 col-lg-3">
+    {{-- STATISTIK (Disesuaikan jadi 4 Menu Saja Sesuai Sidebar) --}}
+    <div class="row g-3 mb-4">
+        
+        <div class="col-6 col-lg-3">
             <a href="{{ route('kelasGuru') }}" class="text-decoration-none text-dark">
                 <div class="card stat-card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="stat-icon bg-success">
+                    <div class="card-body p-3 d-flex flex-column align-items-center text-center gap-2">
+                        <div class="stat-icon bg-success shadow-sm">
                             <i class="fas fa-school"></i>
                         </div>
                         <div>
-                            <div class="fw-bold">Data Kelas</div>
-                            <small class="text-muted">Manajemen kelas</small>
+                            <div class="fw-bold" style="font-size: 0.95rem;">Data Kelas</div>
                         </div>
                     </div>
                 </div>
             </a>
         </div>
 
-        <div class="col-md-4 col-lg-3">
-            <a href="{{ route('guru.dataSubject') }}" class="text-decoration-none text-dark">
-                <div class="card stat-card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="stat-icon bg-warning">
-                            <i class="fas fa-book"></i>
-                        </div>
-                        <div>
-                            <div class="fw-bold">Mata Pelajaran</div>
-                            <small class="text-muted">Subject & topik</small>
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col-md-4 col-lg-3">
+        <div class="col-6 col-lg-3">
             <a href="{{ route('tampilanSoal') }}" class="text-decoration-none text-dark">
                 <div class="card stat-card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="stat-icon bg-danger">
+                    <div class="card-body p-3 d-flex flex-column align-items-center text-center gap-2">
+                        <div class="stat-icon bg-danger shadow-sm">
                             <i class="fas fa-question-circle"></i>
                         </div>
                         <div>
-                            <div class="fw-bold">Bank Soal</div>
-                            <small class="text-muted">Kelola soal</small>
+                            <div class="fw-bold" style="font-size: 0.95rem;">Bank Soal</div>
                         </div>
                     </div>
                 </div>
             </a>
         </div>
 
-        <div class="col-md-4 col-lg-3">
+        <div class="col-6 col-lg-3">
             <a href="{{ route('guru.aktivitas.tampil') }}" class="text-decoration-none text-dark">
                 <div class="card stat-card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="stat-icon bg-info">
-                            <i class="fas fa-tasks"></i>
+                    <div class="card-body p-3 d-flex flex-column align-items-center text-center gap-2">
+                        <div class="stat-icon bg-info shadow-sm">
+                            <i class="fas fa-tasks text-white"></i>
                         </div>
                         <div>
-                            <div class="fw-bold">Aktivitas</div>
-                            <small class="text-muted">Ujian & tugas</small>
+                            <div class="fw-bold" style="font-size: 0.95rem;">Aktivitas</div>
                         </div>
                     </div>
                 </div>
             </a>
         </div>
 
-        <div class="col-md-4 col-lg-3">
+        <div class="col-6 col-lg-3">
             <a href="{{ route('data.nilai') }}" class="text-decoration-none text-dark">
                 <div class="card stat-card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="stat-icon bg-secondary">
+                    <div class="card-body p-3 d-flex flex-column align-items-center text-center gap-2">
+                        <div class="stat-icon bg-secondary shadow-sm">
                             <i class="fas fa-chart-bar"></i>
                         </div>
                         <div>
-                            <div class="fw-bold">Data Nilai</div>
-                            <small class="text-muted">Rekap nilai</small>
+                            <div class="fw-bold" style="font-size: 0.95rem;">Data Nilai</div>
                         </div>
                     </div>
                 </div>
@@ -154,9 +129,9 @@
 
     </div>
 
-    {{-- QUICK ACTION --}}
-    <div class="card border-0 shadow-sm">
-        <div class="card-body">
+    {{-- QUICK ACTION (SAMA PERSIS 100%) --}}
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
             <h5 class="fw-bold mb-3">
                 <i class="fas fa-bolt text-warning me-1"></i> Aksi Cepat
             </h5>
@@ -165,8 +140,8 @@
 
                 <div class="col-md-4">
                     <a href="{{ route('tambahSoal') }}" class="text-decoration-none text-dark">
-                        <div class="quick-btn shadow-sm h-100">
-                            <i class="bi bi-plus-circle text-primary fs-3 mb-2"></i>
+                        <div class="quick-btn shadow-sm h-100 text-center text-md-start">
+                            <i class="fas fa-plus-circle text-primary fs-3 mb-2 d-block"></i>
                             <div class="fw-semibold">Tambah Soal Manual</div>
                             <small class="text-muted">Buat soal sendiri</small>
                         </div>
@@ -175,8 +150,8 @@
 
                 <div class="col-md-4">
                     <a href="{{ route('generateSoal') }}" class="text-decoration-none text-dark">
-                        <div class="quick-btn shadow-sm h-100">
-                            <i class="bi bi-lightbulb text-success fs-3 mb-2"></i>
+                        <div class="quick-btn shadow-sm h-100 text-center text-md-start">
+                            <i class="fas fa-lightbulb text-success fs-3 mb-2 d-block"></i>
                             <div class="fw-semibold">Buat Soal Semi-Otomatis</div>
                             <small class="text-muted">Cepat & efisien</small>
                         </div>
@@ -185,8 +160,8 @@
 
                 <div class="col-md-4">
                     <a href="{{ route('guru.aktivitas.tampil') }}" class="text-decoration-none text-dark">
-                        <div class="quick-btn shadow-sm h-100">
-                            <i class="bi bi-journal-check text-info fs-3 mb-2"></i>
+                        <div class="quick-btn shadow-sm h-100 text-center text-md-start">
+                            <i class="fas fa-journal-whills text-info fs-3 mb-2 d-block"></i>
                             <div class="fw-semibold">Buat Aktivitas</div>
                             <small class="text-muted">Ujian / latihan</small>
                         </div>

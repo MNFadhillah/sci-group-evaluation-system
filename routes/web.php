@@ -11,13 +11,13 @@ use App\Http\Controllers\nilaicontroller;
 use App\Http\Controllers\registerController;
 use App\Http\Controllers\siswaController;
 use App\Http\Controllers\SoalController;
-use App\Http\Middleware\RoleMiddleware;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Guru\EvaluasiController;
 use App\Http\Controllers\ActivityGroupController;
 use App\Http\Controllers\ActivityGroupAnswerController;
 use App\Http\Controllers\ActivityGroupRatingController;
 
-
+use App\Http\Middleware\RoleMiddleware;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('landing');
@@ -28,15 +28,6 @@ Route::get('/', function () {
 Route::post('/activity/saveResult', [aktivitasController::class, 'saveResult'])->name('activity.saveResult');
 
 Route::middleware(['auth', RoleMiddleware::class . ':student'])->group(function () {
-    Route::get(
-    '/activity/{id}/group/rating',
-    [ActivityGroupRatingController::class, 'index']
-)->name('activity.group.rating');
-
-Route::post(
-    '/activity/{id}/group/rating',
-    [ActivityGroupRatingController::class, 'save']
-)->name('activity.group.rating.save');
 
     Route::get('/dashboardsiswa', [siswaController::class, 'dashboardSiswa'])
         ->name('dashboard.siswa');
@@ -45,11 +36,16 @@ Route::post(
         ->name('siswa.aktivitas');
 
     Route::get('/activity/{id}', [aktivitasController::class, 'show'])->name('activity.show');
-    Route::get('/activity/{id}/group', [aktivitasController::class, 'group'])->name('activity.group');
-    Route::get(
-    '/activity/{id}/group/answer',
-    [ActivityGroupAnswerController::class, 'show'])->name('activity.group.answer');
-    Route::post('/activity/{id}/group/answer',[ActivityGroupAnswerController::class, 'save'])->name('activity.group.answer.save');
+
+    Route::get('/activity/{id}/group/answer', [ActivityGroupAnswerController::class, 'show'])->name('activity.group.answer');
+    Route::post('/activity/{id}/group/answer', [ActivityGroupAnswerController::class, 'save'])->name('activity.group.answer.save');
+
+    Route::get('/activity/{id}/group/rating', [ActivityGroupRatingController::class, 'index'])
+        ->name('activity.group.rating');
+        
+    Route::post('/activity/{id}/group/rating', [ActivityGroupRatingController::class, 'save'])
+        ->name('activity.group.rating.save');
+
     Route::get('/activity/{id}/start', [aktivitasController::class, 'start']);
     Route::get('/activity/{id}/question', [aktivitasController::class, 'getQuestion']);
     Route::post('/activity/{id}/submit', [aktivitasController::class, 'submitAnswer']);
@@ -57,7 +53,6 @@ Route::post(
     Route::post('/badges/claim', [BadgeController::class, 'claim'])->name('badges.claim');
     Route::get('/badges/{id}/eligibility', [BadgeController::class, 'eligibility'])->name('badges.eligibility');
     Route::post('/student/gabung-kelas', [siswaController::class, 'gabungKelasSiswa'])->name('student.gabungKelas');
-
 });
 
 Route::middleware(['auth', RoleMiddleware::class . ':teacher'])->group(function () {
@@ -94,36 +89,6 @@ Route::middleware(['auth', RoleMiddleware::class . ':teacher'])->group(function 
     Route::post('/aktivitas/simpan', [guruController::class, 'simpanAktivitas'])->name('guru.aktivitas.simpan');
     Route::put('/aktivitas/ubah/{id}', [guruController::class, 'ubahAktivitas'])->name('guru.aktivitas.ubah');
     Route::delete('/aktivitas/hapus/{id}', [guruController::class, 'hapusAktivitas'])->name('guru.aktivitas.hapus');
-    // =============================
-// 👥 Manajemen Kelompok Aktivitas
-// =============================
-
-Route::get(
-    '/guru/aktivitas/{activity}/kelompok',
-    [ActivityGroupController::class, 'index']
-)->name('guru.activity.groups');
-
-Route::post(
-    '/guru/aktivitas/{activity}/kelompok',
-    [ActivityGroupController::class, 'store']
-)->name('guru.activity.groups.store');
-Route::post(
-    '/guru/aktivitas/{activity}/kelompok/random',
-    [ActivityGroupController::class, 'random']
-)->name('guru.activity.groups.random');
-Route::delete(
-    '/guru/aktivitas/{activity}/kelompok/{group}',
-    [ActivityGroupController::class, 'destroy']
-)->name('guru.activity.groups.destroy');
-Route::get(
-    '/guru/aktivitas/{activity}/kelompok/{group}/edit',
-    [ActivityGroupController::class, 'edit']
-)->name('guru.activity.groups.edit');
-
-Route::put(
-    '/guru/aktivitas/{activity}/kelompok/{group}',
-    [ActivityGroupController::class, 'updateMembers']
-)->name('guru.activity.groups.update');
     // =============================
     // 🟦 1. Halaman Atur Soal (GET)
     // =============================
@@ -169,6 +134,16 @@ Route::put(
 
     Route::get('/get-question/{id}', [aturAktivitasController::class, 'getQuestion']);
 
+    // Monitoring
+    Route::get(
+        '/guru/aktivitas/{activity}/monitoring',
+        [EvaluasiController::class, 'detailJawaban']
+    )->name('guru.monitoring');
+
+    Route::get('/guru/aktivitas/{activity}/kelompok/{group}/penilaian', [EvaluasiController::class, 'formPenilaian'])
+        ->name('guru.penilaian.form');
+    Route::post('/guru/aktivitas/{activity}/kelompok/{group}/penilaian', [EvaluasiController::class, 'simpanPenilaian'])
+        ->name('guru.penilaian.simpan');
 
     //manajemen soal
     Route::get('/datasoal', [guruController::class, 'tampilanSoal'])->name('tampilanSoal');
@@ -225,6 +200,26 @@ Route::put(
         [ActivityMatrixController::class, 'exportExcel']
     )->name('activity.matrix.export');
 
+    // =============================
+    // 👥 Manajemen Kelompok Aktivitas
+    // =============================
+    Route::get('/guru/aktivitas/{activity}/kelompok', [ActivityGroupController::class, 'index'])
+        ->name('guru.activity.groups');
+
+    Route::post('/guru/aktivitas/{activity}/kelompok', [ActivityGroupController::class, 'store'])
+        ->name('guru.activity.groups.store');
+
+    Route::post('/guru/aktivitas/{activity}/kelompok/random', [ActivityGroupController::class, 'random'])
+        ->name('guru.activity.groups.random');
+
+    Route::delete('/guru/aktivitas/{activity}/kelompok/{group}', [ActivityGroupController::class, 'destroy'])
+        ->name('guru.activity.groups.destroy');
+
+    Route::get('/guru/aktivitas/{activity}/kelompok/{group}/edit', [ActivityGroupController::class, 'edit'])
+        ->name('guru.activity.groups.edit');
+
+    Route::put('/guru/aktivitas/{activity}/kelompok/{group}', [ActivityGroupController::class, 'updateMembers'])
+        ->name('guru.activity.groups.update');
 });
 
 

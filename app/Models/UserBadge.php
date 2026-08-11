@@ -10,21 +10,21 @@ class UserBadge extends Model
     use HasFactory;
 
     protected $table = 'user_badge';
-    protected $fillable = ['id_student', 'id_badge','id_class'];
+    // Tambahkan id_activity di sini
+    protected $fillable = ['id_student', 'id_badge', 'id_class', 'id_activity'];
 
-    // (1) belongsTo User
     public function user()
     {
         return $this->belongsTo(User::class, 'id_student');
     }
 
-    // (2) belongsTo Badge
     public function badge()
     {
         return $this->belongsTo(Badge::class, 'id_badge');
     }
-     public function kelas()
+    
+    public function kelas()
     {
-        return $this->belongsTo(Classes::class, 'id_class'); // sesuaikan namespace / nama model
+        return $this->belongsTo(Classes::class, 'id_class');
     }
 }
