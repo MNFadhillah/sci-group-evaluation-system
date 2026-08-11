@@ -14,27 +14,35 @@ class siswaController extends Controller
     {
         $user = Auth::user();
 
-        // 🔹 Ambil semua badge siswa (jika ingin menampilkan banyak)
+        // =========================================================
+        // 🔹 Ambil semua badge siswa & Hitung jumlah perolehannya
+        // =========================================================
         $userBadges = DB::table('user_badge as ub')
             ->join('badge as b', 'ub.id_badge', '=', 'b.id')
+            ->leftJoin('activities as a', 'ub.id_activity', '=', 'a.id') // <-- JOIN KE AKTIVITAS
             ->where('ub.id_student', $user->id)
             ->select(
                 'b.id',
                 'b.name',
                 'b.description',
                 'b.path_icon',
-                'ub.id_class' // penting: scope klaim per kelas (nullable)
+                'ub.id_class',
+                DB::raw('COUNT(ub.id_badge) as jumlah_diperoleh'),
+                // Gabungkan nama aktivitas murni dari tabel activities
+                DB::raw('GROUP_CONCAT(COALESCE(a.title, "Aktivitas Telah Dihapus") SEPARATOR "||") as daftar_aktivitas')
             )
-            ->orderBy('ub.created_at', 'desc')
+            ->groupBy('ub.id_class', 'b.id', 'b.name', 'b.description', 'b.path_icon')
+            ->orderBy('jumlah_diperoleh', 'desc')
             ->get();
+
         $badgesByClass = [];
         foreach ($userBadges as $ub) {
             $key = is_null($ub->id_class) ? 'general' : 'class_' . $ub->id_class;
-            if (!isset($badgesByClass[$key]))
+            if (!isset($badgesByClass[$key])) {
                 $badgesByClass[$key] = [];
+            }
             $badgesByClass[$key][] = $ub;
         }
-
         // 🔹 Ambil data kelas siswa login
         $kelasList = DB::table('student_classes')
             ->join('classes', 'student_classes.id_class', '=', 'classes.id')
@@ -254,11 +262,11 @@ class siswaController extends Controller
             'token' => 'required|string'
         ]);
 
-       
+
         $token = trim($request->token);
 
         $kelas = Classes::whereRaw('LOWER(token) = ?', [strtolower($token)])->first();
-       
+
         if (!$kelas) {
             return redirect()
                 ->back()
@@ -280,10 +288,9 @@ class siswaController extends Controller
             'id_class' => $kelas->id,
         ]);
 
- 
+
         return redirect()
             ->back()
             ->with('swal_success', 'Berhasil bergabung ke kelas: ' . $kelas->name);
     }
-
 }

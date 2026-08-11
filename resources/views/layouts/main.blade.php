@@ -358,6 +358,9 @@
     <!-- jQuery (WAJIB SEBELUM DATATABLES) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
+    <!-- Tambahkan Library SweetAlert2 di sini -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     @stack('scripts')
 </body>
 

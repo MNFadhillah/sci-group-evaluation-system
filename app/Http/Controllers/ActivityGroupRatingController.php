@@ -66,10 +66,12 @@ class ActivityGroupRatingController extends Controller
     /**
      * Menyimpan penilaian anggota.
      */
+    /**
+     * Menyimpan penilaian anggota (Masal/Array)
+     */
     public function save(Request $request, $id)
     {
         $user = Auth::user();
-
         $activity = Activity::findOrFail($id);
 
         // Pastikan aktivitas kelompok
@@ -88,56 +90,47 @@ class ActivityGroupRatingController extends Controller
             abort(403, 'Anda belum terdaftar dalam kelompok aktivitas ini.');
         }
 
+        // 1. Validasi input array 'ratings' (0-100 poin)
         $request->validate([
-            'evaluated_id' => [
-                'required',
-                'integer',
-                'exists:users,id',
-            ],
-            'score' => [
-                'required',
-                'integer',
-                'min:1',
-                'max:5',
-            ],
-            'comment' => [
-                'nullable',
-                'string',
-                'max:1000',
-            ],
+            'ratings' => 'required|array',
+            'ratings.*.score' => 'required|numeric|min:0|max:100',
+            'ratings.*.comment' => 'nullable|string|max:1000',
+        ], [
+            'ratings.required' => 'Data penilaian tidak boleh kosong.',
+            'ratings.*.score.required' => 'Pastikan semua poin kontribusi telah diisi.',
+            'ratings.*.score.min' => 'Poin minimal adalah 0.',
+            'ratings.*.score.max' => 'Poin maksimal adalah 100.',
         ]);
 
-        // Jangan izinkan menilai diri sendiri
-        if ((int) $request->evaluated_id === (int) $user->id) {
-            abort(403, 'Anda tidak dapat menilai diri sendiri.');
+        // 2. Looping array dan simpan semua penilaian ke database
+        // (Aturan 'tidak boleh menilai diri sendiri' sudah DIHAPUS agar sesuai konsep SCI)
+        foreach ($request->ratings as $evaluatedId => $data) {
+
+            // Pastikan orang yang dinilai memang anggota kelompok yang sama
+            $isMember = $group->members()
+                ->where('id_user', $evaluatedId)
+                ->exists();
+
+            if ($isMember) {
+                // Simpan atau update penilaian
+                ActivityGroupRating::updateOrCreate(
+                    [
+                        'id_activity' => $activity->id,
+                        'id_group' => $group->id,
+                        'id_evaluator' => $user->id,
+                        'id_evaluated' => $evaluatedId,
+                    ],
+                    [
+                        'score' => $data['score'],
+                        'comment' => $data['comment'] ?? null,
+                    ]
+                );
+            }
         }
-
-        // Pastikan orang yang dinilai memang anggota kelompok yang sama
-        $isMember = $group->members()
-            ->where('id_user', $request->evaluated_id)
-            ->exists();
-
-        if (!$isMember) {
-            abort(403, 'Siswa yang dinilai bukan anggota kelompok Anda.');
-        }
-
-        // Simpan atau update penilaian
-        ActivityGroupRating::updateOrCreate(
-            [
-                'id_activity' => $activity->id,
-                'id_group' => $group->id,
-                'id_evaluator' => $user->id,
-                'id_evaluated' => $request->evaluated_id,
-            ],
-            [
-                'score' => $request->score,
-                'comment' => $request->comment,
-            ]
-        );
 
         return back()->with(
             'success',
-            'Penilaian berhasil disimpan.'
+            'Sip! Penilaian kinerja kelompok berhasil disimpan.'
         );
     }
 }

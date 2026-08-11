@@ -38,8 +38,8 @@ class nilaicontroller extends Controller
         // 2) ambil detail kelas
         // gunakan Eloquent jika ada model Classes, kalau belum ada gunakan DB
         $classes = null;
-        if (class_exists(\App\Models\Classes::class)) {
-            $classes = \App\Models\Classes::whereIn('id', $classIds)->get();
+        if (class_exists(Classes::class)) {
+            $classes = Classes::whereIn('id', $classIds)->get();
         } else {
             $classes = DB::table('classes')->whereIn('id', $classIds)->get();
         }
@@ -70,13 +70,13 @@ class nilaicontroller extends Controller
                         // load activities for each topic
                         $qTopic->with([
                             'activities' => function ($qAct) {
-                            // eager load activity results (if relation ada)
-                            $qAct->with([
-                                'activityResults' => function ($qAR) {
-                                $qAR->select('id', 'id_activity', 'id_user', 'nilai_akhir', 'result');
+                                // eager load activity results (if relation ada)
+                                $qAct->with([
+                                    'activityResults' => function ($qAR) {
+                                        $qAR->select('id', 'id_activity', 'id_user', 'nilai_akhir', 'result');
+                                    }
+                                ]);
                             }
-                            ]);
-                        }
                         ]);
                     }
                 ])
@@ -100,8 +100,8 @@ class nilaicontroller extends Controller
             ];
 
             // jika model Classes ada, cari nama
-            if (class_exists(\App\Models\Classes::class)) {
-                $classModel = \App\Models\Classes::find($classId);
+            if (class_exists(Classes::class)) {
+                $classModel = Classes::find($classId);
                 $classData['class_name'] = $classModel ? $classModel->name : ('Kelas ' . $classId);
             } else {
                 $classData['class_name'] = 'Kelas ' . $classId;
@@ -161,6 +161,7 @@ class nilaicontroller extends Controller
                         $activityItem = [
                             'id' => $activity->id,
                             'title' => $activity->title ?? ($activity->name ?? 'Aktivitas'),
+                            'is_group_activity' => $activity->is_group_activity,
                             'results' => $resultsByStudent,
                             'results_count' => count($resultsByStudent)
                         ];
@@ -215,7 +216,7 @@ class nilaicontroller extends Controller
 
         $students = User::whereIn('id', $studentIds)->get(['id', 'name']);
 
-        // ambil hasil activity untuk siswa-siswa ini (nilai_akhir preferred)
+        // ambil hasil activity untuk siswa-siswa ini
         $results = DB::table('activity_result')
             ->where('id_activity', $activity->id)
             ->whereIn('id_user', $studentIds)
@@ -223,66 +224,172 @@ class nilaicontroller extends Controller
             ->get()
             ->keyBy('id_user');
 
-        // gabungkan students + nilai (jika ada)
-        $studentRows = $students->map(function ($s) use ($results) {
+        // =========================================================================
+        // TAMBAHAN: Kalkulasi SCI & Nilai Kelompok secara Otomatis (On-the-fly)
+        // =========================================================================
+        $isGroupActivity = $activity->is_group_activity === 'yes';
+        $groupMembers = [];
+        $groupPrAvgs = [];
+        $userPrScores = [];
+
+        if ($isGroupActivity) {
+            $allGroupMembers = DB::table('activity_group_members')
+                ->join('activity_groups', 'activity_group_members.id_group', '=', 'activity_groups.id')
+                ->where('activity_groups.id_activity', $activity->id)
+                ->get();
+
+            // Kelompokkan per group untuk menghitung rata-rata peer review kelompok
+            $groupedMembers = collect($allGroupMembers)->groupBy('id_group');
+
+            foreach ($groupedMembers as $groupId => $members) {
+                $totalPr = 0;
+                foreach ($members as $m) {
+                    $avgRating = DB::table('activity_group_ratings')
+                        ->where('id_activity', $activity->id)
+                        ->where('id_group', $groupId)
+                        ->where('id_evaluated', $m->id_user)
+                        ->avg('score');
+
+                    // Jika belum ada nilai, asumsikan 100
+                    $pr = $avgRating !== null ? (float) $avgRating : 100;
+                    $userPrScores[$m->id_user] = $pr;
+                    $totalPr += $pr;
+                    $groupMembers[$m->id_user] = $groupId;
+                }
+                // Rata-rata PR Kelompok
+                $groupPrAvgs[$groupId] = count($members) > 0 ? ($totalPr / count($members)) : 100;
+            }
+        }
+
+        // =========================================================================
+        // TAMBAHAN: Tarik Data Badge Siswa KHUSUS UNTUK AKTIVITAS INI
+        // =========================================================================
+        $studentBadges = DB::table('user_badge')
+            ->join('badge', 'user_badge.id_badge', '=', 'badge.id')
+            ->whereIn('user_badge.id_student', $studentIds)
+            ->where('user_badge.id_activity', $activity->id) // Pastikan hanya badge di tugas ini
+            ->select('user_badge.id_student', 'badge.name', 'badge.id as badge_id')
+            ->get()
+            ->groupBy('id_student');
+
+        // =========================================================================
+        // Gabungkan students + Nilai Akhir + SCI + Nilai Kelompok + BADGE
+        // =========================================================================
+        // JANGAN LUPA: Tambahkan $studentBadges di dalam kurung "use" di bawah ini:
+        $studentRows = $students->map(function ($s) use ($results, $isGroupActivity, $groupMembers, $groupPrAvgs, $userPrScores, $studentBadges) {
             $res = $results->get($s->id);
-            $nilai = null;
+            $nilaiAkhir = null;
+
             if ($res) {
                 if (isset($res->nilai_akhir) && !is_null($res->nilai_akhir)) {
-                    $nilai = $res->nilai_akhir;
+                    $nilaiAkhir = $res->nilai_akhir;
                 } elseif (isset($res->result) && !is_null($res->result)) {
-                    $nilai = $res->result;
+                    $nilaiAkhir = $res->result;
                 }
             }
+
+            $sci = '-';
+            $nilaiKelompok = '-';
+
+            // Jika aktivitas kelompok dan nilainya sudah masuk
+            if ($isGroupActivity && $nilaiAkhir !== null) {
+                if (isset($groupMembers[$s->id])) {
+                    $groupId = $groupMembers[$s->id];
+                    $myPr = $userPrScores[$s->id];
+                    $groupAvg = $groupPrAvgs[$groupId];
+
+                    // Rumus SCI = PR Individu / PR Kelompok
+                    $calculatedSci = $groupAvg > 0 ? ($myPr / $groupAvg) : 1;
+                    $sci = round($calculatedSci, 2);
+
+                    // Rumus Mundur mencari Nilai Dasar Kelompok: Nilai Akhir / SCI
+                    if ($calculatedSci > 0) {
+                        $nilaiKelompok = round($nilaiAkhir / $calculatedSci);
+                        if ($nilaiKelompok > 100) $nilaiKelompok = 100; // Normalisasi batas
+                    }
+                }
+            } elseif (!$isGroupActivity) {
+                $nilaiKelompok = 'Indiv.';
+                $sci = 'N/A';
+            }
+
+            // =========================================================
+            // Logika Sisipkan Tampilan Badge HTML
+            // =========================================================
+            $myBadges = $studentBadges->get($s->id);
+            $badgeText = '-';
+
+            if ($myBadges && $myBadges->count() > 0) {
+                $badgeName = $myBadges->first()->name;
+                $bId = $myBadges->first()->badge_id;
+
+                // Styling warna badge sesuai kategorinya
+                if ($bId == 1) { // The Carry
+                    $badgeText = '<span class="badge bg-primary px-2 py-1 shadow-sm"><i class="fas fa-medal me-1"></i> ' . $badgeName . '</span>';
+                } elseif ($bId == 2) { // Solid Partner
+                    $badgeText = '<span class="badge bg-success px-2 py-1 shadow-sm"><i class="fas fa-handshake me-1"></i> ' . $badgeName . '</span>';
+                } elseif ($bId == 3) { // Need Help
+                    $badgeText = '<span class="badge bg-danger px-2 py-1 shadow-sm"><i class="fas fa-life-ring me-1"></i> ' . $badgeName . '</span>';
+                } else {
+                    $badgeText = '<span class="badge bg-info text-dark px-2 py-1 shadow-sm">' . $badgeName . '</span>';
+                }
+            }
+
             return [
                 'id' => $s->id,
                 'name' => $s->name,
-                'nilai' => $nilai
+                'nilai' => $nilaiAkhir,
+                'sci' => $sci,
+                'nilai_kelompok' => $nilaiKelompok,
+                'badge' => $badgeText // <--- Variabel badge dimasukkan ke array
             ];
         });
 
-        // Jika user meminta export .xlsx
+        // Bagian Export Excel
         if ($request->query('export') === 'xlsx') {
-            // Buat spreadsheet
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
 
-            // Header
             $sheet->setCellValue('A1', 'No');
             $sheet->setCellValue('B1', 'Nama Siswa');
-            $sheet->setCellValue('C1', 'Nilai Akhir');
+            $sheet->setCellValue('C1', 'Nilai Kelompok');
+            $sheet->setCellValue('D1', 'SCI');
+            $sheet->setCellValue('E1', 'Nilai Akhir');
+            $sheet->setCellValue('F1', 'Badge'); // Tambahan kolom excel
 
-            // Isi baris
             $row = 2;
             foreach ($studentRows as $index => $stu) {
                 $sheet->setCellValue('A' . $row, $index + 1);
                 $sheet->setCellValueExplicit('B' . $row, $stu['name'], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-                // tulis nilai sebagai angka atau teks tergantung is_numeric
+
+                $sheet->setCellValue('C' . $row, $stu['nilai_kelompok'] ?? '-');
+                $sheet->setCellValue('D' . $row, $stu['sci'] ?? '-');
+
                 if (is_numeric($stu['nilai'])) {
-                    $sheet->setCellValue('C' . $row, (float) $stu['nilai']);
+                    $sheet->setCellValue('E' . $row, (float) $stu['nilai']);
                 } else {
-                    $sheet->setCellValueExplicit('C' . $row, $stu['nilai'] ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                    $sheet->setCellValueExplicit('E' . $row, $stu['nilai'] ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
                 }
+
+                // Bersihkan tag HTML agar di excel hanya tampil teks namanya saja
+                $cleanBadgeText = strip_tags($stu['badge']);
+                $sheet->setCellValue('F' . $row, $cleanBadgeText);
+
                 $row++;
             }
 
-            // Auto-size kolom (A..C)
-            foreach (range('A', 'C') as $col) {
+            foreach (range('A', 'F') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 
-            // Penamaan file
             $safeActivityTitle = preg_replace('/[^A-Za-z0-9\-]/', '_', substr($activity->title ?? 'activity', 0, 30));
             $filename = "nilai_{$safeActivityTitle}_{$activity->id}_" . date('Ymd_His') . ".xlsx";
 
             $writer = new Xlsx($spreadsheet);
-
             $response = new StreamedResponse(function () use ($writer) {
-                // menulis langsung ke output
                 $writer->save('php://output');
             });
 
-            // Headers download
             $disposition = $response->headers->makeDisposition(
                 ResponseHeaderBag::DISPOSITION_ATTACHMENT,
                 $filename
@@ -294,7 +401,6 @@ class nilaicontroller extends Controller
             return $response;
         }
 
-        // Jika tidak export, tampilkan view seperti biasa
         return view('guru.detailnilaisiswa', [
             'activity' => $activity,
             'class_id' => $classId,
@@ -344,7 +450,7 @@ class nilaicontroller extends Controller
                     }
                 }
             }
-          
+
             // unique activities by id (hindari duplikat)
             $activities = $activities->unique('id')->values();
 
