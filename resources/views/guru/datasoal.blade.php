@@ -108,7 +108,7 @@
                             @endphp
                             <tr data-question-id="{{ $item->id }}" data-topic-title="{{ $topicTitle }}"
                                 data-id_topic="{{ $item->id_topic ?? '' }}">
-                                <td class="fw-bold"></td>
+                                <td class="fw-bold">{{ $loop->iteration }}</td>
                                 <td>{{ $item->type }}</td>
                                 <td class="text-start">
                                     {!! nl2br(e($item->question->text ?? ($item->question['text'] ?? '-'))) !!}
@@ -496,31 +496,25 @@
                         responsive: true,
                         autoWidth: false,
                         pageLength: 10,
+
                         order: [
                             [1, 'asc']
-                        ], // sorting berdasarkan kolom Tipe
-                        columnDefs: [{
-                                targets: 0, // kolom No
-                                orderable: false,
-                                searchable: false,
-                                className: 'text-center fw-bold'
-                            },
-                            {
-                                targets: 5, // kolom Aksi
-                                orderable: false,
-                                searchable: false
-                            }
                         ],
-                        drawCallback: function() {
-                            var api = this.api();
-                            var startIndex = api.page.info().start;
 
-                            api.column(0, {
-                                page: 'current'
-                            }).nodes().each(function(cell, i) {
-                                cell.innerHTML = startIndex + i + 1;
-                            });
-                        }
+                        columnDefs: [{
+        targets: 0,
+        orderable: false,
+        searchable: false,
+        className: 'text-center fw-bold'
+    },
+    {
+        targets: 5,
+        orderable: false,
+        searchable: false
+    }
+],
+
+
                     });
 
 
@@ -600,15 +594,6 @@
 
                     // update numbering & total saat table di-redraw (draw event)
                     dt.on('draw.dt', function() {
-                        // numbering sudah di-handle oleh render kolom, tapi tetap aman
-                        dt.column(0, {
-                            search: 'applied',
-                            order: 'applied'
-                        }).nodes().each(function(cell, i) {
-                            cell.innerHTML = i + 1;
-                        });
-
-                        // update total setiap kali draw (filter berubah / paging / search)
                         updateTotalLabel();
                     });
                     // View soal modal
