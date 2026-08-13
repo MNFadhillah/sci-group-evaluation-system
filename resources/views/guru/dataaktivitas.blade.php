@@ -236,54 +236,62 @@
                                                 </span>
                                             @endif
                                         </td>
-                                        
 
 
-                                <td class="align-middle text-center">
-                                    <div class="action-group" role="group" aria-label="Aksi aktivitas">
-                                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                            data-bs-target="#modalEdit{{ $r->id }}" title="Edit"
-                                            aria-label="Edit">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
 
-                                        <button type="button" class="btn btn-success btn-sm btn-create-package"
-                                            data-url="{{ route('activity.package.create', $r->id) }}"
-                                            title="Buat Paket Soal">
-                                            <i class="bi bi-archive"></i>
-                                        </button>
+                                        <td class="align-middle text-center">
+                                            <div class="action-group" role="group" aria-label="Aksi aktivitas">
+                                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                                    data-bs-target="#modalEdit{{ $r->id }}" title="Edit"
+                                                    aria-label="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+
+                                                {{-- Paket Soal hanya untuk aktivitas individu --}}
+                                                @if ($r->is_group_activity !== 'yes')
+                                                    <button type="button"
+                                                        class="btn btn-success btn-sm btn-create-package"
+                                                        data-url="{{ route('activity.package.create', $r->id) }}"
+                                                        title="Buat Paket Soal">
+                                                        <i class="bi bi-archive"></i>
+                                                    </button>
+                                                @endif
+
+                                                {{-- Atur Soal untuk individu dan kelompok --}}
+                                                <a href="{{ url('/guru/aktivitas/' . $r->id . '/atur-soal?topic=' . $r->topic_id) }}"
+                                                    class="btn btn-warning btn-sm" title="Atur Soal"
+                                                    aria-label="Atur Soal">
+                                                    <i class="bi bi-gear"></i>
+                                                </a>
 
 
-                                        <a href="{{ url('/guru/aktivitas/' . $r->id . '/atur-soal?topic=' . $r->topic_id) }}"
-                                            class="btn btn-warning btn-sm" title="Atur Soal" aria-label="Atur Soal">
-                                            <i class="bi bi-gear"></i>
-                                        </a>
-                                        @if ($r->is_group_activity === 'yes')
-                                            <a href="{{ route('guru.activity.groups', $r->id) }}"
-                                                class="btn btn-primary btn-sm" title="Kelola Kelompok"
-                                                aria-label="Kelola Kelompok">
-                                                <i class="bi bi-people-fill"></i>
-                                            </a>
-                                        @endif
 
-                                        <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal"
-                                            data-bs-target="#lihatSoal{{ $r->id }}" title="Lihat Soal"
-                                            aria-label="Lihat Soal">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        <form action="{{ route('guru.aktivitas.hapus', $r->id) }}" method="POST"
-                                            class="d-inline delete-form">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" class="btn btn-danger btn-sm btn-delete"
-                                                title="Hapus" aria-label="Hapus">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
+                                                @if ($r->is_group_activity === 'yes')
+                                                    <a href="{{ route('guru.activity.groups', $r->id) }}"
+                                                        class="btn btn-primary btn-sm" title="Kelola Kelompok"
+                                                        aria-label="Kelola Kelompok">
+                                                        <i class="bi bi-people-fill"></i>
+                                                    </a>
+                                                @endif
 
-                                    </div>
-                                </td>
-                                </tr>
+                                                <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal"
+                                                    data-bs-target="#lihatSoal{{ $r->id }}" title="Lihat Soal"
+                                                    aria-label="Lihat Soal">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <form action="{{ route('guru.aktivitas.hapus', $r->id) }}" method="POST"
+                                                    class="d-inline delete-form">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                                        title="Hapus" aria-label="Hapus">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+
+                                            </div>
+                                        </td>
+                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>
@@ -363,14 +371,16 @@
                                 <i class="bi bi-pencil"></i> Edit
                             </button>
 
-                            <button type="button" class="btn btn-success btn-sm btn-create-package"
-                                data-url="{{ route('activity.package.create', $r->id) }}">
-                                <i class="bi bi-archive"></i> Paket
-                            </button>
+                            @if ($r->is_group_activity !== 'yes')
+                                <button type="button" class="btn btn-success btn-sm btn-create-package"
+                                    data-url="{{ route('activity.package.create', $r->id) }}">
+                                    <i class="bi bi-archive"></i> Paket
+                                </button>
+                            @endif
 
                             <a href="{{ url('/guru/aktivitas/' . $r->id . '/atur-soal?topic=' . $r->topic_id) }}"
-                                class="btn btn-warning btn-sm">
-                                <i class="bi bi-gear"></i> Soal
+                                class="btn btn-warning btn-sm" title="Atur Soal" aria-label="Atur Soal">
+                                <i class="bi bi-gear"></i> Atur Soal
                             </a>
                             @if ($r->is_group_activity === 'yes')
                                 <a href="{{ route('guru.activity.groups', $r->id) }}" class="btn btn-primary btn-sm">
@@ -404,7 +414,6 @@
 
         {{-- ================= GLOBAL MODALS ================= --}}
         @foreach ($rows as $r)
-
             {{-- MODAL EDIT --}}
             <div class="modal fade" id="modalEdit{{ $r->id }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
@@ -799,7 +808,6 @@
                     </div>
                 </div>
             </div>
-
         @endforeach
         {{-- ================= END GLOBAL MODALS ================= --}}
 

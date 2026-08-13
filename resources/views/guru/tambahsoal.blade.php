@@ -23,12 +23,10 @@
 
 
                             {{-- Info kelas --}}
-                            @if($kelasGuru->count())
+                            @if ($kelasGuru->count())
                                 <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
-                                    @foreach($kelasGuru as $k)
-
+                                    @foreach ($kelasGuru as $k)
                                         <span class="text-muted"> Nama Kelas : {{ $k->name }}</span>
-
                                     @endforeach
                                 </div>
                             @else
@@ -55,6 +53,7 @@
                                 <option value="">-- Pilih Tipe --</option>
                                 <option value="MultipleChoice">Pilihan Ganda</option>
                                 <option value="ShortAnswer">Isian Singkat</option>
+                                <option value="Essay">Essay / Uraian</option>
                             </select>
                         </div>
 
@@ -74,8 +73,8 @@
                             <label class="form-label fw-semibold">Topik (opsional)</label>
                             <select name="id_topic" class="form-select" id="id_topic">
                                 <option value="">-- Pilih Topik --</option>
-                                @if(isset($topics) && $topics->count())
-                                    @foreach($topics as $t)
+                                @if (isset($topics) && $topics->count())
+                                    @foreach ($topics as $t)
                                         <option value="{{ $t->id }}">{{ $t->title }}</option>
                                     @endforeach
                                 @endif
@@ -112,12 +111,13 @@
                             </h5>
 
                             <div class="row">
-                                @foreach(['a', 'b', 'c', 'd', 'e'] as $i => $opt)
+                                @foreach (['a', 'b', 'c', 'd', 'e'] as $i => $opt)
                                     <div class="col-md-4 mb-3">
                                         <div class="card shadow-sm border-0 h-100">
                                             <div class="card-body">
                                                 <label class="fw-semibold mb-2">Opsi {{ strtoupper($opt) }}</label>
-                                                <input type="text" name="option_text[]" class="form-control option-text mb-2"
+                                                <input type="text" name="option_text[]"
+                                                    class="form-control option-text mb-2"
                                                     placeholder="Teks opsi {{ strtoupper($opt) }}">
 
                                                 <div class="row g-2">
@@ -142,7 +142,7 @@
                                             <label class="form-label fw-semibold">Jawaban Benar</label>
                                             <select name="mc_answer" id="mc_answer" class="form-select">
                                                 <option value="">-- Pilih Jawaban --</option>
-                                                @foreach(['a', 'b', 'c', 'd', 'e'] as $opt)
+                                                @foreach (['a', 'b', 'c', 'd', 'e'] as $opt)
                                                     <option value="{{ $opt }}">{{ strtoupper($opt) }}</option>
                                                 @endforeach
                                             </select>
@@ -166,6 +166,21 @@
                         <button type="button" id="tambahJawaban" class="btn btn-outline-secondary btn-sm mt-2">
                             <i class="bi bi-plus-circle"></i> Tambah Jawaban
                         </button>
+                    </div>
+                    {{-- Essay / Uraian --}}
+                    <div id="opsiEssay" style="display:none; margin-top:1rem;">
+                        <hr>
+
+                        <h5 class="fw-bold text-secondary mb-3">
+                            <i class="bi bi-file-text me-2"></i>
+                            Jawaban Essay / Uraian
+                        </h5>
+
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Soal essay/uraian tidak memerlukan kunci jawaban.
+                            Jawaban akan diberikan oleh siswa saat mengerjakan aktivitas.
+                        </div>
                     </div>
 
                     <div class="text-end mt-4">
@@ -211,8 +226,18 @@
                     <ul>
                         <li><strong>Tipe Soal</strong> menentukan bentuk soal:
                             <ul>
-                                <li><b>Pilihan Ganda</b>: memiliki opsi A–E dan satu jawaban benar</li>
-                                <li><b>Isian Singkat</b>: memiliki satu atau lebih jawaban benar</li>
+                                <li>
+                                    <b>Pilihan Ganda</b>: memiliki opsi A–E dan satu jawaban benar
+                                </li>
+
+                                <li>
+                                    <b>Isian Singkat</b>: memiliki satu atau lebih jawaban benar
+                                </li>
+
+                                <li>
+                                    <b>Essay / Uraian</b>: siswa memberikan jawaban dalam bentuk uraian
+                                    dan tidak memerlukan kunci jawaban pada saat pembuatan soal
+                                </li>
                             </ul>
                         </li>
                         <li><strong>Tingkat Kesulitan</strong> digunakan untuk pengelompokan dan sistem adaptive.</li>
@@ -308,6 +333,7 @@
             const tipeSoal = document.getElementById('tipeSoal');
             const opsiPG = document.getElementById('opsiPilihanGanda');
             const opsiSA = document.getElementById('opsiIsianSingkat');
+            const opsiEssay = document.getElementById('opsiEssay');
             const tambahJawaban = document.getElementById('tambahJawaban');
             const jawabanContainer = document.getElementById('jawabanContainer');
             const questionImageInput = document.getElementById('questionImageInput');
@@ -316,13 +342,14 @@
             const submitBtn = document.getElementById('submitBtn');
 
             // toggle tampil area sesuai tipe soal
-            tipeSoal.addEventListener('change', function () {
+            tipeSoal.addEventListener('change', function() {
                 opsiPG.style.display = this.value === 'MultipleChoice' ? 'block' : 'none';
                 opsiSA.style.display = this.value === 'ShortAnswer' ? 'block' : 'none';
+                opsiEssay.style.display = this.value === 'Essay' ? 'block' : 'none';
             });
 
             // tambah field jawaban singkat
-            tambahJawaban.addEventListener('click', function () {
+            tambahJawaban.addEventListener('click', function() {
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.name = 'sa_answer[]';
@@ -333,12 +360,13 @@
             });
 
             // preview gambar soal
-            questionImageInput?.addEventListener('change', function (e) {
+            questionImageInput?.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = function (event) {
-                        previewQuestionImage.innerHTML = `<img src="${event.target.result}" alt="Preview Gambar Soal" class="img-fluid rounded shadow-sm" style="max-height: 200px;">`;
+                    reader.onload = function(event) {
+                        previewQuestionImage.innerHTML =
+                            `<img src="${event.target.result}" alt="Preview Gambar Soal" class="img-fluid rounded shadow-sm" style="max-height: 200px;">`;
                     };
                     reader.readAsDataURL(file);
                 } else {
@@ -347,7 +375,7 @@
             });
 
             // tampilkan SweetAlert jika server mengirim flash 'success'
-            @if(session('success'))
+            @if (session('success'))
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil',
@@ -360,7 +388,7 @@
             @endif
 
             // VALIDASI SEBELUM SUBMIT
-            form.addEventListener('submit', function (e) {
+            form.addEventListener('submit', function(e) {
                 // disable tombol submit sementara
                 submitBtn.disabled = true;
 
@@ -375,7 +403,10 @@
                         confirmButtonColor: '#f87171'
                     }).then(() => {
                         if (focusEl) {
-                            focusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            focusEl.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
                             focusEl.focus();
                         }
                     });
@@ -405,7 +436,8 @@
 
                     const mcAnswer = document.getElementById('mc_answer').value;
                     if (!mcAnswer) {
-                        return fail('Silakan pilih jawaban benar untuk soal pilihan ganda.', document.getElementById('mc_answer'));
+                        return fail('Silakan pilih jawaban benar untuk soal pilihan ganda.', document
+                            .getElementById('mc_answer'));
                     }
                 } else if (tipe === 'ShortAnswer') {
                     // setidaknya satu jawaban singkat tidak boleh kosong
@@ -413,7 +445,8 @@
                     const anyFilled = saInputs.some(i => (i.value || '').trim() !== '');
                     if (!anyFilled) {
                         // fokus ke pertama
-                        return fail('Masukkan minimal satu jawaban untuk isian singkat.', saInputs[0] || document.getElementById('question_text'));
+                        return fail('Masukkan minimal satu jawaban untuk isian singkat.', saInputs[0] ||
+                            document.getElementById('question_text'));
                     }
                 }
 
