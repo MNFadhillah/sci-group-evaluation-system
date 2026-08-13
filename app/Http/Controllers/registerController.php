@@ -21,25 +21,27 @@ class registerController extends Controller
     {
         try {
             $validated = $request->validate(
-                [
-                    'name' => ['required', 'string', 'max:255'],
-                    'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
-                    'password' => ['required', 'min:6'],
-                    'role' => ['required', Rule::in(['student', 'teacher', 'murid', 'guru'])],
-                    'kodeKelas' => ['nullable', 'string', 'max:50'],
-                    'type_id_other' => ['nullable', Rule::in(['NISN', 'NIM', 'NIP', 'NIDN', 'NUPTK', 'id_lainnya'])],
-                    'id_other' => ['nullable', 'string', 'max:255'],
-                ],
-
-                [
-                    // 🔴 CUSTOM MESSAGE
-                    'email.unique' => 'Email sudah terdaftar. Silakan gunakan email lain.',
-                    'email.required' => 'Email wajib diisi.',
-                    'email.email' => 'Format email tidak valid.',
-                ]
-
-
-            );
+    [
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
+        'password' => ['required', 'min:6'],
+        'role' => ['required', Rule::in(['student', 'teacher', 'murid', 'guru'])],
+        'kodeKelas' => [
+            Rule::requiredIf(fn () => in_array(strtolower($request->input('role')), ['student', 'murid'])),
+            'nullable',
+            'string',
+            'max:50',
+        ],
+        'type_id_other' => ['nullable', Rule::in(['NISN', 'NIM', 'NIP', 'NIDN', 'NUPTK', 'id_lainnya'])],
+        'id_other' => ['nullable', 'string', 'max:255'],
+    ],
+    [
+        'email.unique' => 'Email sudah terdaftar. Silakan gunakan email lain.',
+        'email.required' => 'Email wajib diisi.',
+        'email.email' => 'Format email tidak valid.',
+        'kodeKelas.required' => 'Kode kelas wajib diisi.',
+    ]
+);
 
 
             $roleMap = [
