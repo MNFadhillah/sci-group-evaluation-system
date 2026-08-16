@@ -22,11 +22,23 @@ class Activity extends Model
     'jumlah_soal',
     'kkm',
     'is_group_activity',
+
+    // Mode evaluasi
+    'evaluation_mode',
+
+    // Konfigurasi Mode 2
+    'mode2_question_types',
+    'mode2_random_questions',
+    'mode2_random_order',
+    'mode2_question_source',
 ];
 
-    protected $casts = [
-        'deadline' => 'datetime',
-    ];
+protected $casts = [
+    'deadline' => 'datetime',
+    'mode2_question_types' => 'array',
+    'mode2_random_questions' => 'boolean',
+    'mode2_random_order' => 'boolean',
+];
     public function topic()
     {
         return $this->belongsTo(Topic::class, 'id_topic');

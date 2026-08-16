@@ -617,49 +617,119 @@ class guruController extends Controller
     /**
      * Menyimpan aktivitas baru.
      */
-    public function simpanAktivitas(Request $request)
-    {
-        $request->validate([
-            'title' => ['required', 'string', 'min:3', 'max:255'],
+   public function simpanAktivitas(Request $request)
+{
+    $request->validate([
+        // =========================
+        // DATA UTAMA
+        // =========================
+        'title' => ['required', 'string', 'min:3', 'max:255'],
 
-            // deadline wajib & harus setelah sekarang
-            'deadline' => ['required', 'date', 'after:now'],
+        'deadline' => ['required', 'date', 'after:now'],
 
-            'id_topic' => ['required', 'exists:topics,id'],
+        'id_topic' => ['required', 'exists:topics,id'],
 
-            // wajib yes / no
-            'addaptive' => ['required', 'in:yes,no'],
+        'addaptive' => ['required', 'in:yes,no'],
 
-            // durasi wajib
-            'durasi_pengerjaan' => ['required', 'integer', 'min:1'],
+        'durasi_pengerjaan' => ['required', 'integer', 'min:1'],
 
-            // kkm wajib
-            'kkm' => ['required', 'integer', 'min:0', 'max:100'],
-            'is_group_activity' => ['required', 'in:yes,no'],
-        ], [
-            // 🔴 Pesan error custom (opsional tapi direkomendasikan)
-            'title.required' => 'Judul aktivitas wajib diisi.',
-            'deadline.required' => 'Deadline wajib diisi.',
-            'deadline.after' => 'Deadline harus lebih dari waktu sekarang.',
-            'id_topic.required' => 'Topik wajib dipilih.',
-            'durasi_pengerjaan.required' => 'Durasi pengerjaan wajib diisi.',
-            'kkm.required' => 'KKM wajib diisi.',
-        ]);
+        'kkm' => ['required', 'integer', 'min:0', 'max:100'],
 
-        Activity::create([
-            'title' => $request->title,
-            'deadline' => $request->deadline,
-            'id_topic' => $request->id_topic,
-            'addaptive' => $request->addaptive,
-            'durasi_pengerjaan' => $request->durasi_pengerjaan,
-            'kkm' => $request->kkm,
-            'is_group_activity' => $request->is_group_activity,
-        ]);
+        'is_group_activity' => ['required', 'in:yes,no'],
 
-        return redirect()
-            ->route('guru.aktivitas.tampil')
-            ->with('success', 'Aktivitas berhasil ditambahkan.');
-    }
+        // =========================
+        // MODE EVALUASI
+        // =========================
+        'evaluation_mode' => ['required', 'in:mode1,mode2'],
+
+        // =========================
+        // MODE 2
+        // =========================
+        'jumlah_soal' => ['nullable', 'integer', 'min:1', 'max:100'],
+
+        'mode2_question_types' => ['nullable', 'array'],
+
+        'mode2_question_types.*' => [
+            'in:MultipleChoice,ShortAnswer'
+        ],
+
+        'mode2_random_questions' => ['nullable', 'boolean'],
+
+        'mode2_random_order' => ['nullable', 'boolean'],
+
+        'mode2_question_source' => ['nullable', 'string', 'max:255'],
+
+    ], [
+        'title.required' => 'Judul aktivitas wajib diisi.',
+
+        'deadline.required' => 'Deadline wajib diisi.',
+
+        'deadline.after' => 'Deadline harus lebih dari waktu sekarang.',
+
+        'id_topic.required' => 'Topik wajib dipilih.',
+
+        'durasi_pengerjaan.required' => 'Durasi pengerjaan wajib diisi.',
+
+        'kkm.required' => 'KKM wajib diisi.',
+
+        'evaluation_mode.required' => 'Mode evaluasi wajib dipilih.',
+    ]);
+
+
+    Activity::create([
+        // =========================
+        // DATA UTAMA
+        // =========================
+        'title' => $request->title,
+
+        'deadline' => $request->deadline,
+
+        'id_topic' => $request->id_topic,
+
+        'addaptive' => $request->addaptive,
+
+        'durasi_pengerjaan' => $request->durasi_pengerjaan,
+
+        'kkm' => $request->kkm,
+
+        'is_group_activity' => $request->is_group_activity,
+
+
+        // =========================
+        // MODE EVALUASI
+        // =========================
+        'evaluation_mode' => $request->evaluation_mode,
+
+
+        // =========================
+        // MODE 2
+        // =========================
+        'jumlah_soal' => $request->evaluation_mode === 'mode2'
+            ? ($request->jumlah_soal ?? 10)
+            : null,
+
+        'mode2_question_types' => $request->evaluation_mode === 'mode2'
+            ? ($request->mode2_question_types ?? [])
+            : null,
+
+        'mode2_random_questions' => $request->evaluation_mode === 'mode2'
+            ? $request->boolean('mode2_random_questions')
+            : true,
+
+        'mode2_random_order' => $request->evaluation_mode === 'mode2'
+            ? $request->boolean('mode2_random_order')
+            : true,
+
+        'mode2_question_source' => $request->evaluation_mode === 'mode2'
+            ? ($request->mode2_question_source ?? 'bank')
+            : null,
+    ]);
+
+
+    return redirect()
+        ->route('guru.aktivitas.tampil')
+        ->with('success', 'Aktivitas berhasil ditambahkan.');
+}
 
 
 
@@ -667,28 +737,46 @@ class guruController extends Controller
      * Mengubah data aktivitas.
      */
     public function ubahAktivitas(Request $request, $id)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'deadline' => 'nullable|date',
-            'addaptive' => 'required|in:yes,no',
-            'durasi_pengerjaan' => 'nullable|integer|min:1',
-            'kkm' => 'required|integer|min:0|max:100'
-        ]);
+{
+    $request->validate([
+        'title' => ['required', 'string', 'max:255'],
 
-        $aktivitas = Activity::findOrFail($id);
+        'deadline' => ['nullable', 'date'],
 
-        $aktivitas->update([
-            'title' => $request->title,
-            'deadline' => $request->deadline,
-            'addaptive' => $request->addaptive,
-            'kkm' => $request->kkm,
-            'durasi_pengerjaan' => $request->durasi_pengerjaan ?? null,
-        ]);
+        'id_topic' => ['required', 'exists:topics,id'],
 
-        return redirect()->route('guru.aktivitas.tampil')
-            ->with('success', 'Aktivitas berhasil diperbarui.');
-    }
+        'addaptive' => ['required', 'in:yes,no'],
+
+        'durasi_pengerjaan' => ['nullable', 'integer', 'min:1'],
+
+        'kkm' => ['required', 'integer', 'min:0', 'max:100'],
+
+        'is_group_activity' => ['required', 'in:yes,no'],
+    ]);
+
+    $aktivitas = Activity::findOrFail($id);
+
+    $aktivitas->update([
+        'title' => $request->title,
+
+        'deadline' => $request->deadline,
+
+        // INI YANG SEBELUMNYA HILANG
+        'id_topic' => $request->id_topic,
+
+        'addaptive' => $request->addaptive,
+
+        'kkm' => $request->kkm,
+
+        'durasi_pengerjaan' => $request->durasi_pengerjaan ?? null,
+
+        'is_group_activity' => $request->is_group_activity,
+    ]);
+
+    return redirect()
+        ->route('guru.aktivitas.tampil')
+        ->with('success', 'Aktivitas berhasil diperbarui.');
+}
 
     /**
      * Menghapus aktivitas.
