@@ -108,6 +108,185 @@
                                         </div>
                                     @enderror
                                 </div>
+                                {{-- MODE EVALUASI --}}
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">
+                                        Mode Evaluasi
+                                    </label>
+
+                                    <div class="border rounded p-3 bg-light">
+
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="evaluation_mode"
+                                                id="evaluation_mode_1" value="mode1" checked>
+
+                                            <label class="form-check-label" for="evaluation_mode_1">
+                                                <strong>Mode 1</strong>
+                                                <div class="text-muted small">
+                                                    Menggunakan sistem pengerjaan aktivitas seperti biasa.
+                                                </div>
+                                            </label>
+                                        </div>
+
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="evaluation_mode"
+                                                id="evaluation_mode_2" value="mode2">
+
+                                            <label class="form-check-label" for="evaluation_mode_2">
+                                                <strong>Mode 2</strong>
+                                                <div class="text-muted small">
+                                                    Setiap siswa mendapatkan paket soal yang dapat berbeda.
+                                                </div>
+                                            </label>
+                                        </div>
+
+                                    </div>
+
+                                    @error('evaluation_mode')
+                                        <div class="text-danger small">
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
+                                </div>
+                                {{-- KONFIGURASI MODE 2 --}}
+                                <div class="col-12 d-none" id="mode2Config">
+
+                                    <div class="card border-primary shadow-sm">
+
+                                        <div class="card-header bg-primary text-white fw-semibold">
+                                            <i class="bi bi-sliders me-2"></i>
+                                            Konfigurasi Mode 2
+                                        </div>
+
+                                        <div class="card-body">
+
+                                            <div class="row g-3">
+
+                                                {{-- Jumlah soal --}}
+                                                <div class="col-md-4">
+
+                                                    <label class="form-label fw-semibold">
+                                                        Jumlah Soal
+                                                    </label>
+
+                                                    <input type="number" name="jumlah_soal" id="jumlah_soal"
+                                                        class="form-control" value="10" min="1"
+                                                        max="100">
+
+                                                    <small class="text-muted">
+                                                        Jumlah soal yang diberikan kepada setiap siswa.
+                                                    </small>
+
+                                                </div>
+
+
+                                                {{-- Jenis soal --}}
+                                                <div class="col-md-8">
+
+                                                    <label class="form-label fw-semibold">
+                                                        Jenis Soal
+                                                    </label>
+
+                                                    <div class="d-flex gap-4 mt-2">
+
+                                                        <div class="form-check">
+
+                                                            <input class="form-check-input" type="checkbox"
+                                                                name="mode2_question_types[]" value="MultipleChoice"
+                                                                id="mode2_mc" checked>
+
+                                                            <label class="form-check-label" for="mode2_mc">
+                                                                Pilihan Ganda
+                                                            </label>
+
+                                                        </div>
+
+
+                                                        <div class="form-check">
+
+                                                            <input class="form-check-input" type="checkbox"
+                                                                name="mode2_question_types[]" value="ShortAnswer"
+                                                                id="mode2_sa" checked>
+
+                                                            <label class="form-check-label" for="mode2_sa">
+                                                                Isian Singkat
+                                                            </label>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                {{-- Acak soal --}}
+                                                <div class="col-md-4">
+
+                                                    <label class="form-label fw-semibold">
+                                                        Pengacakan Soal
+                                                    </label>
+
+                                                    <div class="form-check">
+
+                                                        <input class="form-check-input" type="checkbox"
+                                                            name="mode2_random_questions" value="1"
+                                                            id="mode2_random_questions" checked>
+
+                                                        <label class="form-check-label" for="mode2_random_questions">
+                                                            Acak soal
+                                                        </label>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                {{-- Acak urutan --}}
+                                                <div class="col-md-4">
+
+                                                    <label class="form-label fw-semibold">
+                                                        Urutan Soal
+                                                    </label>
+
+                                                    <div class="form-check">
+
+                                                        <input class="form-check-input" type="checkbox"
+                                                            name="mode2_random_order" value="1"
+                                                            id="mode2_random_order" checked>
+
+                                                        <label class="form-check-label" for="mode2_random_order">
+                                                            Acak urutan soal
+                                                        </label>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                {{-- Sumber soal --}}
+                                                <div class="col-md-4">
+
+                                                    <label class="form-label fw-semibold">
+                                                        Sumber Soal
+                                                    </label>
+
+                                                    <select name="mode2_question_source" class="form-select">
+
+                                                        <option value="bank" selected>
+                                                            Bank Soal
+                                                        </option>
+
+                                                    </select>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
                                 {{-- Jenis Pengerjaan --}}
                                 <div class="col-12">
                                     <label class="form-label fw-semibold">
@@ -479,8 +658,10 @@
                                     <select name="id_topic" class="form-select" required>
                                         @foreach (\App\Models\Topic::with('subject')->where('created_by', Auth::id())->get() as $topicOpt)
                                             <option value="{{ $topicOpt->id }}"
-                                                {{ $topicOpt->id === $r->topic_id ? 'selected' : '' }}>
-                                                {{ $topicOpt->title }} ({{ $topicOpt->subject->name ?? 'Tanpa Subject' }})
+                                                {{ $topicOpt->id == $r->topic_id ? 'selected' : '' }}>
+
+                                                {{ $topicOpt->title }}
+                                                ({{ $topicOpt->subject->name ?? 'Tanpa Subject' }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -1100,6 +1281,35 @@
                         });
                     });
                 });
+
+            });
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+
+                const mode1 = document.getElementById('evaluation_mode_1');
+                const mode2 = document.getElementById('evaluation_mode_2');
+
+                const mode2Config = document.getElementById('mode2Config');
+
+                function updateEvaluationMode() {
+
+                    if (mode2.checked) {
+
+                        mode2Config.classList.remove('d-none');
+
+                    } else {
+
+                        mode2Config.classList.add('d-none');
+
+                    }
+
+                }
+
+                mode1.addEventListener('change', updateEvaluationMode);
+                mode2.addEventListener('change', updateEvaluationMode);
+
+                updateEvaluationMode();
 
             });
         </script>
