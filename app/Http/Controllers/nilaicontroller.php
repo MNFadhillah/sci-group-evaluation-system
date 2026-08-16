@@ -225,125 +225,140 @@ class nilaicontroller extends Controller
             ->keyBy('id_user');
 
         // =========================================================================
-        // TAMBAHAN: Kalkulasi SCI & Nilai Kelompok secara Otomatis (On-the-fly)
+        // MODE 2 YANG BENAR: Nilai Murni, Rata-rata Kelompok, SCI & Badge
         // =========================================================================
         $isGroupActivity = $activity->is_group_activity === 'yes';
-        $groupMembers = [];
-        $groupPrAvgs = [];
-        $userPrScores = [];
+        $groupBaseScores = []; // Untuk simpan Nilai Asli Kelompok (Rata-rata)
+        $memberSCIs = [];      // Untuk simpan angka SCI
 
         if ($isGroupActivity) {
+            $activityGroups = DB::table('activity_groups')
+                ->where('id_activity', $activity->id)
+                ->get()
+                ->keyBy('id');
+
             $allGroupMembers = DB::table('activity_group_members')
-                ->join('activity_groups', 'activity_group_members.id_group', '=', 'activity_groups.id')
-                ->where('activity_groups.id_activity', $activity->id)
+                ->whereIn('id_group', $activityGroups->keys())
                 ->get();
 
-            // Kelompokkan per group untuk menghitung rata-rata peer review kelompok
             $groupedMembers = collect($allGroupMembers)->groupBy('id_group');
 
             foreach ($groupedMembers as $groupId => $members) {
+                $sumNilaiIndividu = 0;
+                $validMembers = 0;
                 $totalPr = 0;
-                foreach ($members as $m) {
-                    $avgRating = DB::table('activity_group_ratings')
-                        ->where('id_activity', $activity->id)
-                        ->where('id_group', $groupId)
-                        ->where('id_evaluated', $m->id_user)
-                        ->avg('score');
 
-                    // Jika belum ada nilai, asumsikan 100
+                // 1. Kumpulkan data untuk Nilai Kelompok & SCI
+                foreach ($members as $m) {
+                    // Ambil Nilai Individu (Skor Murni Pengerjaan)
+                    $res = $results->get($m->id_user);
+                    if ($res) {
+                        $nilaiIndividu = isset($res->nilai_akhir) ? $res->nilai_akhir : (isset($res->result) ? $res->result : 0);
+                        $sumNilaiIndividu += $nilaiIndividu;
+                        $validMembers++;
+                    }
+
+                    // Ambil Rating Teman untuk SCI
+                    $avgRating = DB::table('activity_group_ratings')
+                        ->where('id_activity', $activity->id)->where('id_group', $groupId)->where('id_evaluated', $m->id_user)
+                        ->avg('score');
                     $pr = $avgRating !== null ? (float) $avgRating : 100;
                     $userPrScores[$m->id_user] = $pr;
                     $totalPr += $pr;
-                    $groupMembers[$m->id_user] = $groupId;
+                    $groupMembersList[$m->id_user] = $groupId;
                 }
-                // Rata-rata PR Kelompok
-                $groupPrAvgs[$groupId] = count($members) > 0 ? ($totalPr / count($members)) : 100;
+
+                // 2. Tentukan Nilai Asli Kelompok (Rata-rata Nilai Individu)
+                $groupBaseScores[$groupId] = $validMembers > 0 ? round($sumNilaiIndividu / $validMembers, 2) : 0;
+
+                // 3. Kalkulasi Angka SCI
+                $groupPrAvg = count($members) > 0 ? ($totalPr / count($members)) : 100;
+                foreach ($members as $m) {
+                    $myPr = $userPrScores[$m->id_user];
+                    $memberSCIs[$m->id_user] = $groupPrAvg > 0 ? round($myPr / $groupPrAvg, 2) : 1.00;
+                }
             }
         }
 
-        // =========================================================================
-        // TAMBAHAN: Tarik Data Badge Siswa KHUSUS UNTUK AKTIVITAS INI
-        // =========================================================================
+        // Ambil Data Badge yang sudah dikunci di database
         $studentBadges = DB::table('user_badge')
             ->join('badge', 'user_badge.id_badge', '=', 'badge.id')
             ->whereIn('user_badge.id_student', $studentIds)
-            ->where('user_badge.id_activity', $activity->id) // Pastikan hanya badge di tugas ini
+            ->where('user_badge.id_activity', $activity->id)
             ->select('user_badge.id_student', 'badge.name', 'badge.id as badge_id')
             ->get()
-            ->groupBy('id_student');
+            ->keyBy('id_student');
 
         // =========================================================================
-        // Gabungkan students + Nilai Akhir + SCI + Nilai Kelompok + BADGE
+        // SUSUN DATA UNTUK TABEL & LEADERBOARD
         // =========================================================================
-        // JANGAN LUPA: Tambahkan $studentBadges di dalam kurung "use" di bawah ini:
-        $studentRows = $students->map(function ($s) use ($results, $isGroupActivity, $groupMembers, $groupPrAvgs, $userPrScores, $studentBadges) {
+        $studentRows = $students->map(function ($s) use ($results, $isGroupActivity, $groupMembersList, $groupBaseScores, $memberSCIs, $studentBadges) {
             $res = $results->get($s->id);
-            $nilaiAkhir = null;
+            $nilaiIndividu = null;
 
             if ($res) {
-                if (isset($res->nilai_akhir) && !is_null($res->nilai_akhir)) {
-                    $nilaiAkhir = $res->nilai_akhir;
-                } elseif (isset($res->result) && !is_null($res->result)) {
-                    $nilaiAkhir = $res->result;
-                }
+                $nilaiIndividu = isset($res->nilai_akhir) ? $res->nilai_akhir : (isset($res->result) ? $res->result : 0);
             }
 
             $sci = '-';
             $nilaiKelompok = '-';
+            $badgeText = '<span class="no-data">-</span>';
 
-            // Jika aktivitas kelompok dan nilainya sudah masuk
-            if ($isGroupActivity && $nilaiAkhir !== null) {
-                if (isset($groupMembers[$s->id])) {
-                    $groupId = $groupMembers[$s->id];
-                    $myPr = $userPrScores[$s->id];
-                    $groupAvg = $groupPrAvgs[$groupId];
+            if ($isGroupActivity && isset($groupMembersList[$s->id])) {
+                $groupId = $groupMembersList[$s->id];
+                $nilaiKelompok = number_format($groupBaseScores[$groupId] ?? 0, 2, '.', '');
+                $sci = $memberSCIs[$s->id] ?? 1.00;
 
-                    // Rumus SCI = PR Individu / PR Kelompok
-                    $calculatedSci = $groupAvg > 0 ? ($myPr / $groupAvg) : 1;
-                    $sci = round($calculatedSci, 2);
-
-                    // Rumus Mundur mencari Nilai Dasar Kelompok: Nilai Akhir / SCI
-                    if ($calculatedSci > 0) {
-                        $nilaiKelompok = round($nilaiAkhir / $calculatedSci);
-                        if ($nilaiKelompok > 100) $nilaiKelompok = 100; // Normalisasi batas
-                    }
+                // Format Tampilan Badge
+                $myBadge = $studentBadges->get($s->id);
+                if ($myBadge) {
+                    $bId = $myBadge->badge_id;
+                    $bName = $myBadge->name;
+                    if ($bId == 1) $badgeText = '<span class="badge bg-primary shadow-sm"><i class="fas fa-medal me-1"></i> ' . $bName . '</span>';
+                    elseif ($bId == 2) $badgeText = '<span class="badge bg-success shadow-sm"><i class="fas fa-handshake me-1"></i> ' . $bName . '</span>';
+                    elseif ($bId == 3) $badgeText = '<span class="badge bg-danger shadow-sm"><i class="fas fa-life-ring me-1"></i> ' . $bName . '</span>';
                 }
             } elseif (!$isGroupActivity) {
                 $nilaiKelompok = 'Indiv.';
                 $sci = 'N/A';
             }
 
-            // =========================================================
-            // Logika Sisipkan Tampilan Badge HTML
-            // =========================================================
-            $myBadges = $studentBadges->get($s->id);
-            $badgeText = '-';
-
-            if ($myBadges && $myBadges->count() > 0) {
-                $badgeName = $myBadges->first()->name;
-                $bId = $myBadges->first()->badge_id;
-
-                // Styling warna badge sesuai kategorinya
-                if ($bId == 1) { // The Carry
-                    $badgeText = '<span class="badge bg-primary px-2 py-1 shadow-sm"><i class="fas fa-medal me-1"></i> ' . $badgeName . '</span>';
-                } elseif ($bId == 2) { // Solid Partner
-                    $badgeText = '<span class="badge bg-success px-2 py-1 shadow-sm"><i class="fas fa-handshake me-1"></i> ' . $badgeName . '</span>';
-                } elseif ($bId == 3) { // Need Help
-                    $badgeText = '<span class="badge bg-danger px-2 py-1 shadow-sm"><i class="fas fa-life-ring me-1"></i> ' . $badgeName . '</span>';
-                } else {
-                    $badgeText = '<span class="badge bg-info text-dark px-2 py-1 shadow-sm">' . $badgeName . '</span>';
-                }
-            }
-
             return [
                 'id' => $s->id,
                 'name' => $s->name,
-                'nilai' => $nilaiAkhir,
+                'nilai' => $nilaiIndividu !== null ? number_format((float)$nilaiIndividu, 2, '.', '') : null, // MURNI NILAI INDIVIDU
                 'sci' => $sci,
-                'nilai_kelompok' => $nilaiKelompok,
-                'badge' => $badgeText // <--- Variabel badge dimasukkan ke array
+                'nilai_kelompok' => $nilaiKelompok, // MURNI RATA-RATA
+                'badge' => $badgeText,
+                'id_group' => $groupMembersList[$s->id] ?? null
             ];
         });
+
+        // =========================================================================
+        // SUSUN LEADERBOARD (Diurutkan dari Nilai Kelompok Tertinggi)
+        // =========================================================================
+        $leaderboard = collect();
+        if ($isGroupActivity) {
+            $groupedStudents = collect($studentRows)->groupBy('id_group');
+            foreach ($groupedStudents as $groupId => $members) {
+                if (!$groupId) continue;
+                $groupName = isset($activityGroups) && $activityGroups->has($groupId) ? $activityGroups->get($groupId)->name : 'Kelompok ' . $groupId;
+                $leaderboard->push([
+                    'id_group' => $groupId,
+                    'name' => $groupName,
+                    'nilai_kelompok' => (float) ($groupBaseScores[$groupId] ?? 0),
+                    'members' => $members->sortByDesc('sci')->values() // Urut dari The Carry ke bawah
+                ]);
+            }
+            $leaderboard = $leaderboard->sortByDesc('nilai_kelompok')->values();
+        }
+
+        return view('guru.detailnilaisiswa', [
+            'activity' => $activity,
+            'class_id' => $classId,
+            'students' => $studentRows,
+            'leaderboard' => $leaderboard
+        ]);
 
         // Bagian Export Excel
         if ($request->query('export') === 'xlsx') {
@@ -401,10 +416,51 @@ class nilaicontroller extends Controller
             return $response;
         }
 
+        // =========================================================================
+        // TAMBAHAN: Buat Leaderboard & Data Rekap Kelompok (Mode 2)
+        // =========================================================================
+        $leaderboard = collect();
+
+        if ($isGroupActivity) {
+            // Ambil nama-nama kelompok dari database
+            $activityGroups = DB::table('activity_groups')
+                ->where('id_activity', $activity->id)
+                ->get()
+                ->keyBy('id');
+
+            // Kelompokkan data siswa ($studentRows) berdasarkan id_group
+            $groupedStudents = collect($studentRows)->groupBy(function ($item) use ($groupMembers) {
+                return $groupMembers[$item['id']] ?? 'Tanpa Kelompok';
+            });
+
+            foreach ($groupedStudents as $groupId => $members) {
+                if ($groupId === 'Tanpa Kelompok') continue;
+
+                $groupName = $activityGroups->has($groupId) ? $activityGroups->get($groupId)->name : 'Kelompok ' . $groupId;
+
+                // Ambil nilai kelompok dari member pertama (karena semua member di kelompok yang sama nilai kelompoknya sama)
+                $nilaiKel = $members->first()['nilai_kelompok'];
+
+                $leaderboard->push([
+                    'id_group' => $groupId,
+                    'name' => $groupName,
+                    'nilai_kelompok' => (float) $nilaiKel,
+                    'members' => $members->sortByDesc('sci')->values() // Urutkan anggota dari SCI tertinggi (The Carry di atas)
+                ]);
+            }
+
+            // Urutkan kelompok dari nilai tertinggi ke terendah (Peringkat 1 di paling atas)
+            $leaderboard = $leaderboard->sortByDesc('nilai_kelompok')->values();
+        }
+
+        // =========================================================================
+        // VIEW RETURN
+        // =========================================================================
         return view('guru.detailnilaisiswa', [
             'activity' => $activity,
             'class_id' => $classId,
-            'students' => $studentRows
+            'students' => $studentRows,
+            'leaderboard' => $leaderboard // <--- Tambahkan variabel ini ke view
         ]);
     }
 
@@ -736,5 +792,44 @@ class nilaicontroller extends Controller
         $response->headers->set('Content-Disposition', $disposition);
 
         return $response;
+    }
+
+    /**
+     * Tampilkan detail jawaban individu untuk dikoreksi guru (Khusus Mode 2)
+     */
+    public function koreksiJawabanSiswa($idActivity, $idUser)
+    {
+        $activity = Activity::findOrFail($idActivity);
+        $student = User::findOrFail($idUser);
+
+        // Ambil data hasil kuis siswa (jumlah benar, durasi, dll)
+        $result = ActivityResult::where('id_activity', $idActivity)
+            ->where('id_user', $idUser)
+            ->first();
+
+        // Ambil daftar jawaban yang disubmit siswa, di-join dengan tabel soal
+        $answers = DB::table('activity_answers')
+            ->join('question', 'activity_answers.id_question', '=', 'question.id')
+            ->where('activity_answers.id_activity', $idActivity)
+            ->where('activity_answers.id_user', $idUser)
+            ->select(
+                'activity_answers.id as answer_id',
+                'activity_answers.user_answer',
+                'activity_answers.is_correct',
+                'question.id as question_id',
+                'question.type',
+                'question.difficulty',
+                'question.question as soal_teks',
+                'question.MC_answer',
+                'question.SA_answer'
+            )
+            ->get();
+
+        return view('guru.koreksi-mode2', [
+            'activity' => $activity,
+            'student' => $student,
+            'result' => $result,
+            'answers' => $answers
+        ]);
     }
 }

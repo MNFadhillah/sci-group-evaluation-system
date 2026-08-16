@@ -45,14 +45,31 @@
         <div class="card-body">
             <div class="row align-items-center">
                 <div class="col-md-8">
-                    <div class="d-flex align-items-center gap-2 mb-3">
-                        <h4 class="mb-1">{{ $activity->title ?? 'Aktivitas' }}</h4>
-                        <button type="button"
-                            class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
-                            style="width:32px;height:32px" data-bs-toggle="modal" data-bs-target="#modalInfoDetailNilai"
-                            title="Informasi Detail Nilai">
-                            <i class="bi bi-info-lg"></i>
-                        </button>
+                    <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                        <h3 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                            {{ $activity->title }}
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width:28px;height:28px" data-bs-toggle="modal" data-bs-target="#modalInfoActivity" title="Informasi Evaluasi">
+                                <i class="fas fa-info fa-sm"></i>
+                            </button>
+                        </h3>
+
+                        <!-- PENANDA MODE UNTUK GURU -->
+                        @if($activity->is_group_activity === 'yes')
+                        {{-- Asumsi sementara: Jika jumlah soal lebih dari 1, kita anggap Mode 2 --}}
+                        @if(($activity->jumlah_soal ?? 0) > 1)
+                        <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm">
+                            <i class="fas fa-layer-group me-1"></i> Mode 2: Kuis Kelompok (SCI)
+                        </span>
+                        @else
+                        <span class="badge bg-info text-dark px-3 py-2 rounded-pill shadow-sm">
+                            <i class="fas fa-users me-1"></i> Mode 1: Proyek/Uraian Kelompok
+                        </span>
+                        @endif
+                        @else
+                        <span class="badge bg-secondary px-3 py-2 rounded-pill shadow-sm">
+                            <i class="fas fa-user me-1"></i> Mode Individu Biasa
+                        </span>
+                        @endif
                     </div>
 
                     <div class="text-muted mb-2">
@@ -124,6 +141,10 @@
     {{-- tabel nilai --}}
     <div class="card">
         <div class="card-body">
+            @if($activity->is_group_activity === 'yes')
+            <h5 class="fw-bold text-dark mb-3"><i class="fas fa-list text-secondary me-2"></i> Rincian Keseluruhan Siswa</h5>
+            @endif
+            <!-- ========================================== -->
             @if(empty($students) || count($students) === 0)
             <div class="alert alert-info mb-0">Tidak ada siswa di kelas ini.</div>
             @else

@@ -185,4 +185,57 @@
     </div>
 </div>
 
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('input[type="number"][name^="ratings"]');
+        const btnSubmit = document.querySelector('button[type="submit"]');
+        
+        // Buat elemen visual untuk total secara dinamis
+        const infoText = document.querySelector('.card-body p.text-muted.small.mb-3');
+        const totalDisplay = document.createElement('div');
+        totalDisplay.className = 'alert alert-info fw-bold mb-3 py-2 fs-5 transition-all';
+        totalDisplay.innerHTML = 'Total Poin Terbagi: <span id="currentTotal">0</span> / 100';
+        infoText.parentNode.insertBefore(totalDisplay, infoText.nextSibling);
+        
+        const spanTotal = document.getElementById('currentTotal');
+
+        function calculateTotal() {
+            let total = 0;
+            inputs.forEach(input => {
+                total += parseInt(input.value || 0);
+            });
+            
+            spanTotal.innerText = total;
+            
+            if(total === 100) {
+                totalDisplay.classList.remove('alert-danger', 'alert-info');
+                totalDisplay.classList.add('alert-success');
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Simpan Penilaian';
+            } else {
+                totalDisplay.classList.remove('alert-success', 'alert-info');
+                totalDisplay.classList.add('alert-danger');
+                btnSubmit.disabled = true;
+                
+                let selisih = 100 - total;
+                if(selisih > 0) {
+                    btnSubmit.innerHTML = `<i class="fas fa-lock me-2"></i> Kurang ${selisih} Poin Lagi`;
+                } else {
+                    btnSubmit.innerHTML = `<i class="fas fa-lock me-2"></i> Kelebihan ${Math.abs(selisih)} Poin`;
+                }
+            }
+        }
+
+        // Pasang event listener ke setiap inputan
+        inputs.forEach(input => {
+            input.addEventListener('input', calculateTotal);
+        });
+        
+        // Jalankan saat pertama kali halaman dimuat (untuk membaca old input)
+        calculateTotal();
+    });
+</script>
+@endpush
+
 @endsection

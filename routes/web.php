@@ -42,7 +42,7 @@ Route::middleware(['auth', RoleMiddleware::class . ':student'])->group(function 
 
     Route::get('/activity/{id}/group/rating', [ActivityGroupRatingController::class, 'index'])
         ->name('activity.group.rating');
-        
+
     Route::post('/activity/{id}/group/rating', [ActivityGroupRatingController::class, 'save'])
         ->name('activity.group.rating.save');
 
@@ -144,6 +144,9 @@ Route::middleware(['auth', RoleMiddleware::class . ':teacher'])->group(function 
         ->name('guru.penilaian.form');
     Route::post('/guru/aktivitas/{activity}/kelompok/{group}/penilaian', [EvaluasiController::class, 'simpanPenilaian'])
         ->name('guru.penilaian.simpan');
+
+    // Koreksi Jawaban Siswa (Mode 2)
+    Route::get('/guru/aktivitas/{idActivity}/koreksi/{idUser}', [App\Http\Controllers\nilaicontroller::class, 'koreksiJawabanSiswa'])->name('guru.koreksi.mode2');
 
     //manajemen soal
     Route::get('/datasoal', [guruController::class, 'tampilanSoal'])->name('tampilanSoal');

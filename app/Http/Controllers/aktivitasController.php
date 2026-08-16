@@ -161,34 +161,34 @@ class aktivitasController extends Controller
         ]);
     }
     public function group($id)
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    $activity = Activity::findOrFail($id);
+        $activity = Activity::findOrFail($id);
 
-    // Pastikan aktivitas memang aktivitas kelompok
-    if ($activity->is_group_activity !== 'yes') {
-        abort(403, 'Aktivitas ini bukan aktivitas kelompok.');
+        // Pastikan aktivitas memang aktivitas kelompok
+        if ($activity->is_group_activity !== 'yes') {
+            abort(403, 'Aktivitas ini bukan aktivitas kelompok.');
+        }
+
+        // Cari kelompok siswa pada aktivitas ini
+        $group = ActivityGroup::with('members.user')
+            ->where('id_activity', $activity->id)
+            ->whereHas('members', function ($query) use ($user) {
+                $query->where('id_user', $user->id);
+            })
+            ->first();
+
+        // Jika siswa belum masuk kelompok
+        if (!$group) {
+            abort(403, 'Kamu belum terdaftar dalam kelompok aktivitas ini.');
+        }
+
+        return view('siswa.activity-group', [
+            'activity' => $activity,
+            'group' => $group,
+        ]);
     }
-
-    // Cari kelompok siswa pada aktivitas ini
-    $group = ActivityGroup::with('members.user')
-        ->where('id_activity', $activity->id)
-        ->whereHas('members', function ($query) use ($user) {
-            $query->where('id_user', $user->id);
-        })
-        ->first();
-
-    // Jika siswa belum masuk kelompok
-    if (!$group) {
-        abort(403, 'Kamu belum terdaftar dalam kelompok aktivitas ini.');
-    }
-
-    return view('siswa.activity-group', [
-        'activity' => $activity,
-        'group' => $group,
-    ]);
-}
 
     public function start($id)
     {
@@ -244,7 +244,7 @@ class aktivitasController extends Controller
         session(["activity.$id.start_time" => $startTime->toDateTimeString()]);
 
         // 7️⃣ simpan / update result
-        $userId = auth()->id();
+        $userId = Auth::id();
         ActivityResult::updateOrCreate(
             ['id_activity' => $id, 'id_user' => $userId],
             [
@@ -299,7 +299,6 @@ class aktivitasController extends Controller
                     ->inRandomOrder()
                     ->first();
             }
-
         } else {
             // Mode normal urut biasa
             $question = $activity->questions()
@@ -331,7 +330,6 @@ class aktivitasController extends Controller
             'question' => json_decode($question->question),
             'options' => json_decode($question->MC_option),
         ]);
-
     }
 
     public function submitAnswer(Request $req, $id)
@@ -339,58 +337,55 @@ class aktivitasController extends Controller
         $question = Question::findOrFail($req->question_id);
         $adaptive = Activity::find($id)->addaptive === 'yes';
 
-        // =======================
-        // CEK KEBENARAN JAWABAN
-        // =======================
+        // ====================================================
+        // TAHAP 1: KOREKSI JAWABAN (PG & ISIAN) + NORMALISASI
+        // ====================================================
         $correct = false;
 
         if ($question->type === 'MultipleChoice') {
-            $correct = strtolower($req->user_answer) === strtolower($question->MC_answer);
-
+            // Pilihan ganda: Langsung cocokkan huruf (case-insensitive)
+            $correct = strtolower(trim($req->user_answer)) === strtolower(trim($question->MC_answer));
         } else if ($question->type === 'ShortAnswer') {
-
             $answersRaw = $question->SA_answer;
-
-            if (is_string($answersRaw)) {
-                $answers = json_decode($answersRaw, true);
-            } else {
-                $answers = $answersRaw;
-            }
-
+            $answers = is_string($answersRaw) ? json_decode($answersRaw, true) : $answersRaw;
             if (!is_array($answers)) {
                 $answers = [];
             }
 
-            $user = strtolower(trim($req->user_answer));
-            $correct = in_array($user, array_map('strtolower', $answers));
+            // NORMALISASI JAWABAN SISWA: 
+            // 1. Huruf kecil semua 
+            // 2. Hapus spasi di awal/akhir 
+            // 3. Ubah spasi ganda di tengah menjadi 1 spasi saja (preg_replace)
+            $userAnsNormalized = preg_replace('/\s+/', ' ', strtolower(trim($req->user_answer)));
+
+            // Lakukan normalisasi yang sama persis pada array Kunci Jawaban
+            $keysNormalized = array_map(function ($ans) {
+                return preg_replace('/\s+/', ' ', strtolower(trim($ans)));
+            }, $answers);
+
+            // Cek apakah jawaban siswa ada di dalam daftar kunci
+            $correct = in_array($userAnsNormalized, $keysNormalized);
         }
 
-        // =======================
-        // SIMPAN JAWABAN SISWA
-        // =======================
+        // ====================================================
+        // SIMPAN JAWABAN SISWA KE DATABASE (Update / Insert)
+        // ====================================================
         ActivityAnswer::updateOrCreate(
             [
                 'id_activity' => $id,
-                'id_user' => auth()->id(),
+                'id_user' => Auth::id(),
                 'id_question' => $question->id,
             ],
             [
                 'user_answer' => $req->user_answer,
-                'is_correct' => $correct,
+                'is_correct' => $correct, // Menyimpan 1 (True) atau 0 (False)
             ]
         );
 
-        // Hitung total jawaban benar (akumulasi)
-        $prevCorrect = session("activity.$id.total_correct", 0);
-        if ($correct) {
-            session(["activity.$id.total_correct" => $prevCorrect + 1]);
-        }
-
-        // =======================
-        // LOGIKA ADAPTIVE (LEVEL)
-        // =======================
+        // ====================================================
+        // LOGIKA ADAPTIVE (LEVEL & POIN) - Tetap Pakai Logika Lama
+        // ====================================================
         if ($adaptive) {
-
             $correctStreak = session("activity.$id.streak_correct", 0);
             $wrongStreak = session("activity.$id.streak_wrong", 0);
             $level = session("activity.$id.difficulty", "sedang");
@@ -404,20 +399,12 @@ class aktivitasController extends Controller
             }
 
             if ($level === 'sedang') {
-                if ($correctStreak >= 2) {
-                    $level = 'sulit';
-                }
-                if ($wrongStreak >= 2) {
-                    $level = 'mudah';
-                }
+                if ($correctStreak >= 2) $level = 'sulit';
+                if ($wrongStreak >= 2) $level = 'mudah';
             } else if ($level === 'mudah') {
-                if ($correctStreak >= 2) {
-                    $level = 'sedang';
-                }
+                if ($correctStreak >= 2) $level = 'sedang';
             } else if ($level === 'sulit') {
-                if ($wrongStreak >= 2) {
-                    $level = 'sedang';
-                }
+                if ($wrongStreak >= 2) $level = 'sedang';
             }
 
             session([
@@ -425,179 +412,98 @@ class aktivitasController extends Controller
                 "activity.$id.streak_correct" => $correctStreak,
                 "activity.$id.streak_wrong" => $wrongStreak,
             ]);
-        }
 
-        // =======================
-        // HITUNG POIN SOAL INI (HANYA ADAPTIF)
-        // =======================
-
-        if ($adaptive) {
-
+            // Hitung Poin Adaptif
             $pointEasy = (int) Settings::where('name', 'soal_mudah')->value('value');
             $pointMedium = (int) Settings::where('name', 'soal_sedang')->value('value');
             $pointHard = (int) Settings::where('name', 'soal_sulit')->value('value');
 
-            $difficulty = $question->difficulty;
+            $basePoint = $question->difficulty === 'mudah' ? $pointEasy : ($question->difficulty === 'sedang' ? $pointMedium : $pointHard);
+            if (!$correct) $basePoint = 0;
 
-            $basePoint =
-                $difficulty === 'mudah' ? $pointEasy :
-                ($difficulty === 'sedang' ? $pointMedium : $pointHard);
-
-            if (!$correct) {
-                $basePoint = 0;
-            }
-
-            // simpan akumulasi base point
             $prevBase = session("activity.$id.total_base_point", 0);
             session(["activity.$id.total_base_point" => $prevBase + $basePoint]);
 
-            // =======================
-            // BONUS STREAK (ADAPTIF)
-            // =======================
-            $correctStreak = session("activity.$id.streak_correct", 0);
-
             $bonus = 0;
             if ($correct) {
-                if ($correctStreak == 2)
-                    $bonus = 5;
-                else if ($correctStreak == 3)
-                    $bonus = 10;
-                else if ($correctStreak >= 4)
-                    $bonus = 15;
+                if ($correctStreak == 2) $bonus = 5;
+                else if ($correctStreak == 3) $bonus = 10;
+                else if ($correctStreak >= 4) $bonus = 15;
             }
 
             $prevReal = session("activity.$id.total_real_point", 0);
-            session([
-                "activity.$id.total_real_point" => $prevReal + ($basePoint + $bonus)
-            ]);
+            session(["activity.$id.total_real_point" => $prevReal + ($basePoint + $bonus)]);
         }
 
         $saOptions = [];
-
         if ($question->type === 'ShortAnswer') {
-            $saOptions = is_array($question->SA_answer)
-                ? $question->SA_answer
-                : json_decode($question->SA_answer, true);
-
-            if (!is_array($saOptions)) {
-                $saOptions = [];
-            }
+            $saOptions = is_array($question->SA_answer) ? $question->SA_answer : json_decode($question->SA_answer, true);
+            if (!is_array($saOptions)) $saOptions = [];
         }
 
         return response()->json([
             'correct' => $correct,
-            'correct_answer' => $question->type === 'MultipleChoice'
-                ? strtoupper($question->MC_answer)
-                : implode(', ', $saOptions),
+            'correct_answer' => $question->type === 'MultipleChoice' ? strtoupper($question->MC_answer) : implode(', ', $saOptions),
             'explanation' => $question->explanation ?? null,
             'new_level' => session("activity.$id.difficulty"),
             'streak_correct' => session("activity.$id.streak_correct")
         ]);
-
-
     }
 
     public function finishTest(Request $req, $id)
     {
-        $userId = auth()->id();
-
-        $totalBase = session("activity.$id.total_base_point", 0);  // nilai dasar
-        $totalReal = session("activity.$id.total_real_point", 0);  // nilai total (dasar+bonus)
-
-        // Bonus = totalReal - totalBase
-        $bonusPoint = $totalReal - $totalBase;
-
+        $userId = Auth::id();
         $activity = Activity::findOrFail($id);
 
+        $totalBase = session("activity.$id.total_base_point", 0);
+        $totalReal = session("activity.$id.total_real_point", 0);
+        $bonusPoint = $totalReal - $totalBase;
 
-
-        // Ambil start_time dari DB jika ada, kalau tidak ambil dari session
-        $activityResult = ActivityResult::where('id_activity', $id)
-            ->where('id_user', $userId)
-            ->first();
-
+        // Ambil waktu mulai & hitung durasi
+        $activityResult = ActivityResult::where('id_activity', $id)->where('id_user', $userId)->first();
         if ($activityResult && $activityResult->start_time) {
             $start = Carbon::parse($activityResult->start_time);
         } else {
             $startString = session("activity.$id.start_time", null);
             $start = $startString ? Carbon::parse($startString) : Carbon::now();
         }
-
         $end = Carbon::now();
-
-        // hitung durasi dalam detik
         $durationSeconds = max(0, $end->getTimestamp() - $start->getTimestamp());
-        $totalCorrect = session("activity.$id.total_correct", 0);
 
-        // ====== DAPATKAN JUMLAH SOAL YANG DIPAKAI ======
-        // Prioritaskan nilai yang disimpan di session saat start() (adaptive/normal)
+        // ====================================================
+        // HITUNG TOTAL BENAR (ANTI-CHEAT: Tarik Langsung dari DB)
+        // ====================================================
+        $totalCorrect = ActivityAnswer::where('id_activity', $id)
+            ->where('id_user', $userId)
+            ->where('is_correct', 1)
+            ->count();
+
+        // Jumlah soal yang dikerjakan
         $jumlahSoal = session("activity.$id.totalQuestions", null);
-
         if ($jumlahSoal === null) {
-            // fallback: hitung dari relasi questions (pastikan ini merepresentasikan soal yang dipakai)
-            $activity = Activity::find($id);
-            $jumlahSoal = $activity ? $activity->questions()->count() : 0;
-        } else {
-            // pastikan integer
-            $jumlahSoal = (int) $jumlahSoal;
-            // dan ambil activity juga untuk penggunaan selanjutnya
-            $activity = Activity::find($id);
+            $jumlahSoal = $activity->questions()->count();
         }
+        $jumlahSoal = (int) $jumlahSoal;
 
-        // tentukan statusBenar: true jika totalCorrect sama persis dengan jumlahSoal
         $statusBenar = ($totalCorrect === $jumlahSoal) ? true : false;
 
-        // =============== HITUNG BEST CASE (REVISI) ===============
-        // ambil poin dari settings (cast ke float supaya aman)
+        // ====================================================
+        // TAHAP 1: PERHITUNGAN NILAI INDIVIDUAL 1 - 100
+        // ====================================================
         $pointEasy = (float) (Settings::where('name', 'soal_mudah')->value('value') ?? 0);
         $pointMedium = (float) (Settings::where('name', 'soal_sedang')->value('value') ?? 0);
         $pointHard = (float) (Settings::where('name', 'soal_sulit')->value('value') ?? 0);
 
-        // pastikan $jumlahSoal integer (sudah di-cast di atas)
-        $jumlahSoal = (int) $jumlahSoal;
-
-        if ($activity && $activity->addaptive === 'yes') {
-            // REVISI: best-case adaptive = 2 medium (maks) + sisa = hard
-            $mediumBest = min(2, $jumlahSoal);                // paling banyak 2 medium
-            $hardBest = max(0, $jumlahSoal - $mediumBest);  // sisanya hard
-            $easyBest = 0;
-
-            $bestCase = ($easyBest * $pointEasy) + ($mediumBest * $pointMedium) + ($hardBest * $pointHard);
-        } else {
-            // NON-ADAPTIVE: best-case = komposisi soal yang ada di DB (semua benar)
-            if ($activity) {
-                $easyCount = $activity->questions()->where('difficulty', 'mudah')->count();
-                $mediumCount = $activity->questions()->where('difficulty', 'sedang')->count();
-                $hardCount = $activity->questions()->where('difficulty', 'sulit')->count();
-            } else {
-                $easyCount = $mediumCount = $hardCount = 0;
-            }
-
-            $bestCase = ($easyCount * $pointEasy) + ($mediumCount * $pointMedium) + ($hardCount * $pointHard);
-        }
-
-        // hindari pembagian dengan 0 -> kalau bestCase 0 set 1 supaya nilai_akhir jadi 0 ketika totalReal 0
-        if ($bestCase <= 0) {
-            $bestCase = 1;
-        }
-
-        // ======================
-        // HITUNG NILAI AKHIR
-        // ======================
-
         if ($activity->addaptive === 'yes') {
-
-            // ===== ADAPTIF (TETAP PAKAI BEST CASE) =====
-            if ($bestCase <= 0) {
-                $bestCase = 1;
-            }
+            // Logika Adaptif
+            $mediumBest = min(2, $jumlahSoal);
+            $hardBest = max(0, $jumlahSoal - $mediumBest);
+            $bestCase = ($mediumBest * $pointMedium) + ($hardBest * $pointHard);
+            if ($bestCase <= 0) $bestCase = 1;
 
             $nilaiAkhir = round(($totalBase / $bestCase) * 100, 2);
-
         } else {
-
-            // ===== NON-ADAPTIF (RESCALE) =====
-            // Rumus: (jumlah benar / jumlah soal) × 100
+            // Logika Non-Adaptif Biasa (Contoh: Benar 8 / 10 * 100 = Nilai 80)
             if ($jumlahSoal > 0) {
                 $nilaiAkhir = round(($totalCorrect / $jumlahSoal) * 100, 2);
             } else {
@@ -605,14 +511,16 @@ class aktivitasController extends Controller
             }
         }
 
-        // Status kelulusan (angka)
-        $status = $nilaiAkhir >= $activity->kkm ?? 70 ? 'Pass' : 'Remedial';
-        // ====================== SIMPAN KE DB ======================
+        // Batasi nilai agar tidak menembus batas aneh
+        if ($nilaiAkhir > 100) $nilaiAkhir = 100;
+
+        $status = $nilaiAkhir >= ($activity->kkm ?? 70) ? 'Pass' : 'Remedial';
+
+        // ====================================================
+        // SIMPAN HASIL AKHIR KE DATABASE
+        // ====================================================
         ActivityResult::updateOrCreate(
-            [
-                'id_activity' => $id,
-                'id_user' => $userId,
-            ],
+            ['id_activity' => $id, 'id_user' => $userId],
             [
                 'result' => $totalReal,
                 'bonus_poin' => $bonusPoint,
@@ -627,22 +535,16 @@ class aktivitasController extends Controller
             ]
         );
 
-        // Ambil record lagi dari DB untuk dikembalikan ke frontend (source of truth)
-        $activityResult = ActivityResult::where('id_activity', $id)
-            ->where('id_user', $userId)
-            ->first();
+        $activityResult = ActivityResult::where('id_activity', $id)->where('id_user', $userId)->first();
 
-        // bersihkan session
+        // Bersihkan session
         session()->forget("activity.$id");
-        session()->forget("activity.$id.total_correct");
 
         return response()->json([
             'status' => 'saved',
-            // ringkasan cepat
             'duration_seconds' => $durationSeconds,
             'total_correct' => $totalCorrect,
             'jumlah_soal' => $jumlahSoal,
-            // data dari DB (string/angka/timestamp)
             'result_db' => $activityResult ? [
                 'result' => $activityResult->result,
                 'bonus_poin' => $activityResult->bonus_poin,
@@ -657,10 +559,4 @@ class aktivitasController extends Controller
             ] : null,
         ]);
     }
-
-
-
-
-
-
 }
