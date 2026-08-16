@@ -45,6 +45,8 @@ Route::middleware(['auth', RoleMiddleware::class . ':student'])->group(function 
 
     Route::post('/activity/{id}/group/rating', [ActivityGroupRatingController::class, 'save'])
         ->name('activity.group.rating.save');
+    Route::post('/activity/{id}/group/finish', [ActivityGroupRatingController::class, 'finish'])
+        ->name('activity.group.finish');
 
     Route::get('/activity/{id}/start', [aktivitasController::class, 'start']);
     Route::get('/activity/{id}/question', [aktivitasController::class, 'getQuestion']);

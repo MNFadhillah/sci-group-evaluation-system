@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\ActivityAnswer;
 use App\Models\ActivityGroup;
+use App\Models\ActivityStudentPackage;
+use App\Models\ActivityStudentQuestion;
 
 
 class aktivitasController extends Controller
@@ -191,21 +193,32 @@ class aktivitasController extends Controller
     }
 
     public function start($id)
-    {
-        // 1️⃣ reset session lama
-        session()->forget("activity.$id");
+{
+    $activity = Activity::findOrFail($id);
 
-        $activity = Activity::findOrFail($id);
+    // ==========================================
+    // MODE 2
+    // ==========================================
+    // Gunakan package soal khusus setiap siswa.
+    if ($activity->evaluation_mode === 'mode2') {
+        return $this->startMode2($id);
+    }
 
-        // 2️⃣ hitung total soal real di DB
-        $totalDB = $activity->questions()->count();
+    // ==========================================
+    // MODE 1
+    // ==========================================
+    // Sistem lama tetap dipertahankan.
+    session()->forget("activity.$id");
 
-        if ($totalDB === 0) {
-            return response()->json([
-                'totalQuestions' => 0,
-                'message' => 'Soal belum tersedia'
-            ], 422);
-        }
+    // 2️⃣ hitung total soal real di DB
+    $totalDB = $activity->questions()->count();
+
+    if ($totalDB === 0) {
+        return response()->json([
+            'totalQuestions' => 0,
+            'message' => 'Soal belum tersedia'
+        ], 422);
+    }
 
         // 3️⃣ mode adaptive?
         $adaptive = ($activity->addaptive === 'yes');
@@ -269,6 +282,291 @@ class aktivitasController extends Controller
             'durasi_pengerjaan' => $durasiMenit
         ]);
     }
+    public function startMode2($id)
+{
+    $userId = auth()->id();
+
+    $activity = Activity::findOrFail($id);
+
+    // Pastikan aktivitas memang Mode 2
+    if ($activity->evaluation_mode !== 'mode2') {
+        abort(403, 'Aktivitas ini bukan Mode 2.');
+    }
+
+    // Pastikan jumlah soal valid
+    $jumlahSoal = (int) ($activity->jumlah_soal ?? 10);
+
+    if ($jumlahSoal <= 0) {
+        return response()->json([
+            'message' => 'Jumlah soal Mode 2 tidak valid.'
+        ], 422);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Jika aktivitas kelompok, pastikan siswa sudah masuk kelompok
+    |--------------------------------------------------------------------------
+    */
+
+    if ($activity->is_group_activity === 'yes') {
+
+        $group = ActivityGroup::where('id_activity', $activity->id)
+            ->whereHas('members', function ($query) use ($userId) {
+                $query->where('id_user', $userId);
+            })
+            ->first();
+
+        if (!$group) {
+            return response()->json([
+                'message' => 'Kamu belum terdaftar dalam kelompok aktivitas ini.'
+            ], 403);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cek apakah package sudah pernah dibuat
+    |--------------------------------------------------------------------------
+    */
+
+    $package = ActivityStudentPackage::where('id_activity', $activity->id)
+        ->where('id_user', $userId)
+        ->first();
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kalau belum ada → buat package
+    |--------------------------------------------------------------------------
+    */
+
+    if (!$package) {
+
+        $types = $activity->mode2_question_types ?? [];
+
+if (!is_array($types)) {
+    $types = [];
+}
+
+        if (!is_array($types)) {
+            $types = [];
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ambil bank soal
+        |--------------------------------------------------------------------------
+        */
+
+        $query = Question::query()
+            ->where('id_topic', $activity->id_topic);
+
+        // Filter jenis soal
+        if (!empty($types)) {
+            $query->whereIn('type', $types);
+        }
+
+        /*
+|--------------------------------------------------------------------------
+| Ambil bank soal
+|--------------------------------------------------------------------------
+*/
+
+$availableQuestionIds = $query->pluck('id')->toArray();
+
+/*
+|--------------------------------------------------------------------------
+| Pastikan soal cukup
+|--------------------------------------------------------------------------
+*/
+
+if (count($availableQuestionIds) < $jumlahSoal) {
+    return response()->json([
+        'message' =>
+            'Jumlah soal pada bank soal tidak mencukupi. ' .
+            'Dibutuhkan ' . $jumlahSoal .
+            ' soal, tetapi hanya tersedia ' .
+            count($availableQuestionIds) . ' soal.'
+    ], 422);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Pilih soal untuk package
+|--------------------------------------------------------------------------
+*/
+
+if ((int) $activity->mode2_random_questions === 1) {
+
+    // Ambil semua package siswa lain pada aktivitas ini
+    $existingPackageIds = ActivityStudentPackage::where(
+        'id_activity',
+        $activity->id
+    )
+        ->where('id_user', '!=', $userId)
+        ->pluck('id')
+        ->toArray();
+
+    $existingQuestionSets = [];
+
+    if (!empty($existingPackageIds)) {
+
+        $existingQuestions = ActivityStudentQuestion::whereIn(
+            'id_package',
+            $existingPackageIds
+        )
+            ->get()
+            ->groupBy('id_package');
+
+        foreach ($existingQuestions as $packageQuestions) {
+
+            $existingQuestionSets[] = $packageQuestions
+                ->pluck('id_question')
+                ->sort()
+                ->values()
+                ->toArray();
+        }
+    }
+
+    $questions = collect();
+
+    // Coba beberapa kali mencari kombinasi yang berbeda
+    for ($attempt = 0; $attempt < 30; $attempt++) {
+
+        $candidateIds = collect($availableQuestionIds)
+            ->shuffle()
+            ->take($jumlahSoal)
+            ->sort()
+            ->values()
+            ->toArray();
+
+        $isDuplicate = false;
+
+        foreach ($existingQuestionSets as $existingSet) {
+
+            if ($candidateIds === $existingSet) {
+                $isDuplicate = true;
+                break;
+            }
+        }
+
+        if (!$isDuplicate) {
+
+            $questions = Question::whereIn(
+                'id',
+                $candidateIds
+            )->get();
+
+            break;
+        }
+    }
+
+    // Fallback jika tidak menemukan kombinasi baru
+    if ($questions->isEmpty()) {
+
+        $questions = Question::whereIn(
+            'id',
+            collect($availableQuestionIds)
+                ->shuffle()
+                ->take($jumlahSoal)
+                ->toArray()
+        )->get();
+    }
+
+} else {
+
+    $questions = $query
+        ->orderBy('id')
+        ->take($jumlahSoal)
+        ->get();
+}
+
+/*
+|--------------------------------------------------------------------------
+| Random urutan soal
+|--------------------------------------------------------------------------
+*/
+
+if ((int) $activity->mode2_random_order === 1) {
+    $questions = $questions->shuffle()->values();
+}
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pastikan soal cukup
+        |--------------------------------------------------------------------------
+        */
+
+        if ($questions->count() < $jumlahSoal) {
+            return response()->json([
+                'message' =>
+                    'Jumlah soal pada bank soal tidak mencukupi. ' .
+                    'Dibutuhkan ' . $jumlahSoal .
+                    ' soal, tetapi hanya tersedia ' .
+                    $questions->count() . ' soal.'
+            ], 422);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Buat package
+        |--------------------------------------------------------------------------
+        */
+
+        $deadlineAt = null;
+
+        if ($activity->durasi_pengerjaan) {
+            $deadlineAt = Carbon::now()
+                ->addMinutes((int) $activity->durasi_pengerjaan);
+        }
+
+        $package = ActivityStudentPackage::create([
+            'id_activity' => $activity->id,
+            'id_user' => $userId,
+            'started_at' => Carbon::now(),
+            'deadline_at' => $deadlineAt,
+            'status' => 'in_progress',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Simpan soal ke package
+        |--------------------------------------------------------------------------
+        */
+
+        foreach ($questions->values() as $index => $question) {
+
+            ActivityStudentQuestion::create([
+                'id_package' => $package->id,
+                'id_question' => $question->id,
+                'question_order' => $index + 1,
+            ]);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Package sudah ada
+    |--------------------------------------------------------------------------
+    | Jangan random ulang.
+    |--------------------------------------------------------------------------
+    */
+
+    $packageQuestions = ActivityStudentQuestion::where(
+        'id_package',
+        $package->id
+    )
+        ->orderBy('question_order')
+        ->get();
+
+    return response()->json([
+        'mode' => 'mode2',
+        'package_id' => $package->id,
+        'totalQuestions' => $packageQuestions->count(),
+        'started_at' => $package->started_at,
+        'deadline_at' => $package->deadline_at,
+        'status' => $package->status,
+    ]);
+}
 
 
 
