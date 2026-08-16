@@ -25,12 +25,10 @@
                         </div>
 
                         {{-- Info kelas --}}
-                        @if($kelasGuru->count())
+                        @if ($kelasGuru->count())
                             <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
-                                @foreach($kelasGuru as $k)
-
+                                @foreach ($kelasGuru as $k)
                                     <span class="text-muted"> Nama Kelas : {{ $k->name }}</span>
-
                                 @endforeach
                             </div>
                         @else
@@ -59,9 +57,16 @@
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Tipe Soal</label>
                             <select name="type" class="form-select" id="tipeSoal" disabled>
-                                <option value="MultipleChoice" {{ $data->type == 'MultipleChoice' ? 'selected' : '' }}>Pilihan
-                                    Ganda</option>
-                                <option value="ShortAnswer" {{ $data->type == 'ShortAnswer' ? 'selected' : '' }}>Isian Singkat
+                                <option value="MultipleChoice" {{ $data->type == 'MultipleChoice' ? 'selected' : '' }}>
+                                    Pilihan Ganda
+                                </option>
+
+                                <option value="ShortAnswer" {{ $data->type == 'ShortAnswer' ? 'selected' : '' }}>
+                                    Isian Singkat
+                                </option>
+
+                                <option value="Essay" {{ $data->type == 'Essay' ? 'selected' : '' }}>
+                                    Essay / Uraian
                                 </option>
                             </select>
                             <small class="text-muted">Jenis soal tidak dapat diubah.</small>
@@ -81,8 +86,9 @@
                             <label class="form-label fw-semibold">Topik</label>
                             <select name="id_topic" class="form-select">
                                 <option value="">-- Pilih Topik --</option>
-                                @foreach($topics as $t)
-                                    <option value="{{ $t->id }}" {{ (isset($data->id_topic) && $data->id_topic == $t->id) ? 'selected' : '' }}>
+                                @foreach ($topics as $t)
+                                    <option value="{{ $t->id }}"
+                                        {{ isset($data->id_topic) && $data->id_topic == $t->id ? 'selected' : '' }}>
                                         {{ $t->title }}
                                         {{-- optional: tampilkan nama subject / kelas jika Anda mau:
                                         ({{ optional($t->subject)->name ?? '-' }}) --}}
@@ -98,8 +104,7 @@
                     <div class="row mt-3">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Teks Pertanyaan</label>
-                            <textarea name="question_text" id="question_text" class="form-control" rows="4"
-                                required>{{ $question->text ?? '' }}</textarea>
+                            <textarea name="question_text" id="question_text" class="form-control" rows="4" required>{{ $question->text ?? '' }}</textarea>
                         </div>
 
                         <div class="col-md-6">
@@ -112,7 +117,7 @@
                             <input type="text" name="question_url" id="question_url" class="form-control mb-2"
                                 value="{{ $question->URL ?? '' }}" placeholder="Atau masukkan URL gambar">
 
-                            @if(!empty($question->URL))
+                            @if (!empty($question->URL))
                                 <div class="mt-2 text-center">
                                     <img src="{{ $question->URL }}" class="img-fluid rounded shadow-sm"
                                         style="max-height: 200px;">
@@ -124,7 +129,7 @@
                     </div>
 
                     {{-- MULTIPLE CHOICE --}}
-                    @if($data->type == 'MultipleChoice')
+                    @if ($data->type == 'MultipleChoice')
                         <hr class="mt-4">
                         <h5 class="fw-bold text-secondary mb-3">
                             <i class="bi bi-list-check me-2"></i> Pilihan Jawaban
@@ -132,8 +137,8 @@
 
                         <div class="row">
                             {{-- A, B, C --}}
-                            @foreach($labels as $i => $label)
-                                @if($i < 3)
+                            @foreach ($labels as $i => $label)
+                                @if ($i < 3)
                                     @php
                                         $teks = $mcOption[$i][$label]['teks'] ?? '';
                                         $url = $mcOption[$i][$label]['url'] ?? '';
@@ -143,21 +148,25 @@
                                         <div class="card shadow-sm border-0 h-100">
                                             <div class="card-body">
                                                 <label class="fw-semibold mb-2">Opsi {{ strtoupper($label) }}</label>
-                                                <input type="text" name="option_text[]" class="form-control option-text mb-2"
-                                                    value="{{ $teks }}" placeholder="Teks opsi {{ strtoupper($label) }}">
+                                                <input type="text" name="option_text[]"
+                                                    class="form-control option-text mb-2" value="{{ $teks }}"
+                                                    placeholder="Teks opsi {{ strtoupper($label) }}">
                                                 <div class="row g-2">
                                                     <div class="col-6">
-                                                        <input type="file" name="option_image[]" class="form-control" accept="image/*">
+                                                        <input type="file" name="option_image[]" class="form-control"
+                                                            accept="image/*">
                                                     </div>
                                                     <div class="col-6">
-                                                        <input type="text" name="option_url[]" class="form-control" value="{{ $url }}"
+                                                        <input type="text" name="option_url[]" class="form-control"
+                                                            value="{{ $url }}"
                                                             placeholder="URL gambar (opsional)">
                                                     </div>
                                                 </div>
 
-                                                @if(!empty($url))
+                                                @if (!empty($url))
                                                     <div class="mt-2 text-center">
-                                                        <img src="{{ $url }}" class="img-thumbnail shadow-sm" style="max-height: 120px;">
+                                                        <img src="{{ $url }}" class="img-thumbnail shadow-sm"
+                                                            style="max-height: 120px;">
                                                     </div>
                                                 @endif
                                             </div>
@@ -169,8 +178,8 @@
 
                         <div class="row">
                             {{-- D, E --}}
-                            @foreach($labels as $i => $label)
-                                @if($i >= 3)
+                            @foreach ($labels as $i => $label)
+                                @if ($i >= 3)
                                     @php
                                         $teks = $mcOption[$i][$label]['teks'] ?? '';
                                         $url = $mcOption[$i][$label]['url'] ?? '';
@@ -180,21 +189,25 @@
                                         <div class="card shadow-sm border-0 h-100">
                                             <div class="card-body">
                                                 <label class="fw-semibold mb-2">Opsi {{ strtoupper($label) }}</label>
-                                                <input type="text" name="option_text[]" class="form-control option-text mb-2"
-                                                    value="{{ $teks }}" placeholder="Teks opsi {{ strtoupper($label) }}">
+                                                <input type="text" name="option_text[]"
+                                                    class="form-control option-text mb-2" value="{{ $teks }}"
+                                                    placeholder="Teks opsi {{ strtoupper($label) }}">
                                                 <div class="row g-2">
                                                     <div class="col-6">
-                                                        <input type="file" name="option_image[]" class="form-control" accept="image/*">
+                                                        <input type="file" name="option_image[]" class="form-control"
+                                                            accept="image/*">
                                                     </div>
                                                     <div class="col-6">
-                                                        <input type="text" name="option_url[]" class="form-control" value="{{ $url }}"
+                                                        <input type="text" name="option_url[]" class="form-control"
+                                                            value="{{ $url }}"
                                                             placeholder="URL gambar (opsional)">
                                                     </div>
                                                 </div>
 
-                                                @if(!empty($url))
+                                                @if (!empty($url))
                                                     <div class="mt-2 text-center">
-                                                        <img src="{{ $url }}" class="img-thumbnail shadow-sm" style="max-height: 120px;">
+                                                        <img src="{{ $url }}" class="img-thumbnail shadow-sm"
+                                                            style="max-height: 120px;">
                                                     </div>
                                                 @endif
                                             </div>
@@ -210,8 +223,9 @@
                                         <label class="form-label fw-semibold">Jawaban Benar</label>
                                         <select name="mc_answer" id="mc_answer" class="form-select">
                                             <option value="">-- Pilih Jawaban --</option>
-                                            @foreach(['a', 'b', 'c', 'd', 'e'] as $opt)
-                                                <option value="{{ $opt }}" {{ $data->MC_answer == $opt ? 'selected' : '' }}>
+                                            @foreach (['a', 'b', 'c', 'd', 'e'] as $opt)
+                                                <option value="{{ $opt }}"
+                                                    {{ $data->MC_answer == $opt ? 'selected' : '' }}>
                                                     {{ strtoupper($opt) }}
                                                 </option>
                                             @endforeach
@@ -223,17 +237,17 @@
                     @endif
 
                     {{-- SHORT ANSWER --}}
-                    @if($data->type == 'ShortAnswer')
+                    @if ($data->type == 'ShortAnswer')
                         <hr>
                         <h5 class="fw-bold text-secondary mb-3">
                             <i class="bi bi-pencil-square me-2"></i> Jawaban Benar
                         </h5>
 
                         <div id="opsiIsianSingkat">
-                            @if(count($saAnswer))
-                                @foreach($saAnswer as $ans)
-                                    <input type="text" name="sa_answer[]" class="form-control sa-answer mb-2" value="{{ $ans }}"
-                                        placeholder="Masukkan jawaban singkat">
+                            @if (count($saAnswer))
+                                @foreach ($saAnswer as $ans)
+                                    <input type="text" name="sa_answer[]" class="form-control sa-answer mb-2"
+                                        value="{{ $ans }}" placeholder="Masukkan jawaban singkat">
                                 @endforeach
                             @else
                                 <input type="text" name="sa_answer[]" class="form-control sa-answer mb-2"
@@ -243,6 +257,23 @@
                             <button type="button" id="tambahJawaban" class="btn btn-outline-secondary btn-sm">
                                 <i class="bi bi-plus-circle"></i> Tambah Jawaban
                             </button>
+                        </div>
+                    @endif
+                    {{-- ESSAY / URAIAN --}}
+                    @if ($data->type == 'Essay')
+                        <hr>
+
+                        <div class="mt-4">
+                            <h5 class="fw-bold text-secondary mb-3">
+                                <i class="bi bi-file-text me-2"></i>
+                                Jawaban Essay / Uraian
+                            </h5>
+
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Soal essay/uraian tidak memerlukan kunci jawaban.
+                                Jawaban akan diberikan oleh siswa saat mengerjakan aktivitas.
+                            </div>
                         </div>
                     @endif
 
@@ -331,12 +362,13 @@
             const questionImageInput = document.getElementById('questionImageInput');
             const previewQuestionImage = document.getElementById('previewQuestionImage');
 
-            questionImageInput?.addEventListener('change', function (e) {
+            questionImageInput?.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = function (event) {
-                        previewQuestionImage.innerHTML = `<img src="${event.target.result}" class="img-fluid rounded shadow-sm" style="max-height: 200px;">`;
+                    reader.onload = function(event) {
+                        previewQuestionImage.innerHTML =
+                            `<img src="${event.target.result}" class="img-fluid rounded shadow-sm" style="max-height: 200px;">`;
                     };
                     reader.readAsDataURL(file);
                 } else {
@@ -345,7 +377,7 @@
             });
 
             // tambah jawaban untuk short answer (jika ada)
-            document.getElementById('tambahJawaban')?.addEventListener('click', function () {
+            document.getElementById('tambahJawaban')?.addEventListener('click', function() {
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.name = 'sa_answer[]';
@@ -356,7 +388,7 @@
             });
 
             // Tampilkan SweetAlert jika ada session success (redirect setelah close)
-            @if(session('success'))
+            @if (session('success'))
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil',
@@ -366,11 +398,11 @@
                 });
             @endif
 
-                    // VALIDASI CLIENT-SIDE sebelum submit (sama aturan seperti halaman tambah)
-                    const form = document.getElementById('editSoalForm');
+            // VALIDASI CLIENT-SIDE sebelum submit (sama aturan seperti halaman tambah)
+            const form = document.getElementById('editSoalForm');
             const submitBtn = document.getElementById('submitBtn');
 
-            form?.addEventListener('submit', function (e) {
+            form?.addEventListener('submit', function(e) {
                 submitBtn.disabled = true;
 
                 function fail(msg, el) {
@@ -383,7 +415,10 @@
                         confirmButtonColor: '#f87171'
                     }).then(() => {
                         if (el) {
-                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            el.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
                             el.focus();
                         }
                     });
@@ -397,26 +432,54 @@
                 }
 
                 if (tipe === 'MultipleChoice') {
-                    // cek semua option-text
-                    const optionInputs = Array.from(document.querySelectorAll('.option-text'));
+
+                    // validasi pilihan ganda
+                    const optionInputs = Array.from(
+                        document.querySelectorAll('.option-text')
+                    );
+
                     const labels = ['A', 'B', 'C', 'D', 'E'];
 
                     for (let i = 0; i < optionInputs.length; i++) {
                         if ((optionInputs[i].value || '').trim() === '') {
-                            return fail(`Opsi ${labels[i]} belum diisi!`, optionInputs[i]);
+                            return fail(
+                                `Opsi ${labels[i]} belum diisi!`,
+                                optionInputs[i]
+                            );
                         }
                     }
 
-                    const mcAnswer = (document.getElementById('mc_answer')?.value || '');
+                    const mcAnswer =
+                        document.getElementById('mc_answer')?.value || '';
+
                     if (!mcAnswer) {
-                        return fail('Silakan pilih jawaban benar untuk soal pilihan ganda.', document.getElementById('mc_answer'));
+                        return fail(
+                            'Silakan pilih jawaban benar untuk soal pilihan ganda.',
+                            document.getElementById('mc_answer')
+                        );
                     }
+
                 } else if (tipe === 'ShortAnswer') {
-                    const saInputs = Array.from(document.querySelectorAll('.sa-answer'));
-                    const anyFilled = saInputs.some(i => (i.value || '').trim() !== '');
+
+                    const saInputs =
+                        Array.from(document.querySelectorAll('.sa-answer'));
+
+                    const anyFilled =
+                        saInputs.some(i => (i.value || '').trim() !== '');
+
                     if (!anyFilled) {
-                        return fail('Masukkan minimal satu jawaban untuk isian singkat.', saInputs[0] || document.getElementById('question_text'));
+                        return fail(
+                            'Masukkan minimal satu jawaban untuk isian singkat.',
+                            saInputs[0] ||
+                            document.getElementById('question_text')
+                        );
                     }
+
+                } else if (tipe === 'Essay') {
+
+                    // Essay tidak membutuhkan validasi kunci jawaban.
+                    // Cukup pastikan teks pertanyaan sudah diisi.
+
                 }
 
                 // semua ok -> biarkan form submit (tombol tetap dinonaktifkan agar tidak dobel)

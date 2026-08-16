@@ -76,7 +76,7 @@
             <label class="fw-bold">Filter Topik:</label>
             <select id="filterTopik" class="form-select w-auto d-inline-block ms-2">
                 <option value="">Semua Topik</option>
-                @foreach($topics as $t)
+                @foreach ($topics as $t)
                     <option value="{{ $t->id }}">{{ $t->title }}</option>
                 @endforeach
             </select>
@@ -101,14 +101,14 @@
                     </thead>
 
                     <tbody>
-                        @foreach($data as $index => $item)
+                        @foreach ($data as $index => $item)
                             @php
                                 $topicObj = $topics->firstWhere('id', $item->id_topic);
                                 $topicTitle = $topicObj ? $topicObj->title : '-';
                             @endphp
                             <tr data-question-id="{{ $item->id }}" data-topic-title="{{ $topicTitle }}"
                                 data-id_topic="{{ $item->id_topic ?? '' }}">
-                                <td class="fw-bold"></td>
+                                <td class="fw-bold">{{ $loop->iteration }}</td>
                                 <td>{{ $item->type }}</td>
                                 <td class="text-start">
                                     {!! nl2br(e($item->question->text ?? ($item->question['text'] ?? '-'))) !!}
@@ -125,7 +125,7 @@
                                 <td>
                                     <span
                                         class="badge
-                                                                                                                                                                                                                @if($item->difficulty == 'mudah') bg-success
+                                                                                                                                                                                                                @if ($item->difficulty == 'mudah') bg-success
                                                                                                                                                                                                                 @elseif($item->difficulty == 'sedang') bg-warning text-dark
                                                                                                                                                                                                                 @else bg-danger @endif">
                                         {{ ucfirst($item->difficulty) }}
@@ -143,7 +143,8 @@
                                             <i class="bi bi-eye-fill"></i>
                                         </button>
 
-                                        <a href="{{ route('editSoal', $item->id) }}" class="btn btn-outline-warning btn-sm">
+                                        <a href="{{ route('editSoal', $item->id) }}"
+                                            class="btn btn-outline-warning btn-sm">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
 
@@ -167,7 +168,7 @@
         </div>
         <!-- mobile -->
         <div class="d-block d-md-none mt-3">
-            @foreach($data as $item)
+            @foreach ($data as $item)
                 @php
                     $topicObj = $topics->firstWhere('id', $item->id_topic);
                     $topicTitle = $topicObj ? $topicObj->title : '-';
@@ -179,8 +180,9 @@
 
                         <div class="d-flex justify-content-between mb-2">
                             <span class="badge bg-secondary">{{ $item->type }}</span>
-                            <span class="badge
-                                                                                                @if($item->difficulty == 'mudah') bg-success
+                            <span
+                                class="badge
+                                                                                                @if ($item->difficulty == 'mudah') bg-success
                                                                                                 @elseif($item->difficulty == 'sedang') bg-warning text-dark
                                                                                                 @else bg-danger @endif">
                                 {{ ucfirst($item->difficulty) }}
@@ -200,7 +202,8 @@
                                 data-bs-target="#modalLihatSoal" data-q="{{ base64_encode(json_encode($item->question)) }}"
                                 data-opt="{{ base64_encode(json_encode($item->MC_option)) }}"
                                 data-mcanswer="{{ $item->MC_answer }}"
-                                data-sa="{{ base64_encode(json_encode($item->SA_answer)) }}" data-type="{{ $item->type }}">
+                                data-sa="{{ base64_encode(json_encode($item->SA_answer)) }}"
+                                data-type="{{ $item->type }}">
                                 <i class="bi bi-eye"></i>
                             </button>
 
@@ -260,8 +263,9 @@
                                 <label class="form-label">Pilih Topik</label>
                                 <select id="modalTopicSelect" class="form-select">
                                     <option value="">-- Pilih Topik --</option>
-                                    @foreach($topics as $t)
-                                        <option value="{{ $t->id }}" data-id_subject="{{ $t->id_subject }}">{{ $t->title }}
+                                    @foreach ($topics as $t)
+                                        <option value="{{ $t->id }}" data-id_subject="{{ $t->id_subject }}">
+                                            {{ $t->title }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -272,8 +276,9 @@
                                 <label class="form-label">Atau buat topik baru (harus pilih Mata Pelajaran)</label>
                                 <select id="modalSubjectSelect" class="form-select mb-2">
                                     <option value="">-- Pilih Mata Pelajaran --</option>
-                                    @foreach($subjects as $s)
-                                        <option value="{{ $s->id }}" data-id_class="{{ $s->id_class }}">{{ $s->name }}</option>
+                                    @foreach ($subjects as $s)
+                                        <option value="{{ $s->id }}" data-id_class="{{ $s->id_class }}">
+                                            {{ $s->name }}</option>
                                     @endforeach
                                 </select>
                                 <input id="modalNewTopic" type="text" class="form-control"
@@ -478,243 +483,418 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            if (typeof $.fn.DataTable !== 'function') {
-                console.error('DataTables tidak terdeteksi — cek urutan skrip dan pastikan jQuery + DataTables dimuat sekali di layout.');
-                return;
-            }
-
-            // Inisialisasi DataTable (kolom No di-render dari meta)
-            var dt = $('#soalTable').DataTable({
-                responsive: true,
-                autoWidth: false,
-                pageLength: 10,
-                order: [[1, 'asc']], // sorting berdasarkan kolom Tipe
-                columnDefs: [
-                    {
-                        targets: 0,          // kolom No
-                        orderable: false,
-                        searchable: false,
-                        className: 'text-center fw-bold'
-                    },
-                    {
-                        targets: 5,          // kolom Aksi
-                        orderable: false,
-                        searchable: false
+        document.addEventListener("DOMContentLoaded", function() {
+                    if (typeof $.fn.DataTable !== 'function') {
+                        console.error(
+                            'DataTables tidak terdeteksi — cek urutan skrip dan pastikan jQuery + DataTables dimuat sekali di layout.'
+                        );
+                        return;
                     }
-                ],
-                drawCallback: function () {
-                    var api = this.api();
-                    var startIndex = api.page.info().start;
 
-                    api.column(0, { page: 'current' }).nodes().each(function (cell, i) {
-                        cell.innerHTML = startIndex + i + 1;
+                    // Inisialisasi DataTable (kolom No di-render dari meta)
+                    var dt = $('#soalTable').DataTable({
+                        responsive: true,
+                        autoWidth: false,
+                        pageLength: 10,
+
+                        order: [
+                            [1, 'asc']
+                        ],
+
+                        columnDefs: [{
+        targets: 0,
+        orderable: false,
+        searchable: false,
+        className: 'text-center fw-bold'
+    },
+    {
+        targets: 5,
+        orderable: false,
+        searchable: false
+    }
+],
+
+
                     });
-                }
-            });
 
 
-            // fungsi bantu untuk meng-update elemen total berdasarkan baris yg terlihat
-            function updateTotalLabel() {
-                // dt.rows({ search: 'applied' }) menghitung rows yang lolos filter/pencarian DataTables
-                var visibleCount = dt.rows({ search: 'applied' }).count();
-                var totalEl = document.getElementById('totalSoal');
-                if (totalEl) {
-                    totalEl.textContent = 'Total: ' + visibleCount + ' soal';
-                }
-            }
-
-            // panggil sekali untuk set awal (jika server already rendered total, ini sinkronisasi)
-            updateTotalLabel();
-
-            function filterMobileCards(topicId) {
-                let visibleCount = 0;
-
-                document.querySelectorAll('.soal-card').forEach(card => {
-                    const cardTopic = card.getAttribute('data-id_topic') || '';
-
-                    if (!topicId || String(cardTopic) === String(topicId)) {
-                        card.style.display = '';
-                        visibleCount++;
-                    } else {
-                        card.style.display = 'none';
+                    // fungsi bantu untuk meng-update elemen total berdasarkan baris yg terlihat
+                    function updateTotalLabel() {
+                        // dt.rows({ search: 'applied' }) menghitung rows yang lolos filter/pencarian DataTables
+                        var visibleCount = dt.rows({
+                            search: 'applied'
+                        }).count();
+                        var totalEl = document.getElementById('totalSoal');
+                        if (totalEl) {
+                            totalEl.textContent = 'Total: ' + visibleCount + ' soal';
+                        }
                     }
-                });
 
-                const totalEl = document.getElementById('totalSoal');
-                if (totalEl) {
-                    totalEl.textContent = 'Total: ' + visibleCount + ' soal';
-                }
-            }
+                    // panggil sekali untuk set awal (jika server already rendered total, ini sinkronisasi)
+                    updateTotalLabel();
 
+                    function filterMobileCards(topicId) {
+                        let visibleCount = 0;
 
-            // custom filter by topic id (ext.search)
-            var currentTopicFilter = '';
-            $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-                if (settings.nTable.id !== 'soalTable') return true;
-                if (!currentTopicFilter) return true;
-                var rowNode = dt.row(dataIndex).node();
-                var rowTopic = rowNode ? (rowNode.getAttribute('data-id_topic') || '') : '';
-                return String(rowTopic) === String(currentTopicFilter);
-            });
+                        document.querySelectorAll('.soal-card').forEach(card => {
+                            const cardTopic = card.getAttribute('data-id_topic') || '';
 
-            // saat select berubah -> set filter dan redraw
-            $('#filterTopik').on('change', function () {
-                currentTopicFilter = $(this).val() || '';
+                            if (!topicId || String(cardTopic) === String(topicId)) {
+                                card.style.display = '';
+                                visibleCount++;
+                            } else {
+                                card.style.display = 'none';
+                            }
+                        });
 
-                dt.draw(); // desktop
-                filterMobileCards(currentTopicFilter); // mobile
-            });
-
-            // tombol reset filter: kosongkan select dan redraw
-            $('#resetFilterBtn').on('click', function () {
-                $('#filterTopik').val('');
-                currentTopicFilter = '';
-
-                // desktop
-                dt.search('');
-                dt.order([[1, 'asc']]);
-                dt.page.len(10);
-                dt.draw();
-
-                // mobile
-                filterMobileCards('');
-
-                $('#filterTopik').focus();
-            });
+                        const totalEl = document.getElementById('totalSoal');
+                        if (totalEl) {
+                            totalEl.textContent = 'Total: ' + visibleCount + ' soal';
+                        }
+                    }
 
 
-            // update numbering & total saat table di-redraw (draw event)
-            dt.on('draw.dt', function () {
-                // numbering sudah di-handle oleh render kolom, tapi tetap aman
-                dt.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
-                    cell.innerHTML = i + 1;
-                });
+                    // custom filter by topic id (ext.search)
+                    var currentTopicFilter = '';
+                    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                        if (settings.nTable.id !== 'soalTable') return true;
+                        if (!currentTopicFilter) return true;
+                        var rowNode = dt.row(dataIndex).node();
+                        var rowTopic = rowNode ? (rowNode.getAttribute('data-id_topic') || '') : '';
+                        return String(rowTopic) === String(currentTopicFilter);
+                    });
 
-                // update total setiap kali draw (filter berubah / paging / search)
-                updateTotalLabel();
-            });
-            // View soal modal
-            $(document).on('click', '.view-soal', function () {
-                var btn = this;
-                var decode = v => v ? JSON.parse(atob(v)) : null;
-                var q = decode(btn.dataset.q);
-                var opt = decode(btn.dataset.opt);
-                var sa = decode(btn.dataset.sa);
-                var type = btn.dataset.type;
-                var mcAns = btn.dataset.mcanswer;
+                    // saat select berubah -> set filter dan redraw
+                    $('#filterTopik').on('change', function() {
+                        currentTopicFilter = $(this).val() || '';
 
-                $('#soalText').text(q?.text ?? "-");
-                $('#soalImage').html(q?.URL ? `<img src="${q.URL}" class="img-fluid rounded" style="max-height:250px">` : "");
-                var pilihan = $('#soalPilihan').empty();
+                        dt.draw(); // desktop
+                        filterMobileCards(currentTopicFilter); // mobile
+                    });
 
-                if (type === "MultipleChoice" && opt) {
-                    opt.forEach(o => {
-                        var label = Object.keys(o)[0];
-                        var d = o[label];
-                        pilihan.append(`
+                    // tombol reset filter: kosongkan select dan redraw
+                    $('#resetFilterBtn').on('click', function() {
+                        $('#filterTopik').val('');
+                        currentTopicFilter = '';
+
+                        // desktop
+                        dt.search('');
+                        dt.order([
+                            [1, 'asc']
+                        ]);
+                        dt.page.len(10);
+                        dt.draw();
+
+                        // mobile
+                        filterMobileCards('');
+
+                        $('#filterTopik').focus();
+                    });
+
+
+                    // update numbering & total saat table di-redraw (draw event)
+                    dt.on('draw.dt', function() {
+                        updateTotalLabel();
+                    });
+                    // View soal modal
+                    $(document).on('click', '.view-soal', function() {
+                        var btn = this;
+                        var decode = v => v ? JSON.parse(atob(v)) : null;
+                        var q = decode(btn.dataset.q);
+                        var opt = decode(btn.dataset.opt);
+                        var sa = decode(btn.dataset.sa);
+                        var type = btn.dataset.type;
+                        var mcAns = btn.dataset.mcanswer;
+
+                        $('#soalText').text(q?.text ?? "-");
+                        $('#soalImage').html(q?.URL ?
+                            `<img src="${q.URL}" class="img-fluid rounded" style="max-height:250px">` : "");
+                        var pilihan = $('#soalPilihan').empty();
+
+                        if (type === "MultipleChoice" && opt) {
+                            opt.forEach(o => {
+                                var label = Object.keys(o)[0];
+                                var d = o[label];
+                                pilihan.append(`
                                                                                                             <div class="border p-2 mb-2 rounded">
                                                                                                                 <strong>${label.toUpperCase()}.</strong> ${d.teks}
                                                                                                                 ${d.url ? `<br><img src="${d.url}" class="img-thumbnail mt-2" style="max-height:100px">` : ""}
                                                                                                             </div>
                                                                                                         `);
+                            });
+                        } else {
+                            pilihan.html("<em>Tidak ada pilihan jawaban.</em>");
+                        }
+
+                        $('#soalJawaban').text(type === "MultipleChoice" ? mcAns : (sa?.join(", ") ?? "-"));
                     });
-                } else {
-                    pilihan.html("<em>Tidak ada pilihan jawaban.</em>");
-                }
+    </script>
 
-                $('#soalJawaban').text(type === "MultipleChoice" ? mcAns : (sa?.join(", ") ?? "-"));
-            });
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
 
-            // Edit topic modal handling
+            // ==========================================
+            // EDIT TOPIK SOAL
+            // ==========================================
+
             var modalEl = document.getElementById('modalEditTopic');
-            var bsModal = (typeof bootstrap !== 'undefined' && modalEl) ? new bootstrap.Modal(modalEl) : null;
 
-            $(document).on('click', '.btn-edit-topic', function () {
+            if (!modalEl) {
+                console.error('Modal Edit Topik tidak ditemukan.');
+                return;
+            }
+
+            // ==========================================
+            // BUKA MODAL EDIT TOPIK
+            // ==========================================
+
+            $(document).on('click', '.btn-edit-topic', function() {
+
                 var qid = $(this).data('id');
                 var topicId = $(this).data('topic-id') || '';
 
                 $('#modalQuestionId').val(qid);
+
                 $('#modalTopicSelect').val(topicId);
+
                 $('#modalNewTopic').val('');
                 $('#modalSubjectSelect').val('');
-                $('#modalEditAlert').addClass('d-none').removeClass('alert-success alert-danger').text('');
 
-                if (bsModal) bsModal.show();
+                $('#modalEditAlert')
+                    .addClass('d-none')
+                    .removeClass('alert-success alert-danger')
+                    .text('');
+
+                bootstrap.Modal
+                    .getOrCreateInstance(modalEl)
+                    .show();
             });
 
-            $('#formEditTopic').on('submit', function (e) {
+
+            // ==========================================
+            // KETIKA MENGETIK TOPIK BARU
+            // ==========================================
+
+            $('#modalNewTopic').on('input', function() {
+
+                if ($(this).val().trim() !== '') {
+                    $('#modalTopicSelect').val('');
+                }
+
+            });
+
+
+            // ==========================================
+            // KETIKA MEMILIH TOPIK LAMA
+            // ==========================================
+
+            $('#modalTopicSelect').on('change', function() {
+
+                if ($(this).val() !== '') {
+
+                    $('#modalNewTopic').val('');
+                    $('#modalSubjectSelect').val('');
+
+                }
+
+            });
+
+
+            // ==========================================
+            // SIMPAN TOPIK
+            // ==========================================
+
+            $('#formEditTopic').on('submit', function(e) {
+
                 e.preventDefault();
+
                 var qid = $('#modalQuestionId').val();
                 var chosenTopic = $('#modalTopicSelect').val();
                 var newTitle = $('#modalNewTopic').val().trim();
                 var subjectForNew = $('#modalSubjectSelect').val();
 
+
                 if (!chosenTopic && !newTitle) {
-                    $('#modalEditAlert').removeClass('d-none alert-success').addClass('alert-danger').text('Pilih topik atau isi judul topik baru.');
+
+                    $('#modalEditAlert')
+                        .removeClass('d-none alert-success')
+                        .addClass('alert-danger')
+                        .text('Pilih topik atau isi judul topik baru.');
+
                     return;
                 }
+
+
                 if (newTitle && !subjectForNew) {
-                    $('#modalEditAlert').removeClass('d-none alert-success').addClass('alert-danger').text('Pilih Mata Pelajaran jika akan membuat topik baru.');
+
+                    $('#modalEditAlert')
+                        .removeClass('d-none alert-success')
+                        .addClass('alert-danger')
+                        .text('Pilih Mata Pelajaran jika akan membuat topik baru.');
+
                     return;
                 }
 
-                var payload = chosenTopic ? { id_topic: chosenTopic } : { topic_title: newTitle, id_subject: subjectForNew };
 
-                $('#modalSaveBtn').prop('disabled', true).text('Menyimpan...');
+                var payload;
+
+                if (newTitle) {
+
+                    payload = {
+                        topic_title: newTitle,
+                        id_subject: subjectForNew
+                    };
+
+                } else {
+
+                    payload = {
+                        id_topic: chosenTopic
+                    };
+
+                }
+
+
+                $('#modalSaveBtn')
+                    .prop('disabled', true)
+                    .text('Menyimpan...');
+
 
                 fetch(`/edit-topik-soal/${qid}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify(payload)
-                })
+
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+
+                        body: JSON.stringify(payload)
+
+                    })
+
                     .then(res => res.json())
+
                     .then(res => {
+
                         if (res.success) {
+
                             var $tr = $(`tr[data-question-id='${qid}']`);
+
                             if ($tr.length) {
-                                if (res.id_topic) $tr.attr('data-id_topic', res.id_topic);
+
+                                if (res.id_topic) {
+                                    $tr.attr('data-id_topic', res.id_topic);
+                                }
+
                                 if (res.title) {
+
                                     $tr.attr('data-topic-title', res.title);
-                                    $tr.find('.topic-label').text(res.title).attr('title', res.title);
+
+                                    $tr.find('.topic-label')
+                                        .text(res.title)
+                                        .attr('title', res.title);
+
                                 } else if (newTitle) {
+
                                     $tr.attr('data-topic-title', newTitle);
-                                    $tr.find('.topic-label').text(newTitle).attr('title', newTitle);
+
+                                    $tr.find('.topic-label')
+                                        .text(newTitle)
+                                        .attr('title', newTitle);
+
                                 }
-                                if (res.id_topic && res.title && $('#filterTopik option[value="' + res.id_topic + '"]').length === 0) {
-                                    $('#filterTopik').append(`<option value="${res.id_topic}">${res.title}</option>`);
+
+                                if (
+                                    res.id_topic &&
+                                    res.title &&
+                                    $('#filterTopik option[value="' + res.id_topic + '"]').length === 0
+                                ) {
+
+                                    $('#filterTopik').append(
+                                        `<option value="${res.id_topic}">${res.title}</option>`
+                                    );
+
                                 }
-                                dt.row($tr).invalidate().draw(false);
+
+                                // Refresh DataTable jika tersedia
+                                if (
+                                    typeof $.fn.DataTable === 'function' &&
+                                    $.fn.DataTable.isDataTable('#soalTable')
+                                ) {
+
+                                    $('#soalTable')
+                                        .DataTable()
+                                        .row($tr)
+                                        .invalidate()
+                                        .draw(false);
+
+                                }
+
                             }
 
-                            $('#modalEditAlert').removeClass('d-none alert-danger').addClass('alert-success').text('Topik berhasil diperbarui.');
-                            setTimeout(() => {
-                                if (bsModal) bsModal.hide();
-                                $('#modalEditAlert').addClass('d-none').removeClass('alert-success').text('');
+
+                            $('#modalEditAlert')
+                                .removeClass('d-none alert-danger')
+                                .addClass('alert-success')
+                                .text('Topik berhasil diperbarui.');
+
+
+                            setTimeout(function() {
+
+                                bootstrap.Modal
+                                    .getOrCreateInstance(modalEl)
+                                    .hide();
+
+                                $('#modalEditAlert')
+                                    .addClass('d-none')
+                                    .removeClass('alert-success')
+                                    .text('');
+
                             }, 700);
+
+
                         } else {
-                            $('#modalEditAlert').removeClass('d-none alert-success').addClass('alert-danger').text(res.message || 'Gagal menyimpan topik.');
+
+                            $('#modalEditAlert')
+                                .removeClass('d-none alert-success')
+                                .addClass('alert-danger')
+                                .text(
+                                    res.message || 'Gagal menyimpan topik.'
+                                );
+
                         }
+
                     })
-                    .catch(err => {
+
+                    .catch(function(err) {
+
                         console.error(err);
-                        $('#modalEditAlert').removeClass('d-none alert-success').addClass('alert-danger').text('Kesalahan jaringan.');
+
+                        $('#modalEditAlert')
+                            .removeClass('d-none alert-success')
+                            .addClass('alert-danger')
+                            .text('Kesalahan jaringan.');
+
                     })
-                    .finally(() => {
-                        $('#modalSaveBtn').prop('disabled', false).text('Simpan');
+
+                    .finally(function() {
+
+                        $('#modalSaveBtn')
+                            .prop('disabled', false)
+                            .text('Simpan');
+
                     });
+
             });
 
         });
     </script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
 
             document.querySelectorAll('.btn-delete-soal').forEach(btn => {
-                btn.addEventListener('click', function (e) {
+                btn.addEventListener('click', function(e) {
                     e.preventDefault();
 
                     const form = this.closest('form');
@@ -764,5 +944,4 @@
 
         });
     </script>
-
 @endpush

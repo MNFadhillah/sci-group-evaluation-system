@@ -232,7 +232,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', function (event) {
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault();
 
             const email = this.email.value.trim();
@@ -307,6 +307,15 @@
             });
 
             this.submit();
+        });
+        const togglePwd = document.getElementById('togglePwd');
+        const passwordInput = document.getElementById('password');
+        const eyeText = document.getElementById('eyeText');
+
+        togglePwd.addEventListener('click', () => {
+            const isHidden = passwordInput.type === 'password';
+            passwordInput.type = isHidden ? 'text' : 'password';
+            eyeText.textContent = isHidden ? 'Sembunyikan' : 'Tampilkan';
         });
     </script>
 </body>

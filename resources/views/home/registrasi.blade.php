@@ -193,8 +193,8 @@
 
 
                 <div class="mb-3" id="kelasField">
-                    <label>Kode Kelas (opsional)</label>
-                    <input type="text" id="kodeKelas" class="form-control" placeholder="Misal: EVO-1234">
+                    <label>Kode Kelas</label>
+                    <input type="text" id="kodeKelas" class="form-control" placeholder="Misal: KLS7TOKEN">
                     <div id="kelasError" class="error hidden"></div>
                 </div>
 
@@ -255,7 +255,7 @@
 
         function resetErrors() {
             [nameError, emailError, passwordError, kelasError, idError]
-                .forEach(e => e.classList.add('hidden'));
+            .forEach(e => e.classList.add('hidden'));
         }
 
 
@@ -272,7 +272,7 @@
         };
 
         document.getElementById('toLogin').onclick = () => {
-            window.location.href = '{{ url("/login") }}';
+            window.location.href = '{{ url('/login') }}';
         };
 
         document.getElementById('regForm').addEventListener('submit', async e => {
@@ -344,11 +344,16 @@
             }
 
             /* =====================
-               VALIDASI KODE KELAS
-            ===================== */
-            if (role === 'murid' && kodeKelas) {
-                if (!/^EVO-\d{4}$/.test(kodeKelas)) {
-                    kelasError.textContent = 'Kode kelas tidak valid. Contoh: EVO-1234';
+       VALIDASI KODE KELAS
+    ===================== */
+            if (role === 'murid') {
+                if (!kodeKelas) {
+                    kelasError.textContent = 'Kode kelas wajib diisi.';
+                    kelasError.classList.remove('hidden');
+                    return;
+                }
+                if (kodeKelas.length < 4) {
+                    kelasError.textContent = 'Kode kelas terlalu pendek.';
                     kelasError.classList.remove('hidden');
                     return;
                 }
@@ -388,8 +393,10 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify(payload)
                 });
 

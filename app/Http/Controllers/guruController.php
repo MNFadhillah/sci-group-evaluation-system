@@ -780,50 +780,103 @@ class guruController extends Controller
 
         $payload = $request->json()->all();
 
-        // jika id_topic disediakan -> pakai itu
-        if (!empty($payload['id_topic'])) {
-            $idTopic = intval($payload['id_topic']);
-            $topic = Topic::find($idTopic);
-            if (!$topic) {
-                return response()->json(['success' => false, 'message' => 'Topik tidak ditemukan.'], 404);
-            }
-            $question->id_topic = $topic->id;
-            $question->save();
+        // =====================================================
+// 1. JIKA MEMBUAT TOPIK BARU
+// =====================================================
+// topic_title memiliki prioritas lebih tinggi daripada id_topic.
+// Jadi walaupun dropdown topik lama masih terpilih,
+// selama guru mengisi judul topik baru, sistem akan membuat topik baru.
 
-            return response()->json(['success' => true, 'id_topic' => $topic->id, 'title' => $topic->title]);
-        }
+if (!empty($payload['topic_title']) && !empty($payload['id_subject'])) {
 
-        // jika membuat topik baru -> butuh id_subject + topic_title
-        if (!empty($payload['topic_title']) && !empty($payload['id_subject'])) {
-            $title = trim($payload['topic_title']);
-            $idSubject = intval($payload['id_subject']);
+    $title = trim($payload['topic_title']);
+    $idSubject = intval($payload['id_subject']);
 
-            // verifikasi subject berada di kelas guru
-            $subject = DB::table('subject')->where('id', $idSubject)->first();
-            if (!$subject) {
-                return response()->json(['success' => false, 'message' => 'Mata pelajaran tidak ditemukan.'], 404);
-            }
-            // pastikan guru punya akses ke kelas subject tersebut
-            $kelasId = $subject->id_class;
-            $teaches = DB::table('teacher_classes')
-                ->where('id_teacher', $guruId)
-                ->where('id_class', $kelasId)
-                ->exists();
-            if (!$teaches) {
-                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki hak untuk membuat topik pada mata pelajaran ini.'], 403);
-            }
+    // Pastikan mata pelajaran benar-benar ada
+    $subject = DB::table('subject')
+        ->where('id', $idSubject)
+        ->first();
 
-            // buat topik (firstOrCreate berdasarkan title + subject)
-            $topic = Topic::firstOrCreate(
-                ['title' => $title, 'id_subject' => $idSubject],
-                ['created_by' => $guruId]
-            );
+    if (!$subject) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Mata pelajaran tidak ditemukan.'
+        ], 404);
+    }
 
-            $question->id_topic = $topic->id;
-            $question->save();
+    // Pastikan guru mengajar kelas dari mata pelajaran tersebut
+    $kelasId = $subject->id_class;
 
-            return response()->json(['success' => true, 'id_topic' => $topic->id, 'title' => $topic->title]);
-        }
+    $teaches = DB::table('teacher_classes')
+        ->where('id_teacher', $guruId)
+        ->where('id_class', $kelasId)
+        ->exists();
+
+    if (!$teaches) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Anda tidak memiliki hak untuk membuat topik pada mata pelajaran ini.'
+        ], 403);
+    }
+
+    // Cari topik dengan nama yang sama pada mata pelajaran tersebut.
+    // Jika belum ada, buat baru.
+    $topic = Topic::firstOrCreate(
+        [
+            'title' => $title,
+            'id_subject' => $idSubject
+        ],
+        [
+            'created_by' => $guruId
+        ]
+    );
+
+    // Hubungkan soal dengan topik tersebut
+    $question->id_topic = $topic->id;
+    $question->save();
+
+    return response()->json([
+        'success' => true,
+        'created_new_topic' => true,
+        'id_topic' => $topic->id,
+        'title' => $topic->title
+    ]);
+}
+
+
+// =====================================================
+// 2. JIKA MEMILIH TOPIK YANG SUDAH ADA
+// =====================================================
+
+if (!empty($payload['id_topic'])) {
+
+    $idTopic = intval($payload['id_topic']);
+
+    $topic = Topic::find($idTopic);
+
+    if (!$topic) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Topik tidak ditemukan.'
+        ], 404);
+    }
+
+    $question->id_topic = $topic->id;
+    $question->save();
+
+    return response()->json([
+        'success' => true,
+        'created_new_topic' => false,
+        'id_topic' => $topic->id,
+        'title' => $topic->title
+    ]);
+}
+
+
+return response()->json([
+    'success' => false,
+    'message' => 'Silakan pilih topik atau isi judul topik baru.'
+], 422);
 
         return response()->json(['success' => false, 'message' => 'Payload tidak valid.'], 422);
     }
@@ -883,7 +936,7 @@ class guruController extends Controller
     public function simpanSoal(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:MultipleChoice,ShortAnswer',
+            'type' => 'required|in:MultipleChoice,ShortAnswer,Essay',
             'question_text' => 'required|string',
             'difficulty' => 'nullable|in:mudah,sedang,sulit',
             'id_topic' => 'nullable|exists:topics,id'
@@ -1001,16 +1054,20 @@ class guruController extends Controller
 
         // Jika tipe multiple choice, validasi minimal struktur
         if ($data->type === 'MultipleChoice') {
-            // option_text[] mungkin dikirim; mc_answer wajib
-            $rules['option_text'] = 'required|array|min:1';
-            $rules['option_text.*'] = 'nullable|string';
-            $rules['option_url.*'] = 'nullable|url';
-            // option_image.* akan kita proses secara manual (file)
-            $rules['mc_answer'] = 'required|in:a,b,c,d,e';
-        } else { // ShortAnswer
-            $rules['sa_answer'] = 'nullable|array';
-            $rules['sa_answer.*'] = 'nullable|string';
-        }
+    // MultipleChoice
+    $rules['option_text'] = 'required|array|min:1';
+    $rules['option_text.*'] = 'nullable|string';
+    $rules['option_url.*'] = 'nullable|url';
+    $rules['mc_answer'] = 'required|in:a,b,c,d,e';
+
+} elseif ($data->type === 'ShortAnswer') {
+    // ShortAnswer
+    $rules['sa_answer'] = 'nullable|array';
+    $rules['sa_answer.*'] = 'nullable|string';
+
+} elseif ($data->type === 'Essay') {
+    // Essay tidak membutuhkan kunci jawaban
+}
 
         $validated = $request->validate($rules);
 
@@ -1064,17 +1121,29 @@ class guruController extends Controller
 
             $mcOption = json_encode($options);
             $mcAnswer = $request->mc_answer; // validated to be a/b/c/d/e
-        } else {
-            // ShortAnswer: remove empty answers and reindex
-            $sa = $request->input('sa_answer', []);
-            $filtered = array_values(array_filter(array_map(function ($v) {
-                return is_null($v) ? null : trim((string) $v);
-            }, (array) $sa), function ($v) {
-                return $v !== null && $v !== '';
-            }));
+        } elseif ($data->type === 'ShortAnswer') {
+    // ShortAnswer: remove empty answers and reindex
+    $sa = $request->input('sa_answer', []);
 
-            $saAnswer = !empty($filtered) ? json_encode($filtered) : null;
+    $filtered = array_values(array_filter(
+        array_map(function ($v) {
+            return is_null($v) ? null : trim((string) $v);
+        }, (array) $sa),
+        function ($v) {
+            return $v !== null && $v !== '';
         }
+    ));
+
+    $saAnswer = !empty($filtered)
+        ? json_encode($filtered)
+        : null;
+
+} elseif ($data->type === 'Essay') {
+    // Essay tidak menggunakan kunci jawaban
+    $saAnswer = null;
+    $mcAnswer = null;
+    $mcOption = null;
+}
 
         // Update record
         $data->question = json_encode($questionData);
