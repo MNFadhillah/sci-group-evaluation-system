@@ -2,10 +2,10 @@
 @section('dataAktivitas', request()->is('guru/aktivitas/*/atur-soal') ? 'active' : '')
 
 @section('content')
-<div class="container mt-4">
+<div id="aturSoalWrap" class="container-fluid px-3 px-md-4 py-3 d-flex flex-column">
 
-    <div class="d-flex align-items-center gap-2 mb-3">
-        <h3 class="fw-bold mb-0 d-flex align-items-center gap-2 flex-wrap">
+    <div class="d-flex align-items-center gap-2 mb-2">
+        <h4 class="fw-bold mb-0 d-flex align-items-center gap-2 flex-wrap">
             Atur Soal untuk: {{ $aktivitas->title }}
 
             @if($aktivitas->addaptive === 'yes')
@@ -17,26 +17,25 @@
                 <i class="bi bi-slash-circle me-1"></i> Non-Adaptif
             </span>
             @endif
-        </h3>
+        </h4>
 
         <button type="button"
             class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
-            style="width:32px;height:32px" data-bs-toggle="modal" data-bs-target="#modalInfoAturSoal"
+            style="width:30px;height:30px" data-bs-toggle="modal" data-bs-target="#modalInfoAturSoal"
             title="Informasi Pengaturan Soal">
             <i class="bi bi-info-lg"></i>
         </button>
     </div>
 
-
-    <a href="{{ url('/dataaktivitas') }}" class="btn btn-secondary mb-3">
+    <a href="{{ url('/dataaktivitas') }}" class="btn btn-secondary btn-sm mb-2 align-self-start">
         <i class="bi bi-arrow-left"></i> Kembali
     </a>
 
     {{-- PETUNJUK --}}
-    <div class="card shadow-sm mb-3">
-        <div class="card-body">
+    <div class="card shadow-sm mb-2">
+        <div class="card-body py-2">
             <div class="small text-muted">Petunjuk</div>
-            <p class="mb-0">
+            <p class="mb-0 small">
                 Soal terpilih akan ditampilkan di bawah. Gunakan tombol <strong>Lihat Soal</strong> untuk memilih soal
                 dari daftar (manual atau otomatis). Setelah memilih di modal, tekan <strong>Terapkan ke
                     Aktivitas</strong>
@@ -47,10 +46,10 @@
     </div>
 
     {{-- SOAL TERPILIH --}}
-    <div class="card shadow-sm mb-3">
-        <div class="card-header bg-primary text-white fw-semibold">Soal Terpilih</div>
+    <div class="card shadow-sm mb-2">
+        <div class="card-header bg-primary text-white fw-semibold py-2">Soal Terpilih</div>
 
-        <div class="card-body" id="selectedArea" style="min-height:240px; max-height:420px; overflow-y:auto;">
+        <div class="card-body" id="selectedArea" style="min-height:180px; max-height:340px; overflow-y:auto;">
             @if($selectedQuestions->isEmpty())
             <div id="noSelectedPlaceholder" class="text-center text-muted py-4">
                 <i class="bi bi-clipboard-x" style="font-size:2rem"></i>
@@ -75,7 +74,7 @@
             @endif
         </div>
 
-        <div class="card-footer d-flex gap-2">
+        <div class="card-footer d-flex gap-2 py-2">
             <button class="btn btn-outline-primary flex-fill" data-bs-toggle="modal" data-bs-target="#soalModal">
                 <i class="bi bi-list-ul me-1"></i> Lihat Soal
             </button>
@@ -91,10 +90,10 @@
     </div>
 
     {{-- INFORMASI COUNT (opsional) --}}
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body py-3">
+    <div class="card shadow-sm border-0 mb-2">
+        <div class="card-body py-2">
 
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center text-center gap-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center text-center gap-2">
 
                 {{-- Total Soal --}}
                 <div class="px-3">
@@ -1253,6 +1252,32 @@
         });
 
         updateCounter();
+
+        // Isi ruang kosong antara konten dan footer secara dinamis,
+        // konsisten dengan halaman Tambah Soal / Generator Soal.
+        function findFooter() {
+            return document.querySelector('footer') ||
+                document.querySelector('.footer') ||
+                document.querySelector('[class*="footer"]');
+        }
+
+        function adjustWrapHeight() {
+            const wrap = document.getElementById('aturSoalWrap');
+            if (!wrap) return;
+
+            wrap.style.minHeight = '0px';
+
+            const top = wrap.getBoundingClientRect().top;
+            const footer = findFooter();
+            const footerHeight = footer ? footer.getBoundingClientRect().height : 0;
+            const available = window.innerHeight - top - footerHeight;
+
+            wrap.style.minHeight = Math.max(available, 0) + 'px';
+        }
+
+        adjustWrapHeight();
+        window.addEventListener('resize', adjustWrapHeight);
+        window.addEventListener('load', adjustWrapHeight);
     });
 </script>
 
