@@ -164,11 +164,13 @@
                                     <div class="text-dark bg-white p-3 rounded-3 border shadow-sm" style="font-size: 0.95rem; min-height: 80px;">
                                         {!! nl2br(e($ans->answer)) !!}
                                     </div>
+
                                 </div>
                             </div>
                         </div>
                         @endforeach
                     </div>
+
                 </div>
             </div>
             @empty
@@ -179,6 +181,10 @@
             @endforelse
         </div>
 
+
+        {{-- ========================= --}}
+        {{-- PEER REVIEW --}}
+        {{-- ========================= --}}
         <div class="col-lg-3">
             <div class="position-sticky" style="top: 20px;">
                 <div class="card shadow-sm border-0 rounded-4">
@@ -204,6 +210,7 @@
                             @if(!empty($rating->comment))
                             <div class="mt-1 p-2 bg-white rounded border small text-secondary fst-italic">"{{ $rating->comment }}"</div>
                             @endif
+
                         </div>
                         @empty
                         <div class="text-center py-4">
@@ -212,9 +219,12 @@
                         @endforelse
                     </div>
                 </div>
+
             </div>
+
         </div>
     </div>
+
 </div>
 
 <div class="modal fade" id="modalBeriNilai" tabindex="-1">
@@ -226,6 +236,8 @@
             </div>
             <form action="{{ route('guru.penilaian.simpan', ['activity' => $activity->id, 'group' => $group->id]) }}" method="POST">
                 @csrf
+
+
                 <div class="modal-body p-4">
                     <div class="alert alert-info small mb-4">
                         <i class="fas fa-info-circle me-1"></i> Berikan satu nilai rata-rata untuk keseluruhan pekerjaan kelompok ini. Sistem akan memecah nilai ini menggunakan Indeks SCI siswa.
@@ -234,14 +246,32 @@
                         <label class="form-label fw-bold text-dark mb-2">Nilai Mentah Kelompok (0 - 100)</label>
                         <input type="number" name="nilai_kelompok" class="form-control form-control-lg border-success text-center fw-bold fs-3 text-success shadow-sm" required min="0" max="100" placeholder="0">
                     </div>
+
+
+                    <div class="alert alert-light border small mb-0">
+
+                        <i class="fas fa-info-circle text-info me-1"></i>
+
+                        Nilai ini menjadi
+                        <strong>nilai dasar kelompok</strong>.
+                        Sistem akan menggunakan
+                        <strong>Indeks SCI</strong>
+                        masing-masing siswa berdasarkan
+                        peer review untuk menentukan nilai akhir individu.
+
+                    </div>
+
                 </div>
                 <div class="modal-footer bg-light border-0 rounded-bottom-4">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-success fw-bold px-4 shadow-sm">Sahkan & Simpan Nilai</button>
                 </div>
+
             </form>
         </div>
+
     </div>
+
 </div>
 
 <script>

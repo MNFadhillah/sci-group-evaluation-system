@@ -9,14 +9,8 @@
     }
 
     .class-card {
-        border-radius: 14px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-        transition: transform .2s ease, box-shadow .2s ease;
-    }
-
-    .class-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 14px 32px rgba(0, 0, 0, .1);
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     }
 
     .class-card .card-body {
@@ -24,11 +18,6 @@
     }
 
     /* ===== TEXT ===== */
-    .muted-small {
-        font-size: .85rem;
-        color: #6c757d;
-    }
-
     .subject-badge {
         font-size: .8rem;
         margin-right: .4rem;
@@ -51,29 +40,16 @@
 
     /* ===== ACTIVITY ===== */
     .activity-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        /* Agar elemen turun ke bawah di layar kecil */
-        gap: 1rem;
-        padding: 1rem 1.25rem;
         border-radius: 10px;
-        background: #f8f9fa;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        transition: all 0.2s ease-in-out;
+        transition: box-shadow .15s ease;
     }
 
     .activity-row+.activity-row {
-        margin-top: .75rem;
+        margin-top: .5rem;
     }
 
     .activity-row:hover {
-        background: #ffffff;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
-        border-color: #cbd5e1;
-        transform: translateX(3px);
-        /* Efek geser kanan sedikit saat disorot */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
     }
 
     .activity-title {
@@ -82,22 +58,13 @@
         line-height: 1.4;
     }
 
-    .action-buttons {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        /* Tombol aman di layar kecil */
-    }
-
     /* ===== SCROLL AREA ===== */
     .card-scroll {
-        max-height: 450px;
+        max-height: 480px;
         overflow-y: auto;
         padding-right: .5rem;
     }
 
-    /* Modifikasi Scrollbar agar rapi */
     .card-scroll::-webkit-scrollbar {
         width: 6px;
     }
@@ -106,30 +73,23 @@
         background-color: #cbd5e1;
         border-radius: 10px;
     }
-
-    /* ===== BUTTON ===== */
-    .btn-sm-custom {
-        padding: .4rem .75rem;
-        white-space: nowrap;
-        font-size: 0.85rem;
-    }
 </style>
 @endsection
 
 @section('content')
-<div class="container py-4">
+<div class="container-fluid px-3 px-md-4 py-4">
 
     {{-- HEADER --}}
     <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
-                <h1 class="h3 fw-bold mb-0 text-gray-800">Data Nilai & Evaluasi</h1>
+                <h3 class="fw-bold mb-0">Data Nilai & Evaluasi</h3>
 
                 <button type="button"
-                    class="btn btn-sm btn-outline-info rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                    class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
                     style="width:32px;height:32px" data-bs-toggle="modal" data-bs-target="#modalInfoDataNilai"
                     title="Informasi Data Nilai">
-                    <i class="bi bi-info-lg fw-bold"></i>
+                    <i class="bi bi-info-lg"></i>
                 </button>
             </div>
 
@@ -156,9 +116,8 @@
     @else
     <div class="row g-4">
         @foreach($grouped as $class)
-        {{-- Menggunakan col-12 agar card kelas melebar secara optimal untuk layout 2 kolom --}}
         <div class="col-12">
-            <div class="card class-card h-100 border-0 shadow-sm">
+            <div class="card class-card h-100 border-0">
                 <div class="card-body d-flex flex-column">
 
                     {{-- HEADER KELAS --}}
@@ -171,14 +130,14 @@
                         </div>
 
                         <div class="text-end">
-                            <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm mb-2">
+                            <span class="badge bg-primary px-3 py-2 rounded-pill mb-2">
                                 {{ collect($class['subjects'])->sum(function ($s) {
                                         return collect($s['topics'])->sum(fn($t) => count($t['activities']));
                                     }) }} Total Aktivitas
                             </span>
                             <br>
                             <a href="{{ route('guru.datanilai.exportClass', $class['class_id']) }}"
-                                class="btn btn-outline-success btn-sm fw-bold shadow-sm">
+                                class="btn btn-outline-success btn-sm fw-bold">
                                 <i class="fas fa-download"></i> Unduh Rekap Kelas
                             </a>
                         </div>
@@ -189,7 +148,7 @@
                         @forelse ($class['subjects'] as $subject)
                         <div class="subject-block mb-4">
                             <div class="d-flex align-items-center mb-3">
-                                <span class="badge bg-info text-dark subject-badge px-3 py-1 shadow-sm fw-bold">
+                                <span class="badge bg-info text-dark subject-badge px-3 py-1 fw-bold">
                                     {{ $subject['name'] }}
                                 </span>
                                 <small class="text-muted fw-semibold ms-2">
@@ -204,7 +163,6 @@
                                 </div>
 
                                 @php
-                                // Ubah aktivitas menjadi Collection untuk memudahkan pemisahan data
                                 $activities = collect($topic['activities']);
                                 $individualActivities = $activities->where('is_group_activity', '!=', 'yes');
                                 $groupActivities = $activities->where('is_group_activity', 'yes');
@@ -233,23 +191,23 @@
                                                 $cnt = $act['results_count'] ?? 0;
                                                 $badgeClass = $cnt > 0 ? 'bg-success' : 'bg-secondary';
                                                 @endphp
-                                                <div class="activity-row p-3 bg-white rounded-2 border shadow-sm">
+                                                <div class="activity-row p-3 bg-white border">
                                                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                                        <div class="activity-title text-dark fw-semibold" title="{{ $act['title'] }}">
+                                                        <div class="activity-title text-dark" title="{{ $act['title'] }}">
                                                             <i class="fas fa-tasks text-primary me-2"></i> {{ $act['title'] }}
                                                         </div>
-                                                        <div class="action-buttons d-flex align-items-center gap-2">
-                                                            <span class="badge {{ $badgeClass }} px-2 py-1 shadow-sm">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <span class="badge {{ $badgeClass }} px-2 py-1">
                                                                 {{ $cnt }} Dinilai
                                                             </span>
-                                                            <a href="{{ route('detail.nilai', $act['id']) }}" class="btn btn-primary btn-sm fw-bold shadow-sm">
+                                                            <a href="{{ route('detail.nilai', $act['id']) }}" class="btn btn-primary btn-sm fw-bold">
                                                                 <i class="fas fa-eye"></i> Nilai Akhir
                                                             </a>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 @empty
-                                                <div class="text-muted small fst-italic py-3 text-center bg-white rounded-2 border border-dashed">
+                                                <div class="text-muted small fst-italic py-3 text-center bg-white rounded-2 border">
                                                     Tidak ada aktivitas individu.
                                                 </div>
                                                 @endforelse
@@ -272,26 +230,26 @@
                                                 $cnt = $act['results_count'] ?? 0;
                                                 $badgeClass = $cnt > 0 ? 'bg-success' : 'bg-secondary';
                                                 @endphp
-                                                <div class="activity-row p-3 bg-white rounded-2 border shadow-sm">
+                                                <div class="activity-row p-3 bg-white border">
                                                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                                        <div class="activity-title text-dark fw-semibold" title="{{ $act['title'] }}">
+                                                        <div class="activity-title text-dark" title="{{ $act['title'] }}">
                                                             <i class="fas fa-tasks text-primary me-2"></i> {{ $act['title'] }}
                                                         </div>
-                                                        <div class="action-buttons d-flex align-items-center gap-2 flex-wrap">
-                                                            <span class="badge {{ $badgeClass }} px-2 py-1 shadow-sm">
+                                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                            <span class="badge {{ $badgeClass }} px-2 py-1">
                                                                 {{ $cnt }} Dinilai
                                                             </span>
-                                                            <a href="{{ route('guru.monitoring', $act['id']) }}" class="btn btn-warning btn-sm fw-bold shadow-sm text-dark">
+                                                            <a href="{{ route('guru.monitoring', $act['id']) }}" class="btn btn-warning btn-sm fw-bold text-dark">
                                                                 <i class="bi bi-people-fill me-1"></i> Nilai Kelompok
                                                             </a>
-                                                            <a href="{{ route('detail.nilai', $act['id']) }}" class="btn btn-primary btn-sm fw-bold shadow-sm">
+                                                            <a href="{{ route('detail.nilai', $act['id']) }}" class="btn btn-primary btn-sm fw-bold">
                                                                 <i class="fas fa-eye"></i> Nilai Akhir
                                                             </a>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 @empty
-                                                <div class="text-muted small fst-italic py-3 text-center bg-white rounded-2 border border-dashed">
+                                                <div class="text-muted small fst-italic py-3 text-center bg-white rounded-2 border">
                                                     Tidak ada aktivitas kelompok.
                                                 </div>
                                                 @endforelse
@@ -331,7 +289,7 @@
             </div>
             <div class="modal-body">
                 <p class="mb-3">
-                    Halaman <strong>Data Nilai</strong> digunakan untuk memantau pengerjaan kelompok dan mengelola hasil penilaian siswa dari berbagai <strong>kelas</strong> yang Anda ampu.
+                    Halaman ini digunakan untuk memantau pengerjaan kelompok dan mengelola hasil penilaian siswa dari berbagai kelas yang Anda ampu.
                 </p>
                 <hr class="my-3">
                 <h6 class="fw-bold text-warning mb-2">
@@ -339,12 +297,12 @@
                 </h6>
                 <ul class="mb-3">
                     <li>
-                        <button class="btn btn-warning btn-sm py-0 px-2 fw-bold text-dark me-1" disabled><i class="fas fa-satellite-dish"></i> Monitoring</button>
-                        Hanya tersedia pada <strong>Aktivitas Kelompok</strong>. Digunakan untuk memantau progres jawaban kelompok secara <em>real-time</em> dan memberikan nilai proyek kelompok.
+                        <span class="badge bg-warning text-dark fw-bold"><i class="fas fa-satellite-dish"></i> Nilai Kelompok</span>
+                        — hanya ada pada aktivitas kelompok, untuk memantau progres jawaban dan memberi nilai proyek kelompok.
                     </li>
                     <li class="mt-2">
-                        <button class="btn btn-primary btn-sm py-0 px-2 fw-bold me-1" disabled><i class="fas fa-eye"></i> Nilai Akhir</button>
-                        Digunakan untuk melihat rekapitulasi nilai akhir individu, indeks kontribusi SCI, dan Badge siswa.
+                        <span class="badge bg-primary fw-bold"><i class="fas fa-eye"></i> Nilai Akhir</span>
+                        — melihat rekap nilai akhir individu, indeks kontribusi SCI, dan badge siswa.
                     </li>
                 </ul>
                 <hr class="my-3">
@@ -353,11 +311,11 @@
                 </h6>
                 <ul class="mb-0">
                     <li><strong>Export Semua Kelas</strong> → mengunduh seluruh data nilai dari semua kelas.</li>
-                    <li><strong>Unduh Rekap</strong> → mengunduh nilai berdasarkan kelas tertentu saja.</li>
+                    <li><strong>Unduh Rekap Kelas</strong> → mengunduh nilai berdasarkan satu kelas saja.</li>
                 </ul>
             </div>
             <div class="modal-footer border-0">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Tutup Pemandu</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>

@@ -3,10 +3,8 @@
 @section('dataKelas', request()->is('datakelas') ? 'active' : '')
 
 @section('content')
-<div class="container py-4">
-    {{-- PENTING: pastikan di layouts.main ada:
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    --}}
+<div class="container-fluid py-3 px-4 d-flex flex-column" style="overflow-x: hidden; min-height: calc(100vh - 150px);">
+    
     
     {{-- Flash messages --}}
     @if(session('success'))
@@ -19,9 +17,9 @@
         <div class="alert alert-info">{{ session('info') }}</div>
     @endif
 
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-4 gap-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-3">
         <div class="d-flex align-items-center gap-2">
-            <h2 class="fw-bold mb-0">Daftar Kelas Anda</h2>
+            <h3 class="fw-bold mb-0">Daftar Kelas Anda</h3>
 
             <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" style="width:32px;height:32px"
                 data-bs-toggle="modal" data-bs-target="#modalInfoKelas" title="Informasi Pengelolaan Kelas">
@@ -44,17 +42,15 @@
     @if($dataKelas->isEmpty())
         <div class="alert alert-info">Anda belum mengajar kelas apa pun.</div>
     @else
-        <div class="row g-4">
+        <div class="row g-3 flex-grow-1">
             @foreach($dataKelas as $data)
                 <div class="col-12 col-md-6 col-lg-4">
-                    <article class="card h-100 shadow-sm border-0 rounded-4 kelas-card overflow-hidden">
-                        <div class="card-header bg-gradient p-3 d-flex justify-content-between align-items-start">
-                            <div class="text-primary">
-                                <h5 class="mb-1 fw-bold" style="letter-spacing: .2px;">{{ $data->kelas->name }}</h5>
+                    <article class="card h-100 border kelas-card overflow-hidden">
+                        <div class="card-header kelas-header px-3 py-2 d-flex justify-content-between align-items-start">
+                            <div class="text-white">
+                                <h6 class="mb-1 fw-bold" style="letter-spacing: .2px;">{{ $data->kelas->name }}</h6>
                                 <div class="small opacity-85">
-                                    <span class="me-2">Semester:
-                                        <strong>{{ $data->kelas->semester == 'odd' ? 'Ganjil' : 'Genap' }}</strong>
-                                    </span>
+                                    Semester <strong>{{ $data->kelas->semester == 'odd' ? 'Ganjil' : 'Genap' }}</strong>
                                 </div>
                             </div>
 
@@ -86,54 +82,47 @@
                             </div>
                         </div>
 
-                        <div class="card-body p-3">
-                            {{-- Meta info vertical --}}
-                            <dl class="row mb-3">
-                                <dt class="col-4 text-muted small">Jenjang</dt>
-                                <dd class="col-8 mb-1">
-                                    <span class="badge bg-light text-dark border px-3 py-2">{{ $data->kelas->level }}</span>
-                                </dd>
+                        <div class="card-body px-3 pt-3 pb-2">
+                            {{-- Meta info compact chips --}}
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="chip">{{ $data->kelas->level }}</span>
+                                <span class="chip">Grade {{ $data->kelas->grade }}</span>
+                            </div>
 
-                                <dt class="col-4 text-muted small">Kelas</dt>
-                                <dd class="col-8 mb-1">
-                                    <span class="badge bg-light text-dark border px-3 py-2">Grade {{ $data->kelas->grade }}</span>
-                                </dd>
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <small class="text-muted">Token</small>
+                                <code class="px-2 py-1 rounded bg-light text-secondary border small" id="tokenText{{ $loop->index }}">{{ $data->kelas->token }}</code>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="copyToken('tokenText{{ $loop->index }}')" data-bs-toggle="tooltip" title="Salin token">
+                                    Salin
+                                </button>
+                            </div>
 
-                                <dt class="col-4 text-muted small">Token</dt>
-                                <dd class="col-8 mb-0 d-flex align-items-center gap-2">
-                                    <code class="px-2 py-1 rounded bg-white text-secondary border" id="tokenText{{ $loop->index }}">{{ $data->kelas->token }}</code>
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="copyToken('tokenText{{ $loop->index }}')" data-bs-toggle="tooltip" title="Salin token">
-                                        Salin
-                                    </button>
-                                </dd>
-                            </dl>
-                            
                             <!-- klaim paket -->
-                            <div class="mt-2 mb-3">
+                            <div class="mb-3">
                                 <button class="btn btn-outline-primary btn-sm btn-open-claim-modal" data-class-id="{{ $data->kelas->id }}" data-class-name="{{ $data->kelas->name }}">
                                     Klaim Paket
                                 </button>
                             </div>
 
                             {{-- Lists with collapse --}}
-                            <div class="mb-3">
-                                <h6 class="fw-semibold text-secondary mb-1">Guru Pengajar</h6>
+                            <div class="info-section">
+                                <div class="info-label">Guru Pengajar</div>
                                 @if($data->guru->isNotEmpty())
                                     <div class="collapse show" id="guruList{{ $loop->index }}">
-                                        <ol class="ps-3 mb-0 small max-list" aria-hidden="false">
+                                        <ul class="info-list" aria-hidden="false">
                                             @foreach($data->guru as $g)
                                                 <li>{{ $g }}</li>
                                             @endforeach
-                                        </ol>
+                                        </ul>
                                     </div>
                                 @else
                                     <em class="text-muted small">Belum ada guru pengajar</em>
                                 @endif
                             </div>
 
-                            <div class="mb-3">
+                            <div class="info-section">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <h6 class="fw-semibold text-secondary mb-0">Mata Pelajaran</h6>
+                                    <div class="info-label mb-0">Mata Pelajaran</div>
                                     @if($data->subjects->count() > 3)
                                         <a class="small" data-bs-toggle="collapse" href="#subjectList{{ $loop->index }}" role="button" aria-expanded="false">Lihat semua</a>
                                     @endif
@@ -141,20 +130,20 @@
 
                                 @if($data->subjects->isNotEmpty())
                                     <div class="collapse {{ $data->subjects->count() <= 3 ? 'show' : '' }}" id="subjectList{{ $loop->index }}">
-                                        <ol class="ps-3 mb-0 small max-list">
+                                        <ul class="info-list">
                                             @foreach($data->subjects as $s)
                                                 <li>{{ $s }}</li>
                                             @endforeach
-                                        </ol>
+                                        </ul>
                                     </div>
                                 @else
                                     <em class="text-muted small">Tidak ada Mata Pelajaran</em>
                                 @endif
                             </div>
 
-                            <div class="mb-3">
+                            <div class="info-section">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <h6 class="fw-semibold text-secondary mb-0">Topik</h6>
+                                    <div class="info-label mb-0">Topik</div>
                                     @if($data->topics->count() > 3)
                                         <a class="small" data-bs-toggle="collapse" href="#topicList{{ $loop->index }}" role="button" aria-expanded="false">Lihat semua</a>
                                     @endif
@@ -162,20 +151,20 @@
 
                                 @if($data->topics->isNotEmpty())
                                     <div class="collapse {{ $data->topics->count() <= 3 ? 'show' : '' }}" id="topicList{{ $loop->index }}">
-                                        <ol class="ps-3 mb-0 small max-list">
+                                        <ul class="info-list">
                                             @foreach($data->topics as $t)
                                                 <li>{{ $t }}</li>
                                             @endforeach
-                                        </ol>
+                                        </ul>
                                     </div>
                                 @else
                                     <em class="text-muted small">Tidak ada topic</em>
                                 @endif
                             </div>
 
-                            <div>
+                            <div class="info-section mb-0">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <h6 class="fw-semibold text-secondary mb-0">Aktivitas</h6>
+                                    <div class="info-label mb-0">Aktivitas</div>
                                     @if($data->activities->count() > 3)
                                         <a class="small" data-bs-toggle="collapse" href="#activityList{{ $loop->index }}" role="button" aria-expanded="false">Lihat semua</a>
                                     @endif
@@ -183,11 +172,11 @@
 
                                 @if($data->activities->isNotEmpty())
                                     <div class="collapse {{ $data->activities->count() <= 3 ? 'show' : '' }}" id="activityList{{ $loop->index }}">
-                                        <ol class="ps-3 mb-0 small max-list">
+                                        <ul class="info-list">
                                             @foreach($data->activities as $a)
                                                 <li>{{ $a }}</li>
                                             @endforeach
-                                        </ol>
+                                        </ul>
                                     </div>
                                 @else
                                     <em class="text-muted small">Tidak ada activity</em>
@@ -429,8 +418,9 @@
 
 {{-- Styles khusus --}}
 <style>
-    .bg-gradient {
-        background: linear-gradient(135deg, #0d6efd 0%, #3b82f6 100%);
+    .kelas-header {
+        background: #4e73df;
+        border-bottom: none;
     }
 
     .btn-icon {
@@ -442,27 +432,61 @@
     }
 
     .kelas-card {
-        transition: transform .18s ease, box-shadow .18s ease;
+        border-radius: 14px;
+        border-color: #e5e8ec !important;
+        transition: box-shadow .2s ease, border-color .2s ease;
     }
 
     .kelas-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 12px 30px rgba(13, 110, 253, .12);
+        box-shadow: 0 6px 16px rgba(0,0,0,.07);
+        border-color: #cfd6dd !important;
     }
 
-    .max-list {
-        max-height: 6.5rem;
-        overflow: auto;
+    .chip {
+        display: inline-block;
+        background: #f1f3f5;
+        border: 1px solid #e5e8ec;
+        color: #495057;
+        font-size: .78rem;
+        font-weight: 600;
+        padding: .3rem .7rem;
+        border-radius: 999px;
     }
 
-    .max-list::-webkit-scrollbar {
-        height: 6px;
-        width: 6px;
+    .info-section {
+        margin-bottom: .85rem;
     }
 
-    .max-list::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.08);
-        border-radius: 6px;
+    .info-label {
+        font-size: .78rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: .3rem;
+    }
+
+    .info-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        font-size: .875rem;
+        color: #343a40;
+    }
+
+    .info-list li {
+        position: relative;
+        padding-left: 1rem;
+        line-height: 1.6;
+    }
+
+    .info-list li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: .65rem;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #adb5bd;
     }
 </style>
 
