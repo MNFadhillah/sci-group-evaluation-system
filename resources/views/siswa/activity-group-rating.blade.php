@@ -250,7 +250,7 @@
                 totalDisplay.classList.remove('alert-danger', 'alert-info');
                 totalDisplay.classList.add('alert-success');
                 btnSubmit.disabled = false;
-                btnSubmit.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Simpan Penilaian';
+                btnSubmit.innerHTML = '<i class="fas fa-check-circle me-2"></i> Simpan Penilaian & Selesai';
             } else {
                 totalDisplay.classList.remove('alert-success', 'alert-info');
                 totalDisplay.classList.add('alert-danger');
@@ -276,5 +276,4 @@
 </script>
 @endpush
 
-@endsection
 @endsection

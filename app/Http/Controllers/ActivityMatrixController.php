@@ -8,6 +8,7 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Auth;
 
 
 class ActivityMatrixController extends Controller
@@ -19,7 +20,7 @@ class ActivityMatrixController extends Controller
     {
         $classes = DB::table('teacher_classes as tc')
             ->join('classes as c', 'c.id', '=', 'tc.id_class')
-            ->where('tc.id_teacher', auth()->id())
+            ->where('tc.id_teacher', Auth::id())
             ->select('c.id', 'c.name')
             ->get();
 

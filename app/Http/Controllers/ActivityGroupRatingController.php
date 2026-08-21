@@ -12,6 +12,7 @@ use App\Models\ActivityResult;
 use App\Models\ActivityStudentPackage;
 use App\Models\ActivityStudentQuestion;
 use App\Models\ActivityGroupAnswer;
+use App\Models\ActivityAnswer;
 
 class ActivityGroupRatingController extends Controller
 {
@@ -74,6 +75,9 @@ class ActivityGroupRatingController extends Controller
     /**
      * Menyimpan penilaian anggota (Masal/Array)
      */
+    /**
+     * Menyimpan penilaian anggota (Masal/Array)
+     */
     public function save(Request $request, $id)
     {
         $user = Auth::user();
@@ -107,9 +111,7 @@ class ActivityGroupRatingController extends Controller
             'ratings.*.score.max' => 'Poin maksimal adalah 100.',
         ]);
 
-        // =======================================================
-        // TAMBAHAN: VALIDASI TOTAL POIN HARUS TEPAT 100
-        // =======================================================
+        // 2. VALIDASI TOTAL POIN HARUS TEPAT 100
         $totalScore = 0;
         foreach ($request->ratings as $data) {
             $totalScore += (int) $data['score'];
@@ -121,19 +123,12 @@ class ActivityGroupRatingController extends Controller
                 ->withInput();
         }
 
-        // 2. Looping array dan simpan semua penilaian ke database
-
-        // 2. Looping array dan simpan semua penilaian ke database
-        // (Aturan 'tidak boleh menilai diri sendiri' sudah DIHAPUS agar sesuai konsep SCI)
+        // 3. Simpan semua penilaian ke database
         foreach ($request->ratings as $evaluatedId => $data) {
-
             // Pastikan orang yang dinilai memang anggota kelompok yang sama
-            $isMember = $group->members()
-                ->where('id_user', $evaluatedId)
-                ->exists();
+            $isMember = $group->members()->where('id_user', $evaluatedId)->exists();
 
             if ($isMember) {
-                // Simpan atau update penilaian
                 ActivityGroupRating::updateOrCreate(
                     [
                         'id_activity' => $activity->id,
@@ -150,327 +145,60 @@ class ActivityGroupRatingController extends Controller
         }
 
         // =======================================================
-        // PERBAIKAN: HITUNG SCI & SIMPAN BADGE SECARA PERMANEN
+        // TAHAP 2: TRIGGER MESIN SENTRAL SCI (AUTO-CALCULATE)
         // =======================================================
-        // 1. Ambil semua anggota di kelompok ini
-        $groupMembers = $group->members()->pluck('id_user')->toArray();
-        $userPrScores = [];
-        $totalPr = 0;
+        // Kita panggil fungsi kalkulasiSCIKelompok yang ada di EvaluasiController
+        // Mesin ini akan otomatis mengalikan Nilai Murni dengan SCI dan menyimpan Nilai Akhir!
+        app(\App\Http\Controllers\Guru\EvaluasiController::class)->kalkulasiSCIKelompok($activity->id, $group->id);
 
-        // 2. Hitung rata-rata rating (PR) yang didapat tiap anggota
-        foreach ($groupMembers as $memberId) {
-            $avgRating = ActivityGroupRating::where('id_activity', $activity->id)
-                ->where('id_group', $group->id)
-                ->where('id_evaluated', $memberId)
-                ->avg('score');
-
-            $pr = $avgRating !== null ? (float) $avgRating : 100;
-            $userPrScores[$memberId] = $pr;
-            $totalPr += $pr;
-        }
-
-        // 3. Rata-rata PR Kelompok
-        $groupAvg = count($groupMembers) > 0 ? ($totalPr / count($groupMembers)) : 100;
-
-        // 4. Hitung SCI tiap anggota & Berikan Badge
-        foreach ($groupMembers as $memberId) {
-            $myPr = $userPrScores[$memberId];
-            $sci = $groupAvg > 0 ? round($myPr / $groupAvg, 2) : 1.00;
-
-            // Aturan Badge Mode 2
-            $badgeId = 2; // Default (Solid Partner)
-            if ($sci >= 1.10) {
-                $badgeId = 1; // The Carry
-            } elseif ($sci < 0.90) {
-                $badgeId = 3; // Need Help
-            }
-
-            // Simpan Badge ke database (Pastikan siswa dapat badge)
-            DB::table('user_badge')->updateOrCreate(
-                [
-                    'id_student' => $memberId,
-                    'id_activity' => $activity->id,
-                ],
-                [
-                    'id_badge' => $badgeId,
-                    'id_class' => $group->id_class ?? null,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]
-            );
-        }
-
-        return back()->with(
+        // UBAH RETURN REDIRECTNYA JADI LANGSUNG KE DASHBOARD
+        return redirect()->route('siswa.aktivitas')->with(
             'success',
-            'Sip! Penilaian kinerja kelompok berhasil disimpan.'
+            'Sip! Penilaian kinerja kelompok berhasil disimpan. Aktivitas telah selesai sepenuhnya!'
         );
     }
     /**
- * Menyelesaikan aktivitas Mode 2 kelompok.
- */
-public function finish($id)
-{
-    $user = Auth::user();
+     * Menyelesaikan aktivitas Mode 2 kelompok.
+     */
+    public function finish($id)
+    {
+        $user = Auth::user();
+        $activity = Activity::findOrFail($id);
 
-    // Ambil aktivitas
-    $activity = Activity::findOrFail($id);
+        // Pastikan aktivitas adalah Mode 2
+        if ($activity->evaluation_mode !== 'mode2') {
+            abort(403, 'Aktivitas ini bukan Mode 2.');
+        }
 
-    // Pastikan aktivitas adalah Mode 2
-    if ($activity->evaluation_mode !== 'mode2') {
-        abort(403, 'Aktivitas ini bukan Mode 2.');
-    }
+        // Cari package Mode 2 milik siswa
+        $package = ActivityStudentPackage::where('id_activity', $activity->id)
+            ->where('id_user', $user->id)
+            ->latest('id')
+            ->first();
 
-    // Pastikan aktivitas adalah aktivitas kelompok
-    if ($activity->is_group_activity !== 'yes') {
-        abort(403, 'Aktivitas ini bukan aktivitas kelompok.');
-    }
+        if (!$package) {
+            return redirect()->route('siswa.aktivitas')->with('error', 'Package soal belum dibuat.');
+        }
 
-    // Cari kelompok siswa
-    $group = ActivityGroup::where('id_activity', $activity->id)
-        ->whereHas('members', function ($query) use ($user) {
-            $query->where('id_user', $user->id);
-        })
-        ->first();
+        // Ambil Nilai Akhir yang sudah dihitungkan oleh Mesin SCI (di Tahap 2)
+        $resultData = ActivityResult::where('id_activity', $activity->id)
+            ->where('id_user', $user->id)
+            ->first();
 
-    if (!$group) {
-        abort(403, 'Anda belum terdaftar dalam kelompok aktivitas ini.');
-    }
+        $nilaiAkhir = $resultData ? $resultData->nilai_akhir : 0;
 
-    // Cari package Mode 2 milik siswa
-    $package = ActivityStudentPackage::where('id_activity', $activity->id)
-        ->where('id_user', $user->id)
-        ->first();
+        // Tutup sesi pengerjaan (jika belum tertutup)
+        if ($package->status !== 'submitted') {
+            $package->update([
+                'submitted_at' => now(),
+                'status' => 'submitted',
+            ]);
+        }
 
-    if (!$package) {
-        return back()->with(
-            'error',
-            'Package soal belum dibuat. Silakan mulai aktivitas terlebih dahulu.'
-        );
-    }
-
-    // Jika sudah pernah submit, jangan proses ulang
-    if ($package->status === 'submitted') {
-        return back()->with(
+        // Arahkan pulang ke Dashboard Siswa
+        return redirect()->route('siswa.aktivitas')->with(
             'success',
-            'Aktivitas ini sudah selesai.'
+            "Aktivitas berhasil diselesaikan secara menyeluruh. Nilai Akhir Anda: {$nilaiAkhir}"
         );
     }
-
-    // Ambil soal yang memang diberikan kepada siswa ini
-    $packageQuestions = ActivityStudentQuestion::with('question')
-        ->where('id_package', $package->id)
-        ->orderBy('question_order')
-        ->get();
-
-    $jumlahSoal = $packageQuestions->count();
-
-    if ($jumlahSoal === 0) {
-        return back()->with(
-            'error',
-            'Soal dalam package belum tersedia.'
-        );
-    }
-
-    // Ambil jawaban siswa untuk aktivitas dan kelompok ini
-    $answers = ActivityGroupAnswer::where('id_activity', $activity->id)
-        ->where('id_group', $group->id)
-        ->where('id_user', $user->id)
-        ->get()
-        ->keyBy('id_question');
-
-    // Pastikan seluruh soal sudah dijawab
-    $jumlahDijawab = $answers->count();
-
-    if ($jumlahDijawab < $jumlahSoal) {
-
-        $belumDijawab = $jumlahSoal - $jumlahDijawab;
-
-        return back()->with(
-            'error',
-            "Masih ada {$belumDijawab} soal yang belum dijawab. Silakan lengkapi semua jawaban terlebih dahulu."
-        );
-    }
-
-    // ==========================================
-    // HITUNG JAWABAN BENAR
-    // ==========================================
-
-    $totalBenar = 0;
-
-    foreach ($packageQuestions as $packageQuestion) {
-
-        $question = $packageQuestion->question;
-
-        if (!$question) {
-            continue;
-        }
-
-        $answerRecord = $answers->get($question->id);
-
-        if (!$answerRecord) {
-            continue;
-        }
-
-        $userAnswer = trim((string) $answerRecord->answer);
-        $correct = false;
-
-        // Multiple Choice
-        if ($question->type === 'MultipleChoice') {
-
-            $correctAnswer = trim((string) $question->MC_answer);
-
-            $correct = strtolower($userAnswer)
-                === strtolower($correctAnswer);
-        }
-
-        // Short Answer
-elseif ($question->type === 'ShortAnswer') {
-
-    $answersRaw = $question->SA_answer;
-
-    if (is_string($answersRaw)) {
-
-        $decoded = json_decode($answersRaw, true);
-
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            $acceptedAnswers = $decoded;
-        } else {
-            $acceptedAnswers = [$answersRaw];
-        }
-
-    } elseif (is_array($answersRaw)) {
-
-        $acceptedAnswers = $answersRaw;
-
-    } else {
-
-        $acceptedAnswers = [];
-    }
-
-    // Normalisasi jawaban siswa
-    $normalizedUserAnswer = strtolower(
-        trim(
-            preg_replace(
-                '/\s+/',
-                ' ',
-                $userAnswer
-            )
-        )
-    );
-
-    $correct = false;
-
-    foreach ($acceptedAnswers as $acceptedAnswer) {
-
-        $normalizedAcceptedAnswer = strtolower(
-            trim(
-                preg_replace(
-                    '/\s+/',
-                    ' ',
-                    (string) $acceptedAnswer
-                )
-            )
-        );
-
-        if ($normalizedAcceptedAnswer === '') {
-            continue;
-        }
-
-        /*
-        |--------------------------------------------------------------
-        | Jawaban dianggap benar jika:
-        | 1. Sama persis dengan kunci
-        | 2. Jawaban siswa mengandung salah satu jawaban yang diterima
-        |--------------------------------------------------------------
-        */
-
-        if (
-            $normalizedUserAnswer === $normalizedAcceptedAnswer ||
-            str_contains(
-                $normalizedUserAnswer,
-                $normalizedAcceptedAnswer
-            )
-        ) {
-            $correct = true;
-            break;
-        }
-    }
-}
-
-        if ($correct) {
-            $totalBenar++;
-        }
-    }
-
-    // ==========================================
-    // HITUNG NILAI
-    // ==========================================
-
-    $nilaiAkhir = round(
-        ($totalBenar / $jumlahSoal) * 100,
-        2
-    );
-
-    $kkm = (int) ($activity->kkm ?? 70);
-
-    $status = $nilaiAkhir >= $kkm
-        ? 'Pass'
-        : 'Remedial';
-
-    $statusBenar = $totalBenar === $jumlahSoal;
-
-    // ==========================================
-    // HITUNG DURASI
-    // ==========================================
-
-    $start = $package->started_at
-        ? \Carbon\Carbon::parse($package->started_at)
-        : \Carbon\Carbon::now();
-
-    $end = \Carbon\Carbon::now();
-
-    $durationSeconds = max(
-        0,
-        $end->getTimestamp() - $start->getTimestamp()
-    );
-
-    // ==========================================
-    // SIMPAN HASIL AKHIR
-    // ==========================================
-
-    ActivityResult::updateOrCreate(
-        [
-            'id_activity' => $activity->id,
-            'id_user' => $user->id,
-        ],
-        [
-            'result' => $nilaiAkhir,
-            'bonus_poin' => 0,
-            'real_poin' => 0,
-            'result_status' => $status,
-            'waktu_mengerjakan' => $durationSeconds,
-            'total_benar' => $totalBenar,
-            'start_time' => $start,
-            'end_time' => $end,
-            'status_benar' => $statusBenar,
-            'nilai_akhir' => $nilaiAkhir,
-        ]
-    );
-
-    // ==========================================
-    // UPDATE STATUS PACKAGE
-    // ==========================================
-
-    $package->update([
-        'submitted_at' => $end,
-        'status' => 'submitted',
-    ]);
-
-    return redirect()
-        ->route('siswa.aktivitas')
-        ->with(
-            'success',
-            "Aktivitas berhasil diselesaikan. Nilai Anda: {$nilaiAkhir}"
-        );
-}
 }

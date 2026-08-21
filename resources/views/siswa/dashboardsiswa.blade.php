@@ -184,12 +184,12 @@
 
                     <!-- Etalase Badge -->
                     <div class="flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="fw-bold text-dark mb-0">Perolehan Badge</h6>
-                            <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#badgeListModal">
-                                <i class="fas fa-search me-1"></i> Info & Klaim
-                            </button>
-                        </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="fw-bold text-dark mb-0">Perolehan Badge</h6>
+                                <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#badgeListModal">
+                                    <i class="fas fa-search me-1"></i> Info & Klaim
+                                </button>
+                            </div>
 
                         {{-- Tabs Kelas --}}
                         <ul class="nav nav-pills nav-sm mb-3 gap-2" id="badgeTabs" role="tablist">

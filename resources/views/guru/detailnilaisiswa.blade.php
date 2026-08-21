@@ -54,17 +54,14 @@
                         </h3>
 
                         <!-- PENANDA MODE UNTUK GURU -->
-                        @if($activity->is_group_activity === 'yes')
-                        {{-- Asumsi sementara: Jika jumlah soal lebih dari 1, kita anggap Mode 2 --}}
-                        @if(($activity->jumlah_soal ?? 0) > 1)
+                        @if($isMode2)
                         <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm">
                             <i class="fas fa-layer-group me-1"></i> Mode 2: Kuis Kelompok (SCI)
                         </span>
-                        @else
+                        @elseif($isMode1)
                         <span class="badge bg-info text-dark px-3 py-2 rounded-pill shadow-sm">
                             <i class="fas fa-users me-1"></i> Mode 1: Proyek/Uraian Kelompok
                         </span>
-                        @endif
                         @else
                         <span class="badge bg-secondary px-3 py-2 rounded-pill shadow-sm">
                             <i class="fas fa-user me-1"></i> Mode Individu Biasa
@@ -155,14 +152,13 @@
                             <th style="width:60px">No</th>
                             <th>Nama Siswa</th>
 
-                            <!-- LOGIKA HIDE/SHOW KOLOM SCI -->
-                            @if($activity->is_group_activity === 'yes')
-                            <th style="width:140px" class="text-center">Nilai Kel.</th>
+                            @if($isMode1 || $isMode2)
+                            <th style="width:140px" class="text-center">{{ $isMode2 ? 'Nilai Murni' : 'Nilai Kel.' }}</th>
                             <th style="width:100px" class="text-center">SCI</th>
+                            <th style="width:140px" class="text-center">Badge</th>
                             @endif
 
                             <th style="width:140px" class="text-center">Nilai Akhir</th>
-                            <th style="width:140px" class="text-center">Badge</th>
                             <th style="width:120px">Status</th>
                         </tr>
                     </thead>
@@ -170,25 +166,49 @@
                         @foreach($students as $i => $s)
                         @php
                         $nilai_akhir = $s['nilai'] ?? null;
-                        $nilai_kelompok = $s['nilai_kelompok'] ?? '-'; // Data dari controller
-                        $sci = $s['sci'] ?? '-'; // Data dari controller
-                        $badge = $s['badge'] ?? '-'; // Data dari controller
-                        $status = '-';
+                        // PERBAIKAN: Ubah jadi nilai_kolom_pertama sesuai Controller
+                        $nilai_kolom_pertama = $s['nilai_kolom_pertama'] ?? '-';
+                        $sci = $s['sci'] ?? '-';
+                        $badge = $s['badge'] ?? '-';
 
                         if ($nilai_akhir !== null && $nilai_akhir !== '') {
-                        $status = (is_numeric($nilai_akhir) && $nilai_akhir >= 75) ? 'Lulus' : 'Remedial';
+                        $status = (is_numeric($nilai_akhir) && $nilai_akhir >= ($activity->kkm ?? 75)) ? 'Lulus' : 'Remedial';
                         } else {
                         $status = 'Belum Dinilai';
                         }
                         @endphp
                         <tr>
                             <td>{{ $i + 1 }}</td>
-                            <td>{{ $s['name'] ?? ('Siswa ' . ($s['id'] ?? '')) }}</td>
+                            <td class="fw-semibold text-dark">
+                                @if($isMode2)
+                                <a href="{{ route('guru.koreksi.mode2', ['idActivity' => $activity->id, 'idUser' => $s['id']]) }}"
+                                    class="text-decoration-none text-primary d-flex align-items-center gap-2"
+                                    title="Koreksi Lembar Kuis Siswa (Mode 2)">
+                                    {{ $s['name'] ?? ('Siswa ' . ($s['id'] ?? '')) }}
+                                    <i class="fas fa-external-link-alt small opacity-50"></i>
+                                </a>
+                                @elseif($isMode1)
+                                <div class="d-flex align-items-center gap-2">
+                                    {{ $s['name'] ?? ('Siswa ' . ($s['id'] ?? '')) }}
+                                    <span class="badge bg-light text-secondary border" style="font-size: 0.65rem;" title="Mode 1">
+                                        Tugas Kelompok
+                                    </span>
+                                </div>
+                                @else
+                                {{ $s['name'] ?? ('Siswa ' . ($s['id'] ?? '')) }}
+                                @endif
+                            </td>
 
-                            <!-- LOGIKA HIDE/SHOW DATA SCI -->
-                            @if($activity->is_group_activity === 'yes')
-                            <td class="text-center fw-bold text-secondary">{{ $nilai_kelompok }}</td>
+                            @if($isMode1 || $isMode2)
+                            <td class="text-center fw-bold text-secondary">{{ $nilai_kolom_pertama }}</td>
                             <td class="text-center fw-bold text-primary">{{ $sci }}</td>
+                            <td class="text-center">
+                                @if($badge !== '-' && $badge !== '<span class="no-data">-</span>')
+                                {!! $badge !!}
+                                @else
+                                <span class="no-data">-</span>
+                                @endif
+                            </td>
                             @endif
 
                             <td class="text-center">
@@ -196,13 +216,6 @@
                                 <span class="no-data">-</span>
                                 @else
                                 <span class="text-dark fw-bold">{{ $nilai_akhir }}</span>
-                                @endif
-                            </td>
-                            <td class="text-center">
-                                @if($badge !== '-')
-                                {!! $badge !!}
-                                @else
-                                <span class="no-data">-</span>
                                 @endif
                             </td>
                             <td>

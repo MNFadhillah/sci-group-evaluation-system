@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Activity;
 use App\Models\ActivityGroup;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class EvaluasiController extends Controller
 {
@@ -17,7 +18,7 @@ class EvaluasiController extends Controller
         // 1. Ambil data aktivitas utama
         $activity = Activity::findOrFail($activityId);
 
-        // Pastikan ini aktivitas kelompok (opsional, sebagai validasi tambahan)
+        // Pastikan ini aktivitas kelompok
         if ($activity->is_group_activity !== 'yes') {
             return back()->with('swal', [
                 'icon' => 'warning',
@@ -26,103 +27,105 @@ class EvaluasiController extends Controller
             ]);
         }
 
-        // 2. Tarik data Kelompok beserta relasinya (Anggota + User + Jawaban)
+        // =========================================================
+        // 2. IDENTIFIKASI MODE (SINKRON DENGAN DATABASE)
+        // =========================================================
+        $isMode2 = $activity->evaluation_mode === 'mode2';
+        $isMode1 = $activity->evaluation_mode === 'mode1' && $activity->is_group_activity === 'yes';
+
+        // 3. Tarik data Kelompok beserta relasinya
         $groups = ActivityGroup::with(['members.user', 'answers'])
             ->where('id_activity', $activityId)
             ->orderBy('group_number', 'asc')
             ->get();
 
-        // 3. Olah data untuk menghitung persentase progres & status anggota
+        // Ambil data submit untuk Mode 2 (Dari tabel package buatan partner)
+        $mode2SubmittedUsers = [];
+        if ($isMode2) {
+            $mode2SubmittedUsers = DB::table('activity_student_packages')
+                ->where('id_activity', $activityId)
+                ->whereIn('status', ['submitted', 'late'])
+                ->pluck('id_user')
+                ->toArray();
+        }
+
+        // ==============================================
+        // TAMBAHAN: AMBIL DATA NILAI MURNI INDIVIDU
+        // ==============================================
+        $individualResults = DB::table('activity_result')
+            ->where('id_activity', $activityId)
+            ->get()
+            ->keyBy('id_user');
+
+        // 4. Olah data untuk menghitung persentase progres & status anggota
         foreach ($groups as $group) {
             $totalMembers = $group->members->count();
 
-            // Ambil daftar id_user yang sudah memiliki jawaban di tabel activity_group_answers
-            $submittedUserIds = $group->answers->pluck('id_user')->unique()->toArray();
+            // Cek user yang sudah submit berdasarkan Mode
+            if ($isMode2) {
+                $memberIds = $group->members->pluck('id_user')->toArray();
+                $submittedUserIds = array_intersect($memberIds, $mode2SubmittedUsers);
+            } else {
+                $submittedUserIds = $group->answers->pluck('id_user')->unique()->toArray();
+            }
+
             $submittedCount = count($submittedUserIds);
 
             // Kalkulasi Persentase (0 - 100%)
-            $progressPercentage = $totalMembers > 0
-                ? round(($submittedCount / $totalMembers) * 100)
-                : 0;
+            $progressPercentage = $totalMembers > 0 ? round(($submittedCount / $totalMembers) * 100) : 0;
 
-            // Tempelkan hasil kalkulasi ke object $group agar mudah dipanggil di Blade View
             $group->total_members = $totalMembers;
             $group->submitted_count = $submittedCount;
             $group->progress_percentage = $progressPercentage;
 
-            // Tandai status submit masing-masing anggota kelompok
+            // Tandai status submit masing-masing anggota
             foreach ($group->members as $member) {
                 $member->has_submitted = in_array($member->id_user, $submittedUserIds);
             }
 
             // =========================================================
-            // 4. CEK STATUS PENILAIAN & NILAI KELOMPOK (REVERSE SCI)
+            // 5. CEK STATUS PENILAIAN & NILAI KELOMPOK
             // =========================================================
             $group->is_graded = false;
-            $group->nilai_kelompok = null;
+            $group->nilai_kelompok = 0;
 
             if ($totalMembers > 0) {
-                // Cek apakah anggota pertama di kelompok ini sudah memiliki nilai di database
-                $firstMemberId = $group->members->first()->id_user;
-                $result = \Illuminate\Support\Facades\DB::table('activity_result')
-                    ->where('id_activity', $activityId)
-                    ->where('id_user', $firstMemberId)
-                    ->first();
+                if ($isMode2) {
+                    // Mode 2: Nilai kelompok = Rata-rata dari nilai individu di DB
+                    $avgScore = DB::table('activity_result')
+                        ->where('id_activity', $activityId)
+                        ->whereIn('id_user', $group->members->pluck('id_user'))
+                        ->avg('nilai_akhir');
 
-                // Jika ada datanya, artinya kelompok ini TELAH DINILAI
-                if ($result) {
-                    $group->is_graded = true;
+                    $group->nilai_kelompok = $avgScore ? round($avgScore, 2) : 0;
+                    $group->is_graded = ($progressPercentage == 100); // Mode 2 dianggap selesai/dinilai jika 100% submit
+                } else {
+                    // Mode 1: Ambil langsung dari tabel activity_groups (yang sudah kita simpan)
+                    $groupData = DB::table('activity_groups')->where('id', $group->id)->first();
+                    $group->nilai_kelompok = $groupData ? (float) ($groupData->nilai_kelompok ?? 0) : 0;
 
-                    // Lakukan perhitungan mundur (Nilai Akhir / SCI) untuk mendapat Nilai Mentah Kelompok
-                    $totalPr = 0;
-                    $userPrScores = [];
-
-                    foreach ($group->members as $m) {
-                        $avgRating = \Illuminate\Support\Facades\DB::table('activity_group_ratings')
-                            ->where('id_activity', $activityId)
-                            ->where('id_group', $group->id)
-                            ->where('id_evaluated', $m->id_user)
-                            ->avg('score');
-
-                        $pr = $avgRating !== null ? (float) $avgRating : 100;
-                        $userPrScores[$m->id_user] = $pr;
-                        $totalPr += $pr;
-                    }
-
-                    $groupAvg = $totalPr / $totalMembers;
-                    $myPr = $userPrScores[$firstMemberId];
-
-                    // Rumus menemukan SCI
-                    $sci = $groupAvg > 0 ? ($myPr / $groupAvg) : 1;
-
-                    // Tarik nilai akhir dari database
-                    $nilaiAkhir = $result->nilai_akhir ?? $result->result;
-
-                    // Kembalikan ke Nilai Mentah Guru
-                    if ($sci > 0) {
-                        $nilaiKelompok = round($nilaiAkhir / $sci);
-                        $group->nilai_kelompok = $nilaiKelompok > 100 ? 100 : $nilaiKelompok;
-                    } else {
-                        $group->nilai_kelompok = $nilaiAkhir;
+                    // Jika nilai > 0, berarti guru sudah menilai
+                    if ($group->nilai_kelompok > 0) {
+                        $group->is_graded = true;
                     }
                 }
             }
         }
 
-        // 5. Lempar data yang sudah matang ke Blade View
-        return view('guru.evaluasi.detail-jawaban', compact('activity', 'groups'));
+        // 6. Lempar data beserta penanda Mode ke Blade View
+        return view('guru.evaluasi.detail-jawaban', compact('activity', 'groups', 'isMode1', 'isMode2'));
     }
 
     /**
-     * Menampilkan Halaman Lembar Jawaban & Form Penilaian Guru
+     * Menampilkan Halaman Lembar Jawaban & Form Penilaian Guru (HANYA MODE 1)
      */
     public function formPenilaian($activityId, $groupId)
     {
         $activity = Activity::findOrFail($activityId);
         $group = ActivityGroup::with(['members.user'])->findOrFail($groupId);
 
-        // Tarik jawaban kelompok dari database
-        $answers = \Illuminate\Support\Facades\DB::table('activity_group_answers')
+        // Tarik jawaban kelompok dari database (Mode 1 Uraian)
+        $answers = DB::table('activity_group_answers')
             ->join('question', 'activity_group_answers.id_question', '=', 'question.id')
             ->join('users', 'activity_group_answers.id_user', '=', 'users.id')
             ->where('activity_group_answers.id_activity', $activityId)
@@ -131,7 +134,7 @@ class EvaluasiController extends Controller
             ->get();
 
         // Tarik hasil rating antar teman (Peer Review)
-        $ratings = \Illuminate\Support\Facades\DB::table('activity_group_ratings')
+        $ratings = DB::table('activity_group_ratings')
             ->join('users as evaluator', 'activity_group_ratings.id_evaluator', '=', 'evaluator.id')
             ->join('users as evaluated', 'activity_group_ratings.id_evaluated', '=', 'evaluated.id')
             ->where('activity_group_ratings.id_activity', $activityId)
@@ -139,110 +142,134 @@ class EvaluasiController extends Controller
             ->select('activity_group_ratings.*', 'evaluator.name as evaluator_name', 'evaluated.name as evaluated_name')
             ->get();
 
-        return view('guru.evaluasi.penilaian-kelompok', compact('activity', 'group', 'answers', 'ratings'));
+        // Beritahu view bahwa ini sedang mengoreksi Mode 1
+        $isMode1 = true;
+        $isMode2 = false;
+
+        return view('guru.evaluasi.penilaian-kelompok', compact('activity', 'group', 'answers', 'ratings', 'isMode1', 'isMode2'));
     }
 
     /**
-     * Menyimpan nilai guru dan mengkalkulasi SCI (Student Contribution Index)
+     * Menyimpan nilai guru dan mengkalkulasi SCI (HANYA MODE 1)
+     */
+    /**
+     * Menyimpan nilai guru dan memicu kalkulasi
      */
     public function simpanPenilaian(Request $request, $activityId, $groupId)
     {
-        // 1. Validasi input nilai kelompok (0-100)
-        $request->validate([
-            'nilai_kelompok' => 'required|numeric|min:0|max:100'
-        ]);
+        $activity = Activity::findOrFail($activityId);
 
-        $nilaiKelompok = $request->nilai_kelompok;
-
-        // Ambil data activity untuk mengetahui class_id (Opsional, untuk disimpan di user_badge)
-        $activity = Activity::with('topic.subject')->findOrFail($activityId);
-        $classId = optional(optional($activity->topic)->subject)->id_class;
-
-        // 2. Ambil daftar user/anggota di kelompok tersebut
-        $members = \Illuminate\Support\Facades\DB::table('activity_group_members')
-            ->where('id_group', $groupId)
-            ->pluck('id_user')
-            ->toArray();
-
-        if (empty($members)) {
-            return back()->with('error', 'Gagal: Kelompok ini tidak memiliki anggota.');
+        // Mode 1: Guru wajib memasukkan angka manual untuk kelompok
+        if ($activity->evaluation_mode === 'mode1') {
+            $request->validate(['nilai_kelompok' => 'required|numeric|min:0|max:100']);
+            DB::table('activity_groups')->where('id', $groupId)->update(['nilai_kelompok' => $request->nilai_kelompok]);
         }
 
+        // Eksekusi Mesin SCI
+        $this->kalkulasiSCIKelompok($activityId, $groupId);
+
+        return redirect('/guru/aktivitas/' . $activityId . '/monitoring')
+            ->with('success', 'Berhasil! Nilai kelompok disahkan, SCI dikalkulasi, dan Badge otomatis dibagikan.');
+    }
+
+    /**
+     * MESIN SENTRAL: Menghitung SCI dan Nilai Akhir
+     */
+    /**
+     * MESIN SENTRAL: Menghitung SCI dan Nilai Akhir
+     */
+    public function kalkulasiSCIKelompok($activityId, $groupId)
+    {
+        $activity = Activity::with('topic.subject')->findOrFail($activityId);
+        $classId = optional(optional($activity->topic)->subject)->id_class;
+        $isMode2 = $activity->evaluation_mode === 'mode2';
+
+        $members = DB::table('activity_group_members')->where('id_group', $groupId)->pluck('id_user')->toArray();
+        if (empty($members)) return;
+
+        // Cari Nilai Kelompok (HANYA UNTUK MODE 1)
+        $nilaiKelompok = 0;
+        if (!$isMode2) {
+            $groupData = DB::table('activity_groups')->where('id', $groupId)->first();
+            $nilaiKelompok = $groupData ? (float)($groupData->nilai_kelompok ?? 0) : 0;
+        }
+
+        // Tarik Data Peer Review (SCI)
         $prScores = [];
         $totalPr = 0;
-
-        // 3. Hitung PR (Peer Review) Individu
         foreach ($members as $userId) {
-            $avgRating = \Illuminate\Support\Facades\DB::table('activity_group_ratings')
-                ->where('id_activity', $activityId)
-                ->where('id_group', $groupId)
-                ->where('id_evaluated', $userId)
-                ->avg('score');
-
+            $avgRating = DB::table('activity_group_ratings')
+                ->where('id_activity', $activityId)->where('id_group', $groupId)->where('id_evaluated', $userId)->avg('score');
             $pr = $avgRating !== null ? (float) $avgRating : 100;
-
             $prScores[$userId] = $pr;
             $totalPr += $pr;
         }
 
-        // 4. Hitung Rata-rata PR Kelompok
-        $groupPrAvg = $totalPr / count($members);
+        $groupPrAvg = count($members) > 0 ? ($totalPr / count($members)) : 100;
 
-        // 5. Hitung Indeks SCI, Finalisasi Nilai, dan Beri Badge!
+        // Eksekusi Rumus SCI & Bagikan Badge
         foreach ($members as $userId) {
-            $memberPr = $prScores[$userId];
 
-            // Rumus SCI = PR Individu dibagi PR Kelompok
+            // =========================================================
+            // 🛡️ PROTEKSI ANTI-NYASAR: JANGAN NILAI SISWA YANG BELUM SELESAI
+            // =========================================================
+            if ($isMode2) {
+                // Di Mode 2: Cek apakah siswa ini sudah Kumpul Kuis
+                $isSubmitted = DB::table('activity_student_packages')
+                    ->where('id_activity', $activityId)
+                    ->where('id_user', $userId)
+                    ->where('status', 'submitted')
+                    ->exists();
+
+                // Jika belum submit kuis, LEWATI! Jangan buatkan nilai akhir.
+                if (!$isSubmitted) {
+                    continue; 
+                }
+            } else {
+                // Di Mode 1: Pastikan guru sudah memberikan nilai kelompok
+                if ($nilaiKelompok <= 0) {
+                    continue; 
+                }
+            }
+            // =========================================================
+
+            $memberPr = $prScores[$userId];
             $sci = $groupPrAvg > 0 ? ($memberPr / $groupPrAvg) : 1;
 
-            $nilaiAkhir = round($nilaiKelompok * $sci);
-            if ($nilaiAkhir > 100) {
-                $nilaiAkhir = 100;
+            // 🌟 LOGIKA NILAI AKHIR (DIBEDAKAN BERDASARKAN MODE)
+            if ($isMode2) {
+                // MODE 2 (KUIS INDIVIDU): Nilai Kuis Murni x SCI
+                $rawIndividu = DB::table('activity_result')
+                    ->where('id_activity', $activityId)
+                    ->where('id_user', $userId)
+                    ->value('result') ?? 0;
+                $nilaiAkhir = round($rawIndividu * $sci, 2);
+            } else {
+                // MODE 1 (PROYEK KELOMPOK): Nilai Proyek Kelompok x SCI
+                $nilaiAkhir = round($nilaiKelompok * $sci, 2);
             }
 
-            // ============================================
-            // 🏅 LOGIKA OTOMATISASI BADGE SCI
-            // ============================================
-            $badgeId = 5; // Default: Solid Partner SEKARANG ID: 5
+            if ($nilaiAkhir > 100) $nilaiAkhir = 100;
 
+            // Logika Badge
+            $badgeId = 5; // Solid Partner
             if ($sci >= 1.10) {
-                $badgeId = 4; // The Carry SEKARANG ID: 4
+                $badgeId = 4; // The Carry
             } elseif ($sci < 0.90) {
-                $badgeId = 6; // Need Help SEKARANG ID: 6
+                $badgeId = 6; // Need Help
             }
 
-            // Simpan / Timpa Badge untuk tugas ini
-            \Illuminate\Support\Facades\DB::table('user_badge')->updateOrInsert(
-                [
-                    'id_student'  => $userId,
-                    'id_activity' => $activityId
-                ],
-                [
-                    'id_badge'   => $badgeId,
-                    'id_class'   => $classId,
-                    'updated_at' => now(),
-                    // Update created_at hanya saat insert baru
-                    'created_at' => \Illuminate\Support\Facades\DB::raw('COALESCE(created_at, NOW())')
-                ]
+            DB::table('user_badge')->updateOrInsert(
+                ['id_student' => $userId, 'id_activity' => $activityId],
+                ['id_badge' => $badgeId, 'id_class' => $classId, 'updated_at' => now(), 'created_at' => DB::raw('COALESCE(created_at, NOW())')]
             );
 
-            // ============================================
-            // Simpan nilai akhir
-            // ============================================
-            \Illuminate\Support\Facades\DB::table('activity_result')->updateOrInsert(
-                [
-                    'id_activity' => $activityId,
-                    'id_user' => $userId
-                ],
-                [
-                    'nilai_akhir' => $nilaiAkhir,
-                    'result' => $nilaiAkhir,
-                    'updated_at' => now()
-                ]
+            $status = $nilaiAkhir >= ($activity->kkm ?? 70) ? 'Pass' : 'Remedial';
+            
+            DB::table('activity_result')->updateOrInsert(
+                ['id_activity' => $activityId, 'id_user' => $userId],
+                ['nilai_akhir' => $nilaiAkhir, 'result_status' => $status, 'updated_at' => now()]
             );
         }
-
-        return redirect()->route('guru.monitoring', $activityId)
-            ->with('success', 'Berhasil! Nilai kelompok disimpan, SCI dikalkulasi, dan Badge otomatis dibagikan.');
     }
 }

@@ -65,25 +65,40 @@
                     <ul class="list-group list-group-flush mb-3">
                         @foreach($group->members as $member)
                         <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-light">
-                            <span class="text-secondary">
+                            <span class="text-secondary fw-semibold">
                                 {{ $member->user->name ?? 'User Tidak Diketahui' }}
                             </span>
 
-                            @if($member->has_submitted)
-                            <span class="badge bg-success rounded-pill px-3 py-2">
-                                Telah Submit
-                            </span>
-                            @else
-                            <span class="badge bg-secondary rounded-pill px-3 py-2">
-                                Belum Mengerjakan
-                            </span>
-                            @endif
+                            <div class="d-flex align-items-center gap-2">
+                                @if($member->has_submitted)
+                                    @if(isset($isMode2) && $isMode2)
+                                        
+                                        @php
+                                            $resIndiv = isset($individualResults) ? $individualResults->get($member->user->id) : null;
+                                        @endphp
+                                        @if($resIndiv && $resIndiv->result !== null)
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill shadow-sm" title="Nilai Murni Kuis Siswa">
+                                                <i class="fas fa-star text-warning me-1"></i> Nilai Murni: {{ (float) $resIndiv->result }}
+                                            </span>
+                                        @endif
+
+                                        <a href="{{ route('guru.koreksi.mode2', ['idActivity' => $activity->id, 'idUser' => $member->user->id]) }}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" title="Koreksi Jawaban Kuis Siswa">
+                                            <i class="fas fa-edit me-1"></i> Koreksi
+                                        </a>
+                                    @else
+                                        <span class="badge bg-success rounded-pill px-3 py-2">Telah Submit</span>
+                                    @endif
+                                @else
+                                    <span class="badge bg-secondary rounded-pill px-3 py-2">Belum Mengerjakan</span>
+                                @endif
+                            </div>
                         </li>
                         @endforeach
                     </ul>
                 </div>
 
                 <!-- Tombol Aksi -->
+                @if(!isset($isMode2) || !$isMode2)
                 <div class="card-footer bg-white border-top-0 pb-3 pt-0">
                     <div class="d-grid gap-2">
 
@@ -114,6 +129,7 @@
 
                     </div>
                 </div>
+                @endif
             </div>
         </div>
         @empty

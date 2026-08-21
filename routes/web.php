@@ -27,6 +27,8 @@ Route::get('/', function () {
 
 Route::post('/activity/saveResult', [aktivitasController::class, 'saveResult'])->name('activity.saveResult');
 
+Route::post('/guru/aktivitas/{idActivity}/koreksi/{idUser}/simpan', [nilaicontroller::class, 'simpanKoreksiSiswa'])->name('guru.koreksi.simpan');
+
 Route::middleware(['auth', RoleMiddleware::class . ':student'])->group(function () {
 
     Route::get('/dashboardsiswa', [siswaController::class, 'dashboardSiswa'])
