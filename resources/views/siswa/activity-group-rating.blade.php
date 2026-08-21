@@ -170,15 +170,6 @@
 
             </div>
         </form>
-        <form method="POST" action="{{ route('activity.group.finish', $activity->id) }}" class="mt-3"
-            onsubmit="return confirm('Yakin ingin menyelesaikan aktivitas? Pastikan semua soal sudah dijawab dan penilaian anggota sudah disimpan.');">
-            @csrf
-
-            <button type="submit" class="btn btn-success btn-lg fw-bold shadow-sm">
-                <i class="fas fa-check-circle me-2"></i>
-                Selesaikan Aktivitas
-            </button>
-        </form>
     </div>
 
     <!-- ========================================== -->
