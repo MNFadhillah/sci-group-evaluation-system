@@ -191,69 +191,68 @@
 
             <hr class="sidebar-divider my-0">
 
-            @if(Auth::user()->role === 'student')
+            @if (Auth::user()->role === 'student')
+                {{-- Dashboard --}}
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->is('dashboardsiswa') ? 'active' : '' }}"
+                        href="{{ url('/dashboardsiswa') }}">
+                        <i class="fas fa-fw fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
 
-    {{-- Dashboard --}}
-    <li class="nav-item">
-        <a class="nav-link @yield('dashboardSiswa')" href="{{ url('/dashboardsiswa') }}">
-            <i class="fas fa-fw fa-tachometer-alt"></i>
-            <span>Dashboard</span>
-        </a>
-    </li>
-
-    {{-- Aktivitas --}}
-    <li class="nav-item">
-        <a class="nav-link @yield('aktivitasSiswa')" href="{{ url('/aktivitassiswa') }}">
-            <i class="fas fa-fw fa-tasks"></i>
-            <span>Aktivitas</span>
-        </a>
-    </li>
-
-@endif
+                {{-- Aktivitas --}}
+                <li class="nav-item">
+    <a class="nav-link {{ request()->is('aktivitassiswa') ? 'active' : '' }}"
+       href="{{ url('/aktivitassiswa') }}">
+        <i class="fas fa-fw fa-tasks"></i>
+        <span>Aktivitas</span>
+    </a>
+</li>
+            @endif
 
             @if (Auth::user()->role === 'teacher')
+                {{-- Dashboard --}}
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->is('dashboardguru') ? 'active' : '' }}"
+                        href="{{ url('/dashboardguru') }}">
+                        <i class="fas fa-fw fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
 
-    {{-- Dashboard --}}
-    <li class="nav-item">
-        <a class="nav-link @yield('dashboardGuru')" href="{{ url('/dashboardguru') }}">
-            <i class="fas fa-fw fa-tachometer-alt"></i>
-            <span>Dashboard</span>
-        </a>
-    </li>
+                {{-- Kelas --}}
+                <li class="nav-item">
+                    <a class="nav-link @yield('dataKelas')" href="{{ url('/datakelas') }}">
+                        <i class="fas fa-fw fa-school"></i>
+                        <span>Kelas</span>
+                    </a>
+                </li>
 
-    {{-- Kelas --}}
-    <li class="nav-item">
-        <a class="nav-link @yield('dataKelas')" href="{{ url('/datakelas') }}">
-            <i class="fas fa-fw fa-school"></i>
-            <span>Kelas</span>
-        </a>
-    </li>
+                {{-- Bank Soal --}}
+                <li class="nav-item">
+                    <a class="nav-link @yield('dataSoal')" href="{{ url('/datasoal') }}">
+                        <i class="fas fa-fw fa-question-circle"></i>
+                        <span>Bank Soal</span>
+                    </a>
+                </li>
 
-    {{-- Bank Soal --}}
-    <li class="nav-item">
-        <a class="nav-link @yield('dataSoal')" href="{{ url('/datasoal') }}">
-            <i class="fas fa-fw fa-question-circle"></i>
-            <span>Bank Soal</span>
-        </a>
-    </li>
+                {{-- Aktivitas --}}
+                <li class="nav-item">
+                    <a class="nav-link @yield('dataAktivitas')" href="{{ url('/dataaktivitas') }}">
+                        <i class="fas fa-fw fa-tasks"></i>
+                        <span>Aktivitas</span>
+                    </a>
+                </li>
 
-    {{-- Aktivitas --}}
-    <li class="nav-item">
-        <a class="nav-link @yield('dataAktivitas')" href="{{ url('/dataaktivitas') }}">
-            <i class="fas fa-fw fa-tasks"></i>
-            <span>Aktivitas</span>
-        </a>
-    </li>
-
-    {{-- Nilai --}}
-    <li class="nav-item">
-        <a class="nav-link @yield('dataNilai')" href="{{ route('data.nilai') }}">
-            <i class="fas fa-fw fa-chart-bar"></i>
-            <span>Nilai</span>
-        </a>
-    </li>
-
-@endif
+                {{-- Nilai --}}
+                <li class="nav-item">
+                    <a class="nav-link @yield('dataNilai')" href="{{ route('data.nilai') }}">
+                        <i class="fas fa-fw fa-chart-bar"></i>
+                        <span>Nilai</span>
+                    </a>
+                </li>
+            @endif
 
             <hr class="sidebar-divider d-none d-md-block">
 
@@ -323,31 +322,31 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.querySelector('.sidebar');
             const toggleDesktop = document.getElementById('sidebarToggle');
             const toggleMobile = document.getElementById('sidebarToggleTop');
             const overlay = document.getElementById('sidebarOverlay');
 
             // DESKTOP TOGGLE
-            toggleDesktop?.addEventListener('click', function (e) {
+            toggleDesktop?.addEventListener('click', function(e) {
                 e.preventDefault();
                 sidebar.classList.toggle('toggled');
             });
 
             // MOBILE TOGGLE
-            toggleMobile?.addEventListener('click', function (e) {
+            toggleMobile?.addEventListener('click', function(e) {
                 e.preventDefault();
                 document.body.classList.toggle('sidebar-open');
             });
 
             // OVERLAY CLICK (mobile)
-            overlay?.addEventListener('click', function () {
+            overlay?.addEventListener('click', function() {
                 document.body.classList.remove('sidebar-open');
             });
 
             // RESET SAAT RESIZE
-            window.addEventListener('resize', function () {
+            window.addEventListener('resize', function() {
                 if (window.innerWidth >= 992) {
                     document.body.classList.remove('sidebar-open');
                 }

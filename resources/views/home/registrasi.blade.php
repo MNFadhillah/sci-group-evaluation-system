@@ -11,68 +11,167 @@
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
     <!-- SweetAlert -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         :root {
-            --primary: #4e73df;
-            --primary-dark: #224abe;
-            --soft: rgba(78, 115, 223, .12);
-            --text: #1f2937;
-            --muted: #6b7280;
+            --primary: #4f73dc;
+            --primary-dark: #3158c7;
+            --soft: rgba(79, 115, 220, .10);
+            --text: #182235;
+            --muted: #59677a;
+            --border: #d9dfeb;
             --danger: #e11d48;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         html,
         body {
             height: 100%;
             margin: 0;
-            font-family: 'Nunito', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(180deg, #f8f9fc, #eef2ff);
-            overflow-x: hidden;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8f9fc;
+            color: var(--text);
+            overflow: hidden;
         }
 
         .register-wrapper {
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 24px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* lingkaran mengambang tipis, senada landing & login */
+
+        .float-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--primary);
+            opacity: .10;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .float-circle:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            left: -80px;
+            top: 8%;
+            animation: floatA 9s ease-in-out infinite;
+        }
+
+        .float-circle:nth-child(2) {
+            width: 170px;
+            height: 170px;
+            right: 6%;
+            top: 10%;
+            opacity: .08;
+            animation: floatB 11s ease-in-out infinite;
+        }
+
+        .float-circle:nth-child(3) {
+            width: 130px;
+            height: 130px;
+            right: 10%;
+            bottom: 8%;
+            opacity: .13;
+            animation: floatA 8s ease-in-out infinite;
+        }
+
+        .float-circle:nth-child(4) {
+            width: 110px;
+            height: 110px;
+            left: 6%;
+            bottom: 10%;
+            opacity: .11;
+            animation: floatB 10s ease-in-out infinite;
+        }
+
+        @keyframes floatA {
+            0%, 100% { transform: translate(0, 0); }
+            50%      { transform: translate(20px, -40px); }
+        }
+
+        @keyframes floatB {
+            0%, 100% { transform: translate(0, 0); }
+            50%      { transform: translate(-18px, 30px); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .float-circle { animation: none; }
         }
 
         .register-card {
+            position: relative;
+            z-index: 1;
             width: 100%;
-            max-width: 460px;
+            max-width: 920px;
             background: #fff;
-            border-radius: 1rem;
-            box-shadow: 0 18px 40px rgba(78, 115, 223, .15);
-            padding: 28px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 18px 40px rgba(78, 115, 223, .12);
+            padding: 22px 40px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            margin-bottom: .7rem;
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
         }
 
         h1 {
             font-weight: 800;
-            font-size: 1.35rem;
-            margin-bottom: 6px;
+            font-size: 1.3rem;
+            letter-spacing: -.3px;
+            margin-bottom: 4px;
             color: var(--text);
         }
 
         .lead {
-            font-size: .9rem;
+            font-size: .87rem;
             color: var(--muted);
-            margin-bottom: 1.2rem;
+            margin-bottom: .9rem;
         }
 
         label {
-            font-size: .85rem;
-            font-weight: 600;
-            margin-bottom: 6px;
+            font-size: .82rem;
+            font-weight: 700;
+            margin-bottom: 4px;
         }
 
         .form-control,
         .form-select {
-            border-radius: .6rem;
-            font-size: .9rem;
+            border-color: var(--border);
+            border-radius: 8px;
+            font-size: .88rem;
+            padding: .48rem .8rem;
         }
 
         .form-control:focus,
@@ -81,43 +180,88 @@
             box-shadow: 0 0 0 .2rem var(--soft);
         }
 
+        /* ROLE SELECTOR — segmented pill */
+
         .role-box {
-            background: #f8f9fc;
-            border-radius: .6rem;
-            padding: .6rem .8rem;
             display: flex;
-            gap: 1rem;
+            gap: .4rem;
+            background: #f1f3f9;
+            border-radius: 10px;
+            padding: .25rem;
+        }
+
+        .role-box input[type="radio"] {
+            display: none;
+        }
+
+        .role-box label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            margin: 0;
+            padding: .42rem .6rem;
+            border-radius: 7px;
+            font-size: .83rem;
+            font-weight: 700;
+            color: var(--muted);
+            cursor: pointer;
+            transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+        }
+
+        .role-box input[type="radio"]:checked+label {
+            background: #fff;
+            color: var(--primary-dark);
+            box-shadow: 0 2px 6px rgba(31, 41, 55, .08);
+        }
+
+        .input-group .btn-outline-secondary {
+            border-color: var(--border);
+            color: var(--muted);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .input-group .btn-outline-secondary:hover {
+            background: var(--soft);
+            color: var(--primary-dark);
+            border-color: var(--border);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: var(--primary);
             border: none;
             font-weight: 700;
-            box-shadow: 0 10px 24px rgba(78, 115, 223, .35);
+            padding: .6rem 1rem;
+            border-radius: 9px;
+            box-shadow: 0 8px 20px rgba(78, 115, 223, .25);
+            transition: background .2s ease, transform .2s ease;
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            background: var(--primary-dark);
+            transform: translateY(-1px);
         }
 
         .btn-outline {
-            border: 1px solid #d1d5db;
+            border: 1px solid var(--border);
             background: transparent;
-            font-weight: 600;
+            color: var(--text);
+            font-weight: 700;
+            border-radius: 9px;
+            padding: .55rem 1rem;
         }
 
-        .toggle-pass {
-            background: transparent;
-            border: none;
-            font-size: .8rem;
-            color: var(--muted);
-            padding-left: .5rem;
+        .btn-outline:hover {
+            background: var(--soft);
+            border-color: var(--border);
         }
 
         .error {
-            font-size: .85rem;
+            font-size: .78rem;
+            font-weight: 600;
             color: var(--danger);
-            margin-top: .5rem;
+            margin-top: .3rem;
         }
 
         .hidden {
@@ -126,18 +270,19 @@
 
         .footer {
             text-align: center;
-            margin-top: 1rem;
-            font-size: .85rem;
+            margin-top: .8rem;
+            font-size: .83rem;
             color: var(--muted);
         }
 
         .footer a {
-            font-weight: 600;
+            font-weight: 700;
             color: var(--primary);
             text-decoration: none;
         }
 
         .footer a:hover {
+            color: var(--primary-dark);
             text-decoration: underline;
         }
     </style>
@@ -146,7 +291,18 @@
 <body>
 
     <div class="register-wrapper">
+
+        <div class="float-circle"></div>
+        <div class="float-circle"></div>
+        <div class="float-circle"></div>
+        <div class="float-circle"></div>
+
         <main class="register-card">
+
+            <a href="{{ url('/') }}" class="back-link">
+                <i class="bi bi-arrow-left"></i>
+                Kembali ke beranda
+            </a>
 
             <h1>Daftar Evolevel</h1>
             <p class="lead">Buat akun baru sebagai murid atau guru</p>
@@ -154,73 +310,75 @@
             <form id="regForm" novalidate>
 
                 <!-- ROLE -->
-                <div class="mb-3">
+                <div class="mb-2">
                     <label>Daftar sebagai</label>
                     <div class="role-box">
-                        <label class="d-flex align-items-center gap-2 mb-0">
-                            <input type="radio" name="role" value="murid" checked>
+                        <input type="radio" name="role" id="roleMurid" value="murid" checked>
+                        <label for="roleMurid">
+                            <i class="bi bi-mortarboard"></i>
                             Murid
                         </label>
-                        <label class="d-flex align-items-center gap-2 mb-0">
-                            <input type="radio" name="role" value="guru">
+
+                        <input type="radio" name="role" id="roleGuru" value="guru">
+                        <label for="roleGuru">
+                            <i class="bi bi-person-workspace"></i>
                             Guru
                         </label>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label>Nama Lengkap</label>
-                    <input type="text" id="name" class="form-control" placeholder="Nama lengkap">
-                    <div id="nameError" class="error hidden"></div>
-                </div>
+                <div class="row g-3">
 
-
-                <div class="mb-3">
-                    <label>Email</label>
-                    <input type="email" id="email" class="form-control" placeholder="nama@contoh.com">
-                    <div id="emailError" class="error hidden"></div>
-                </div>
-
-
-                <div class="mb-3">
-                    <label>Kata Sandi</label>
-                    <div class="input-group">
-                        <input type="password" id="password" class="form-control" placeholder="Minimal 6 karakter">
-                        <button type="button" class="toggle-pass" id="togglePass">Tampilkan</button>
+                    <div class="col-md-6">
+                        <label>Nama Lengkap</label>
+                        <input type="text" id="name" class="form-control" placeholder="Nama lengkap">
+                        <div id="nameError" class="error hidden"></div>
                     </div>
-                    <div id="passwordError" class="error hidden"></div>
+
+                    <div class="col-md-6">
+                        <label>Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="nama@contoh.com">
+                        <div id="emailError" class="error hidden"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label>Kata Sandi</label>
+                        <div class="input-group">
+                            <input type="password" id="password" class="form-control"
+                                placeholder="Minimal 6 karakter">
+                            <button type="button" class="btn btn-outline-secondary" id="togglePass">
+                                <i class="bi bi-eye" id="togglePassIcon"></i>
+                            </button>
+                        </div>
+                        <div id="passwordError" class="error hidden"></div>
+                    </div>
+
+                    <div class="col-md-6" id="kelasField">
+                        <label>Kode Kelas</label>
+                        <input type="text" id="kodeKelas" class="form-control" placeholder="Misal: KLS7TOKEN">
+                        <div id="kelasError" class="error hidden"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label>Jenis ID</label>
+                        <select id="type_id_other" class="form-select">
+                            <option value="">— Pilih jenis ID —</option>
+                            <option value="NISN">NISN</option>
+                            <option value="NIM">NIM</option>
+                            <option value="NIP">NIP</option>
+                            <option value="NIDN">NIDN</option>
+                            <option value="NUPTK">NUPTK</option>
+                            <option value="id_lainnya">ID Lainnya</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label>Nomor ID</label>
+                        <input type="text" id="id_other" class="form-control" placeholder="Masukkan jika ada">
+                        <div id="idError" class="error hidden"></div>
+                    </div>
+
                 </div>
-
-
-                <div class="mb-3" id="kelasField">
-                    <label>Kode Kelas</label>
-                    <input type="text" id="kodeKelas" class="form-control" placeholder="Misal: KLS7TOKEN">
-                    <div id="kelasError" class="error hidden"></div>
-                </div>
-
-
-                <!-- ID -->
-                <div class="mb-3">
-                    <label>Jenis ID</label>
-                    <select id="type_id_other" class="form-select">
-                        <option value="">— Pilih jenis ID —</option>
-                        <option value="NISN">NISN</option>
-                        <option value="NIM">NIM</option>
-                        <option value="NIP">NIP</option>
-                        <option value="NIDN">NIDN</option>
-                        <option value="NUPTK">NUPTK</option>
-                        <option value="id_lainnya">ID Lainnya</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label>Nomor ID</label>
-                    <input type="text" id="id_other" class="form-control" placeholder="Masukkan jika ada">
-                    <div id="idError" class="error hidden"></div>
-                </div>
-
-
-
 
                 <div class="d-grid gap-2 mt-3">
                     <button type="submit" class="btn btn-primary">Daftar</button>
@@ -238,8 +396,8 @@
         const roleInputs = document.querySelectorAll('input[name="role"]');
         const kelasField = document.getElementById('kelasField');
         const togglePass = document.getElementById('togglePass');
+        const togglePassIcon = document.getElementById('togglePassIcon');
         const password = document.getElementById('password');
-        const errMsg = document.getElementById('errMsg');
 
         const nameInput = document.getElementById('name');
         const emailInput = document.getElementById('email');
@@ -255,9 +413,8 @@
 
         function resetErrors() {
             [nameError, emailError, passwordError, kelasError, idError]
-            .forEach(e => e.classList.add('hidden'));
+                .forEach(e => e.classList.add('hidden'));
         }
-
 
         function updateRole() {
             const role = document.querySelector('input[name="role"]:checked').value;
@@ -268,7 +425,7 @@
 
         togglePass.onclick = () => {
             password.type = password.type === 'password' ? 'text' : 'password';
-            togglePass.textContent = password.type === 'password' ? 'Tampilkan' : 'Sembunyikan';
+            togglePassIcon.className = password.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
         };
 
         document.getElementById('toLogin').onclick = () => {
@@ -344,8 +501,8 @@
             }
 
             /* =====================
-       VALIDASI KODE KELAS
-    ===================== */
+               VALIDASI KODE KELAS
+            ===================== */
             if (role === 'murid') {
                 if (!kodeKelas) {
                     kelasError.textContent = 'Kode kelas wajib diisi.';
@@ -386,8 +543,6 @@
                 id_other: idOther || null
             };
 
-
-
             try {
                 const res = await fetch("{{ route('register.submit') }}", {
                     method: 'POST',
@@ -426,12 +581,11 @@
                     throw new Error(json.message || 'Registrasi gagal');
                 }
 
-
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil!',
                     text: 'Akun berhasil dibuat',
-                    confirmButtonColor: '#4e73df'
+                    confirmButtonColor: '#4f73dc'
                 }).then(() => {
                     if (json.redirect) {
                         window.location.href = json.redirect;
@@ -439,7 +593,6 @@
                         window.location.href = '/login';
                     }
                 });
-
 
             } catch (err) {
                 Swal.fire({
@@ -451,7 +604,6 @@
             }
         });
     </script>
-
 
 </body>
 
