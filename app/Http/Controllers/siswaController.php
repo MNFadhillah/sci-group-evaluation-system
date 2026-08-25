@@ -19,8 +19,9 @@ class siswaController extends Controller
         // =========================================================
         $userBadges = DB::table('user_badge as ub')
             ->join('badge as b', 'ub.id_badge', '=', 'b.id')
-            ->leftJoin('activities as a', 'ub.id_activity', '=', 'a.id') // <-- JOIN KE AKTIVITAS
+            ->leftJoin('activities as a', 'ub.id_activity', '=', 'a.id')
             ->where('ub.id_student', $user->id)
+            ->whereIn('ub.id_badge', [4, 5, 6])
             ->select(
                 'b.id',
                 'b.name',
@@ -28,7 +29,6 @@ class siswaController extends Controller
                 'b.path_icon',
                 'ub.id_class',
                 DB::raw('COUNT(ub.id_badge) as jumlah_diperoleh'),
-                // Gabungkan nama aktivitas murni dari tabel activities
                 DB::raw('GROUP_CONCAT(COALESCE(a.title, "Aktivitas Telah Dihapus") SEPARATOR "||") as daftar_aktivitas')
             )
             ->groupBy('ub.id_class', 'b.id', 'b.name', 'b.description', 'b.path_icon')
@@ -43,6 +43,7 @@ class siswaController extends Controller
             }
             $badgesByClass[$key][] = $ub;
         }
+
         // 🔹 Ambil data kelas siswa login
         $kelasList = DB::table('student_classes')
             ->join('classes', 'student_classes.id_class', '=', 'classes.id')
@@ -140,7 +141,7 @@ class siswaController extends Controller
         $jumlahRemedial = $rawActivitiesAll->where('result_status', 'Remedial')->count();
 
         // -----------------------------
-        // Leaderboard per kelas (LOGIC BENAR)
+        // Leaderboard per kelas
         // -----------------------------
         $leaderboardsPerClass = [];
 
@@ -206,16 +207,14 @@ class siswaController extends Controller
         }
 
         $allBadges = DB::table('badge')
+            ->whereIn('id', [4, 5, 6])
             ->select('id', 'name', 'description', 'path_icon')
             ->orderBy('id')
             ->get();
 
-        $claimedBadgeIds = $userBadges->pluck('id')->toArray();
-
         // -----------------------------
-        // Tambahan: Daftar Nilai (ambil dari activity_result + relasi)
+        // Daftar Nilai
         // -----------------------------
-        // Cari semua activity_result milik user yang berkaitan dengan kelas user
         $kelasIds = $kelasList->pluck('id')->toArray();
 
         $nilaiList = DB::table('activity_result')
@@ -246,7 +245,6 @@ class siswaController extends Controller
             'userBadges' => $userBadges,
             'badgesByClass' => $badgesByClass,
             'allBadges' => $allBadges,
-            'claimedBadgeIds' => $claimedBadgeIds,
             'kelasList' => $kelasList,
             'activitiesByClass' => $activitiesByClass,
             'jumlahAktivitas' => $jumlahAktivitas,
@@ -262,9 +260,7 @@ class siswaController extends Controller
             'token' => 'required|string'
         ]);
 
-
         $token = trim($request->token);
-
         $kelas = Classes::whereRaw('LOWER(token) = ?', [strtolower($token)])->first();
 
         if (!$kelas) {
@@ -282,12 +278,10 @@ class siswaController extends Controller
                 ->with('swal_warning', 'Anda sudah tergabung di kelas ini.');
         }
 
-
         StudentClasses::create([
             'id_student' => Auth::id(),
             'id_class' => $kelas->id,
         ]);
-
 
         return redirect()
             ->back()

@@ -574,30 +574,31 @@
             width: 100%;
         }
     }
+
     /* =========================================================
    FIX UKURAN BADGE DI MODAL
    ========================================================= */
 
-#badgeListModal .badge-card {
-    min-height: 150px;
-    padding: 14px;
-    border-radius: 14px;
-}
+    #badgeListModal .badge-card {
+        min-height: 150px;
+        padding: 14px;
+        border-radius: 14px;
+    }
 
-#badgeListModal .badge-card .badge-icon {
-    width: 64px !important;
-    height: 64px !important;
-    min-width: 64px !important;
-    max-width: 64px !important;
-    min-height: 64px !important;
-    max-height: 64px !important;
+    #badgeListModal .badge-card .badge-icon {
+        width: 64px !important;
+        height: 64px !important;
+        min-width: 64px !important;
+        max-width: 64px !important;
+        min-height: 64px !important;
+        max-height: 64px !important;
 
-    object-fit: contain !important;
-    flex: 0 0 64px;
+        object-fit: contain !important;
+        flex: 0 0 64px;
 
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
-}
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+    }
 </style>
 
 
@@ -733,10 +734,8 @@
                                     class="btn btn-sm btn-primary rounded-pill fw-bold shadow-sm"
                                     data-bs-toggle="modal"
                                     data-bs-target="#badgeListModal">
-
                                     <i class="fas fa-search me-1"></i>
-                                    Info & Klaim
-
+                                    Informasi Badge
                                 </button>
 
                             </div>
@@ -750,24 +749,24 @@
 
                                 @foreach($kelasList as $k)
 
-                                    <li
-                                        class="nav-item"
-                                        role="presentation">
+                                <li
+                                    class="nav-item"
+                                    role="presentation">
 
-                                        <button
-                                            class="nav-link {{ $loop->first ? 'active' : '' }}"
-                                            id="badge-tab-{{ $k->id }}"
-                                            data-bs-toggle="pill"
-                                            data-bs-target="#badge-pane-{{ $k->id }}"
-                                            type="button"
-                                            role="tab"
-                                            aria-selected="{{ $loop->first ? 'true' : 'false' }}">
+                                    <button
+                                        class="nav-link {{ $loop->first ? 'active' : '' }}"
+                                        id="badge-tab-{{ $k->id }}"
+                                        data-bs-toggle="pill"
+                                        data-bs-target="#badge-pane-{{ $k->id }}"
+                                        type="button"
+                                        role="tab"
+                                        aria-selected="{{ $loop->first ? 'true' : 'false' }}">
 
-                                            {{ $k->name }}
+                                        {{ $k->name }}
 
-                                        </button>
+                                    </button>
 
-                                    </li>
+                                </li>
 
                                 @endforeach
 
@@ -779,101 +778,101 @@
 
                                 @foreach($kelasList as $k)
 
-                                    @php
-                                        $key = 'class_' . $k->id;
-                                    @endphp
+                                @php
+                                $key = 'class_' . $k->id;
+                                @endphp
 
-                                    <div
-                                        class="tab-pane fade {{ $loop->first ? 'show active' : '' }}"
-                                        id="badge-pane-{{ $k->id }}"
-                                        role="tabpanel">
+                                <div
+                                    class="tab-pane fade {{ $loop->first ? 'show active' : '' }}"
+                                    id="badge-pane-{{ $k->id }}"
+                                    role="tabpanel">
 
-                                        <div class="row g-2 profile-badges-row">
+                                    <div class="row g-2 profile-badges-row">
 
-                                            @if(!empty($badgesByClass[$key]))
+                                        @if(!empty($badgesByClass[$key]))
 
-                                                @foreach($badgesByClass[$key] as $ub)
+                                        @foreach($badgesByClass[$key] as $ub)
 
-                                                    @php
+                                        @php
 
-                                                        $icon =
-                                                            $ub->path_icon
-                                                                ? asset($ub->path_icon)
-                                                                : asset('img/default.png');
+                                        $icon =
+                                        $ub->path_icon
+                                        ? asset($ub->path_icon)
+                                        : asset('img/default.png');
 
-                                                        $modalTarget =
-                                                            'modalDetailBadge_' .
-                                                            $ub->id .
-                                                            '_' .
-                                                            $k->id;
+                                        $modalTarget =
+                                        'modalDetailBadge_' .
+                                        $ub->id .
+                                        '_' .
+                                        $k->id;
 
-                                                    @endphp
-
-
-                                                    <div class="col-6 col-sm-4 text-center">
-
-                                                        <div
-                                                            class="profile-badge-card"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#{{ $modalTarget }}"
-                                                            title="Klik untuk melihat riwayat aktivitas">
+                                        @endphp
 
 
-                                                            @if($ub->jumlah_diperoleh > 1)
+                                        <div class="col-6 col-sm-4 text-center">
 
-                                                                <span class="badge-counter badge rounded-pill bg-danger border border-white border-2">
-
-                                                                    x{{ $ub->jumlah_diperoleh }}
-
-                                                                </span>
-
-                                                            @endif
+                                            <div
+                                                class="profile-badge-card"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#{{ $modalTarget }}"
+                                                title="Klik untuk melihat riwayat aktivitas">
 
 
-                                                            <img
-                                                                src="{{ $icon }}"
-                                                                alt="{{ $ub->name }}">
+                                                @if($ub->jumlah_diperoleh > 1)
+
+                                                <span class="badge-counter badge rounded-pill bg-danger border border-white border-2">
+
+                                                    x{{ $ub->jumlah_diperoleh }}
+
+                                                </span>
+
+                                                @endif
 
 
-                                                            <div class="badge-name">
-
-                                                                {{ $ub->name }}
-
-                                                            </div>
+                                                <img
+                                                    src="{{ $icon }}"
+                                                    alt="{{ $ub->name }}">
 
 
-                                                            <div class="badge-link">
+                                                <div class="badge-name">
 
-                                                                <i class="fas fa-hand-pointer me-1"></i>
-
-                                                                Lihat Riwayat
-
-                                                            </div>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                @endforeach
-
-                                            @else
-
-                                                <div class="col-12 text-center py-3">
-
-                                                    <div class="text-muted small fst-italic">
-
-                                                        Belum ada badge di kelas ini.
-                                                        Selesaikan aktivitas untuk meraih badge!
-
-                                                    </div>
+                                                    {{ $ub->name }}
 
                                                 </div>
 
-                                            @endif
+
+                                                <div class="badge-link">
+
+                                                    <i class="fas fa-hand-pointer me-1"></i>
+
+                                                    Lihat Riwayat
+
+                                                </div>
+
+                                            </div>
 
                                         </div>
 
+                                        @endforeach
+
+                                        @else
+
+                                        <div class="col-12 text-center py-3">
+
+                                            <div class="text-muted small fst-italic">
+
+                                                Belum ada badge di kelas ini.
+                                                Selesaikan aktivitas untuk meraih badge!
+
+                                            </div>
+
+                                        </div>
+
+                                        @endif
+
                                     </div>
+
+                                </div>
 
                                 @endforeach
 
@@ -911,27 +910,27 @@
 
                             @if($kelasList->count() > 1)
 
-                                <select
-                                    id="kelasSelector"
-                                    class="form-select leaderboard-select">
+                            <select
+                                id="kelasSelector"
+                                class="form-select leaderboard-select">
 
-                                    @foreach($kelasList as $kelas)
+                                @foreach($kelasList as $kelas)
 
-                                        <option value="{{ $kelas->id }}">
-                                            {{ $kelas->name }}
-                                        </option>
+                                <option value="{{ $kelas->id }}">
+                                    {{ $kelas->name }}
+                                </option>
 
-                                    @endforeach
+                                @endforeach
 
-                                </select>
+                            </select>
 
                             @else
 
-                                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill shadow-sm">
+                            <span class="badge bg-light text-dark border px-3 py-2 rounded-pill shadow-sm">
 
-                                    {{ $kelasList->first()->name ?? '-' }}
+                                {{ $kelasList->first()->name ?? '-' }}
 
-                                </span>
+                            </span>
 
                             @endif
 
@@ -994,9 +993,9 @@
 
                             @foreach($kelasList as $k)
 
-                                <option value="{{ e($k->name) }}">
-                                    {{ $k->name }}
-                                </option>
+                            <option value="{{ e($k->name) }}">
+                                {{ $k->name }}
+                            </option>
 
                             @endforeach
 
@@ -1030,152 +1029,152 @@
 
                     @if($nilaiList->isEmpty())
 
-                        <div class="text-center text-muted py-5 bg-light rounded-4 border border-light">
+                    <div class="text-center text-muted py-5 bg-light rounded-4 border border-light">
 
-                            <i class="bi bi-inboxes fs-1 d-block mb-3 opacity-50"></i>
+                        <i class="bi bi-inboxes fs-1 d-block mb-3 opacity-50"></i>
 
-                            <span class="fw-medium">
-                                Belum ada data nilai.
-                            </span>
+                        <span class="fw-medium">
+                            Belum ada data nilai.
+                        </span>
 
-                        </div>
+                    </div>
 
                     @else
 
-                        <!-- DESKTOP -->
-                        <div class="d-none d-md-block">
+                    <!-- DESKTOP -->
+                    <div class="d-none d-md-block">
 
-                            <table
-                                id="nilaiTable"
-                                class="table table-bordered table-striped align-middle">
+                        <table
+                            id="nilaiTable"
+                            class="table table-bordered table-striped align-middle">
 
-                                <thead>
+                            <thead>
 
-                                    <tr>
+                                <tr>
 
-                                        <th>No</th>
-                                        <th>Tanggal</th>
-                                        <th>Kelas</th>
-                                        <th>Mata Pelajaran</th>
-                                        <th>Topik</th>
-                                        <th>Nama Aktivitas</th>
-                                        <th>Nilai Akhir</th>
+                                    <th>No</th>
+                                    <th>Tanggal</th>
+                                    <th>Kelas</th>
+                                    <th>Mata Pelajaran</th>
+                                    <th>Topik</th>
+                                    <th>Nama Aktivitas</th>
+                                    <th>Nilai Akhir</th>
 
-                                    </tr>
+                                </tr>
 
-                                </thead>
+                            </thead>
 
 
-                                <tbody>
+                            <tbody>
 
-                                    @foreach($nilaiList as $index => $n)
+                                @foreach($nilaiList as $index => $n)
 
-                                        <tr>
+                                <tr>
 
-                                            <td>
-                                                {{ $index + 1 }}
-                                            </td>
+                                    <td>
+                                        {{ $index + 1 }}
+                                    </td>
 
-                                            <td>
-                                                {{ \Carbon\Carbon::parse($n->result_created_at)->format('d M Y H:i') }}
-                                            </td>
+                                    <td>
+                                        {{ \Carbon\Carbon::parse($n->result_created_at)->format('d M Y H:i') }}
+                                    </td>
 
-                                            <td>
-                                                {{ $n->kelas ?? '-' }}
-                                            </td>
+                                    <td>
+                                        {{ $n->kelas ?? '-' }}
+                                    </td>
 
-                                            <td>
-                                                {{ $n->mapel ?? '-' }}
-                                            </td>
+                                    <td>
+                                        {{ $n->mapel ?? '-' }}
+                                    </td>
 
-                                            <td>
-                                                {{ $n->topik ?? $n->aktivitas ?? '-' }}
-                                            </td>
+                                    <td>
+                                        {{ $n->topik ?? $n->aktivitas ?? '-' }}
+                                    </td>
 
-                                            <td>
-                                                {{ $n->aktivitas ?? '-' }}
-                                            </td>
+                                    <td>
+                                        {{ $n->aktivitas ?? '-' }}
+                                    </td>
 
-                                            <td>
+                                    <td>
 
-                                                {{ is_null($n->nilai_akhir) || $n->nilai_akhir === '-'
+                                        {{ is_null($n->nilai_akhir) || $n->nilai_akhir === '-'
                                                     ? 'Belum Mengerjakan'
                                                     : $n->nilai_akhir }}
 
-                                            </td>
+                                    </td>
 
-                                        </tr>
+                                </tr>
 
-                                    @endforeach
+                                @endforeach
 
-                                </tbody>
+                            </tbody>
 
-                            </table>
+                        </table>
 
-                        </div>
-
-
-                        <!-- MOBILE -->
-                        <div class="d-block d-md-none">
-
-                            @foreach($nilaiList as $n)
-
-                                <div class="card shadow-sm mb-3 border-0">
-
-                                    <div class="card-body">
-
-                                        <div class="fw-bold mb-1">
-                                            {{ $n->aktivitas ?? '-' }}
-                                        </div>
-
-                                        <div class="small text-muted mb-2">
-
-                                            {{ \Carbon\Carbon::parse($n->result_created_at)->format('d M Y H:i') }}
-
-                                        </div>
-
-                                        <div class="mb-2">
-
-                                            <div>
-                                                <strong>Kelas:</strong>
-                                                {{ $n->kelas ?? '-' }}
-                                            </div>
-
-                                            <div>
-                                                <strong>Mapel:</strong>
-                                                {{ $n->mapel ?? '-' }}
-                                            </div>
-
-                                            <div>
-                                                <strong>Topik:</strong>
-                                                {{ $n->topik ?? '-' }}
-                                            </div>
-
-                                        </div>
+                    </div>
 
 
-                                        <div>
+                    <!-- MOBILE -->
+                    <div class="d-block d-md-none">
 
-                                            <span
-                                                class="badge {{ is_numeric($n->nilai_akhir)
-                                                    ? 'bg-success'
-                                                    : 'bg-secondary' }}">
+                        @foreach($nilaiList as $n)
 
-                                                {{ is_numeric($n->nilai_akhir)
-                                                    ? 'Nilai: ' . $n->nilai_akhir
-                                                    : 'Belum Mengerjakan' }}
+                        <div class="card shadow-sm mb-3 border-0">
 
-                                            </span>
+                            <div class="card-body">
 
-                                        </div>
+                                <div class="fw-bold mb-1">
+                                    {{ $n->aktivitas ?? '-' }}
+                                </div>
 
+                                <div class="small text-muted mb-2">
+
+                                    {{ \Carbon\Carbon::parse($n->result_created_at)->format('d M Y H:i') }}
+
+                                </div>
+
+                                <div class="mb-2">
+
+                                    <div>
+                                        <strong>Kelas:</strong>
+                                        {{ $n->kelas ?? '-' }}
+                                    </div>
+
+                                    <div>
+                                        <strong>Mapel:</strong>
+                                        {{ $n->mapel ?? '-' }}
+                                    </div>
+
+                                    <div>
+                                        <strong>Topik:</strong>
+                                        {{ $n->topik ?? '-' }}
                                     </div>
 
                                 </div>
 
-                            @endforeach
+
+                                <div>
+
+                                    <span
+                                        class="badge {{ is_numeric($n->nilai_akhir)
+                                                    ? 'bg-success'
+                                                    : 'bg-secondary' }}">
+
+                                        {{ is_numeric($n->nilai_akhir)
+                                                    ? 'Nilai: ' . $n->nilai_akhir
+                                                    : 'Belum Mengerjakan' }}
+
+                                    </span>
+
+                                </div>
+
+                            </div>
 
                         </div>
+
+                        @endforeach
+
+                    </div>
 
                     @endif
 
@@ -1212,7 +1211,7 @@
 
                     <i class="fas fa-medal text-warning me-2"></i>
 
-                    Pusat Informasi & Klaim Badge
+                    Pusat Informasi Badge
 
                 </h5>
 
@@ -1230,86 +1229,54 @@
 
                 @if(!isset($allBadges) || $allBadges->isEmpty())
 
-                    <div class="text-center text-muted py-4">
+                <div class="text-center text-muted py-4">
 
-                        Belum ada data badge di sistem.
+                    Belum ada data badge di sistem.
 
-                    </div>
+                </div>
 
                 @else
 
-                    <div class="row g-3">
+                <div class="row g-3">
 
-                        @foreach($allBadges as $b)
+                    @foreach($allBadges as $b)
 
-                            @php
+                    @php
+                    $icon = $b->path_icon ? asset($b->path_icon) : asset('img/default.png');
+                    @endphp
 
-                                $icon =
-                                    $b->path_icon
-                                        ? asset($b->path_icon)
-                                        : asset('img/default.png');
+                    <!-- UBAH: col-md-4 menjadi col-md-6 agar jadi 2 kolom besar -->
+                    <div class="col-12 col-md-6">
+                        <!-- UBAH: Tambahkan padding (p-3) agar area dalam card lebih luas -->
+                        <div class="card h-100 shadow-sm badge-card bg-light border-0 p-3">
+                            <div class="card-body d-flex gap-4 align-items-center"> <!-- UBAH: gap-4 untuk jarak ikon & teks -->
 
-                                $isOtomatis =
-                                    in_array($b->id, [4, 5, 6]);
+                                <img src="{{ $icon }}" alt="{{ $b->name }}" class="badge-icon bg-white p-2">
 
-                            @endphp
-
-
-                            <div
-                                class="col-12 col-sm-6 col-md-4"
-                                id="badge-card-{{ $b->id }}">
-
-                                <div class="card h-100 shadow-sm badge-card bg-light border-0">
-
-                                    <div class="card-body d-flex gap-3">
-
-                                        <img
-                                            src="{{ $icon }}"
-                                            alt="{{ $b->name }}"
-                                            class="badge-icon bg-white p-1">
-
-
-                                        <div class="min-w-0 flex-grow-1">
-
-                                            <div class="badge-title mb-1 text-dark">
-
-                                                {{ $b->name }}
-
-                                            </div>
-
-
-                                            <div class="badge-desc small text-muted mb-2 lh-sm">
-
-                                                {{ $b->description }}
-
-                                            </div>
-
-
-                                            @if($isOtomatis)
-
-                                                <div class="small text-primary fw-bold mt-2">
-
-                                                    Dibagikan Otomatis oleh Sistem
-
-                                                </div>
-
-                                            @else
-
-                                                <div class="badge-matches-wrapper"></div>
-
-                                            @endif
-
-                                        </div>
-
+                                <div class="min-w-0 flex-grow-1">
+                                    <!-- UBAH: Ukuran judul diperbesar jadi fs-5 -->
+                                    <div class="badge-title mb-2 text-dark fs-5 fw-bold">
+                                        {{ $b->name }}
                                     </div>
 
+                                    <!-- UBAH: Deskripsi dibuat normal (hilangkan class 'small') agar lebih terbaca -->
+                                    <div class="badge-desc text-muted mb-3 lh-base">
+                                        {{ $b->description }}
+                                    </div>
+
+                                    <!-- UBAH: Teks status otomatis -->
+                                    <div class="text-primary fw-bold mt-2" style="font-size: 0.9rem;">
+                                        <i class="fas fa-robot me-1"></i> Dibagikan Otomatis oleh Sistem
+                                    </div>
                                 </div>
 
                             </div>
-
-                        @endforeach
-
+                        </div>
                     </div>
+
+                    @endforeach
+
+                </div>
 
                 @endif
 
@@ -1333,139 +1300,111 @@
     </div>
 
 </div>
-
-
 <!-- =============================================================
      MODAL DETAIL BADGE
      ============================================================= -->
 
 @foreach($kelasList as $k)
 
-    @php
-        $key = 'class_' . $k->id;
-    @endphp
+@php
+$key = 'class_' . $k->id;
+@endphp
 
-    @if(!empty($badgesByClass[$key]))
+@if(!empty($badgesByClass[$key]))
 
-        @foreach($badgesByClass[$key] as $ub)
+@foreach($badgesByClass[$key] as $ub)
 
-            @php
+@php
+$icon = $ub->path_icon ? asset($ub->path_icon) : asset('img/default.png');
+$modalTarget = 'modalDetailBadge_' . $ub->id . '_' . $k->id;
+@endphp
 
-                $icon =
-                    $ub->path_icon
-                        ? asset($ub->path_icon)
-                        : asset('img/default.png');
+<div
+    class="modal fade text-start"
+    id="{{ $modalTarget }}"
+    tabindex="-1"
+    aria-hidden="true">
 
-                $modalTarget =
-                    'modalDetailBadge_' .
-                    $ub->id .
-                    '_' .
-                    $k->id;
+    <!-- PERUBAHAN: Menghapus class 'modal-sm' agar modal menggunakan ukuran normal yang lebih luas -->
+    <div class="modal-dialog modal-dialog-centered">
 
-            @endphp
+        <div class="modal-content border-0 shadow-lg rounded-4">
 
+            <div class="modal-header border-bottom-0 pb-0">
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close">
+                </button>
+            </div>
 
-            <div
-                class="modal fade text-start"
-                id="{{ $modalTarget }}"
-                tabindex="-1"
-                aria-hidden="true">
+            <!-- PERUBAHAN: Menambah padding horizontal (px-4 px-md-5) agar lebih rapi -->
+            <div class="modal-body text-center pt-0 pb-4 px-4 px-md-5">
 
-                <div class="modal-dialog modal-dialog-centered modal-sm">
+                <!-- PERUBAHAN: Memperbesar gambar dari 70px menjadi 100px & menambah background/shadow ringan -->
+                <img
+                    src="{{ $icon }}"
+                    alt="{{ $ub->name }}"
+                    class="mb-3 bg-light p-2 rounded-4 shadow-sm"
+                    style="
+                        width: 100px;
+                        height: 100px;
+                        object-fit: contain;
+                    ">
 
-                    <div class="modal-content border-0 shadow rounded-4">
+                <!-- PERUBAHAN: Mengubah h5 menjadi h4 agar judul lebih tegas -->
+                <h4 class="fw-bold text-dark mb-2">
+                    {{ $ub->name }}
+                </h4>
 
-                        <div class="modal-header border-bottom-0 pb-0">
+                <!-- PERUBAHAN: Menghilangkan class 'small' dan menggantinya ke ukuran font normal (lh-base) -->
+                <p class="text-secondary mb-4 lh-base" style="font-size: 0.95rem;">
+                    {{ $ub->description }}
+                </p>
 
-                            <button
-                                type="button"
-                                class="btn-close"
-                                data-bs-dismiss="modal"
-                                aria-label="Close">
-                            </button>
+                <!-- PERUBAHAN: Membungkus daftar aktivitas dengan background kotak yang rapi -->
+                <div class="text-start bg-light p-3 p-md-4 rounded-4 border border-secondary-subtle">
 
-                        </div>
+                    <h6 class="fw-bold text-dark mb-3">
+                        <i class="fas fa-list-check text-primary me-2"></i>
+                        Diraih dari Aktivitas:
+                    </h6>
 
+                    <!-- PERUBAHAN: Memperbesar max-height agar area scroll lebih panjang -->
+                    <ul
+                        class="list-group list-group-flush border rounded-3 overflow-auto shadow-sm bg-white"
+                        style="max-height: 220px;">
 
-                        <div class="modal-body text-center pt-0 pb-4 px-4">
+                        @php
+                        $aktivitasArray = explode('||', $ub->daftar_aktivitas);
+                        @endphp
 
-                            <img
-                                src="{{ $icon }}"
-                                alt="{{ $ub->name }}"
-                                class="mb-3"
-                                style="
-                                    width: 70px;
-                                    height: 70px;
-                                    object-fit: contain;
-                                ">
+                        @foreach($aktivitasArray as $actName)
 
+                        <!-- PERUBAHAN: Menghilangkan class 'small' dan memberikan padding (py-2 px-3) -->
+                        <li class="list-group-item border-light py-2 px-3 d-flex align-items-center gap-3">
+                            <i class="fas fa-check-circle text-success fs-5"></i>
+                            <span class="fw-medium text-dark">{{ trim($actName) }}</span>
+                        </li>
 
-                            <h5 class="fw-bold text-dark mb-1">
-                                {{ $ub->name }}
-                            </h5>
+                        @endforeach
 
-
-                            <p class="text-muted small mb-4">
-                                {{ $ub->description }}
-                            </p>
-
-
-                            <div class="text-start">
-
-                                <h6
-                                    class="fw-bold text-secondary mb-2"
-                                    style="font-size: .85rem;">
-
-                                    <i class="fas fa-list-check me-1"></i>
-
-                                    Diraih dari Aktivitas:
-
-                                </h6>
-
-
-                                <ul
-                                    class="list-group list-group-flush border rounded-3 overflow-auto shadow-sm"
-                                    style="max-height: 150px;">
-
-                                    @php
-                                        $aktivitasArray =
-                                            explode(
-                                                '||',
-                                                $ub->daftar_aktivitas
-                                            );
-                                    @endphp
-
-
-                                    @foreach($aktivitasArray as $actName)
-
-                                        <li
-                                            class="list-group-item bg-light border-light small py-2">
-
-                                            <i
-                                                class="fas fa-check-circle text-success me-2">
-                                            </i>
-
-                                            {{ trim($actName) }}
-
-                                        </li>
-
-                                    @endforeach
-
-                                </ul>
-
-                            </div>
-
-                        </div>
-
-                    </div>
+                    </ul>
 
                 </div>
 
             </div>
 
-        @endforeach
+        </div>
 
-    @endif
+    </div>
+
+</div>
+
+@endforeach
+
+@endif
 
 @endforeach
 
@@ -1604,8 +1543,7 @@
 
                 },
 
-                zeroRecords:
-                    "Tidak ditemukan data yang sesuai."
+                zeroRecords: "Tidak ditemukan data yang sesuai."
 
             },
 
@@ -1710,7 +1648,6 @@
 
 
 <script>
-
     const serverDataElem =
         document.getElementById('serverData');
 
@@ -1934,590 +1871,8 @@
         );
 
     }
-
 </script>
 
-
-<!-- =============================================================
-     BADGE ELIGIBILITY
-     ============================================================= -->
-
-<script>
-
-    document.addEventListener(
-        'DOMContentLoaded',
-        function() {
-
-            const badgeModal =
-                document.getElementById(
-                    'badgeListModal'
-                );
-
-
-            async function checkEligibilityFor(
-                badgeId
-            ) {
-
-                try {
-
-                    const res =
-                        await fetch(
-                            "{{ url('/badges') }}/" +
-                            badgeId +
-                            "/eligibility",
-                            {
-
-                                headers: {
-
-                                    'X-Requested-With':
-                                        'XMLHttpRequest'
-
-                                },
-
-                                credentials:
-                                    'same-origin'
-
-                            }
-                        );
-
-
-                    return await res.json();
-
-                } catch (err) {
-
-                    console.error(
-                        'fetch error',
-                        err
-                    );
-
-
-                    return {
-
-                        eligible: false,
-
-                        reason:
-                            'Gagal mengecek syarat (network).'
-
-                    };
-
-                }
-
-            }
-
-
-            async function refreshBadgeEligibility() {
-
-                document
-                    .querySelectorAll(
-                        '.badge-matches-wrapper'
-                    )
-                    .forEach(
-                        w =>
-                            w.innerHTML = ''
-                    );
-
-
-                const cards =
-                    Array.from(
-                        document.querySelectorAll(
-                            '[id^="badge-card-"]'
-                        )
-                    );
-
-
-                for (
-                    const card of cards
-                ) {
-
-                    const badgeId =
-                        card.id
-                            .replace(
-                                'badge-card-',
-                                ''
-                            )
-                            .trim();
-
-
-                    const wrapper =
-                        card.querySelector(
-                            '.badge-matches-wrapper'
-                        );
-
-
-                    if (!wrapper) continue;
-
-
-                    wrapper.innerHTML = `
-
-                        <div class="small text-muted">
-
-                            <i class="fas fa-spinner fa-spin me-1"></i>
-
-                            Memeriksa syarat…
-
-                        </div>
-
-                    `;
-
-
-                    const json =
-                        await checkEligibilityFor(
-                            badgeId
-                        );
-
-
-                    wrapper.innerHTML = '';
-
-
-                    if (
-                        json.eligible &&
-                        Array.isArray(json.matches) &&
-                        json.matches.length
-                    ) {
-
-                        const allClaimed =
-                            json.matches.every(
-                                m =>
-                                    !!m.already_claimed
-                            );
-
-
-                        if (allClaimed) {
-
-                            wrapper.innerHTML = `
-
-                                <div
-                                    class="small text-success fw-bold">
-
-                                    <i
-                                        class="fas fa-check-circle me-1">
-                                    </i>
-
-                                    Sudah diklaim semua.
-
-                                </div>
-
-                            `;
-
-                            continue;
-
-                        }
-
-
-                        const list =
-                            document.createElement(
-                                'div'
-                            );
-
-                        list.className =
-                            'badge-matches-list';
-
-
-                        json.matches.forEach(
-                            m => {
-
-                                const item =
-                                    document.createElement(
-                                        'div'
-                                    );
-
-                                item.className =
-                                    'list-group-item';
-
-
-                                const left =
-                                    document.createElement(
-                                        'div'
-                                    );
-
-                                left.className =
-                                    'match-left';
-
-
-                                left.innerHTML = `
-
-                                    <div
-                                        class="class-name text-wrap lh-sm"
-                                        title="${escapeHtml(
-                                            m.activity_title
-                                        )}">
-
-                                        <span
-                                            class="fw-bold text-dark">
-
-                                            ${escapeHtml(
-                                                m.class_name
-                                            )}
-
-                                        </span>
-
-                                        <br>
-
-                                        <small
-                                            class="text-primary"
-                                            style="font-size: .75rem;">
-
-                                            ${escapeHtml(
-                                                m.activity_title
-                                            )}
-
-                                        </small>
-
-                                    </div>
-
-                                `;
-
-
-                                const right =
-                                    document.createElement(
-                                        'div'
-                                    );
-
-
-                                if (
-                                    m.already_claimed
-                                ) {
-
-                                    right.innerHTML = `
-
-                                        <span
-                                            class="claimed-pill">
-
-                                            Terklaim
-
-                                        </span>
-
-                                    `;
-
-                                } else {
-
-                                    const btn =
-                                        document.createElement(
-                                            'button'
-                                        );
-
-
-                                    btn.className =
-                                        'btn btn-sm btn-primary btn-claim-class px-2 py-1';
-
-
-                                    btn.style.fontSize =
-                                        '.75rem';
-
-
-                                    btn.dataset.badgeId =
-                                        badgeId;
-
-
-                                    btn.dataset.classId =
-                                        m.class_id;
-
-
-                                    btn.dataset.activityId =
-                                        m.activity_id;
-
-
-                                    btn.type =
-                                        'button';
-
-
-                                    btn.textContent =
-                                        'Klaim';
-
-
-                                    right.appendChild(
-                                        btn
-                                    );
-
-                                }
-
-
-                                item.appendChild(left);
-
-                                item.appendChild(right);
-
-                                list.appendChild(item);
-
-                            }
-                        );
-
-
-                        wrapper.appendChild(list);
-
-                    } else {
-
-                        const reason =
-                            json.reason ||
-                            'Belum memenuhi syarat.';
-
-
-                        wrapper.innerHTML = `
-
-                            <div
-                                class="small text-muted fst-italic">
-
-                                ${escapeHtml(
-                                    reason
-                                )}
-
-                            </div>
-
-                        `;
-
-                    }
-
-                }
-
-            }
-
-
-            document.addEventListener(
-                'click',
-                function(e) {
-
-                    const t =
-                        e.target;
-
-
-                    if (
-                        t &&
-                        t.classList.contains(
-                            'btn-claim-class'
-                        )
-                    ) {
-
-                        const badgeId =
-                            t.dataset.badgeId;
-
-                        const classId =
-                            t.dataset.classId;
-
-                        const activityId =
-                            t.dataset.activityId;
-
-                        const originalText =
-                            t.innerText;
-
-
-                        t.disabled = true;
-
-                        t.innerText =
-                            'Tunggu...';
-
-
-                        fetch(
-                            "{{ route('badges.claim') }}",
-                            {
-
-                                method: 'POST',
-
-                                headers: {
-
-                                    'Content-Type':
-                                        'application/json',
-
-                                    'X-CSRF-TOKEN':
-                                        '{{ csrf_token() }}',
-
-                                    'X-Requested-With':
-                                        'XMLHttpRequest'
-
-                                },
-
-                                body:
-                                    JSON.stringify({
-
-                                        badge_id:
-                                            badgeId,
-
-                                        class_id:
-                                            classId,
-
-                                        activity_id:
-                                            activityId
-
-                                    })
-
-                            }
-                        )
-
-                        .then(
-                            r =>
-                                r.json()
-                                    .catch(
-                                        () => ({
-
-                                            success:
-                                                false,
-
-                                            message:
-                                                'Invalid JSON'
-
-                                        })
-                                    )
-                        )
-
-                        .then(
-                            res => {
-
-                                if (
-                                    res &&
-                                    res.success
-                                ) {
-
-                                    if (
-                                        typeof Swal !==
-                                        'undefined'
-                                    ) {
-
-                                        Swal.fire(
-                                            'Sukses',
-                                            res.message,
-                                            'success'
-                                        );
-
-                                    }
-
-
-                                    const right =
-                                        t.parentElement;
-
-
-                                    right.innerHTML = `
-
-                                        <span
-                                            class="claimed-pill">
-
-                                            Terklaim
-
-                                        </span>
-
-                                    `;
-
-
-                                    setTimeout(
-                                        () => {
-
-                                            window.location.reload();
-
-                                        },
-                                        1500
-                                    );
-
-                                } else {
-
-                                    if (
-                                        typeof Swal !==
-                                        'undefined'
-                                    ) {
-
-                                        Swal.fire(
-                                            'Gagal',
-                                            res.message ||
-                                            'Gagal klaim',
-                                            'error'
-                                        );
-
-                                    }
-
-
-                                    t.disabled =
-                                        false;
-
-                                    t.innerText =
-                                        originalText;
-
-                                }
-
-                            }
-                        )
-
-                        .catch(
-                            err => {
-
-                                console.error(
-                                    'claim error',
-                                    err
-                                );
-
-
-                                if (
-                                    typeof Swal !==
-                                    'undefined'
-                                ) {
-
-                                    Swal.fire(
-                                        'Error',
-                                        'Gagal menghubungi server',
-                                        'error'
-                                    );
-
-                                }
-
-
-                                t.disabled =
-                                    false;
-
-                                t.innerText =
-                                    originalText;
-
-                            }
-                        );
-
-                    }
-
-                }
-            );
-
-
-            if (badgeModal) {
-
-                badgeModal.addEventListener(
-                    'show.bs.modal',
-                    refreshBadgeEligibility
-                );
-
-            }
-
-
-            function escapeHtml(str) {
-
-                if (
-                    typeof str !==
-                    'string'
-                ) {
-
-                    return str || '';
-
-                }
-
-
-                return str.replace(
-                    /[&<>"'`=\/]/g,
-                    function(s) {
-
-                        return ({
-                            '&': '&amp;',
-                            '<': '&lt;',
-                            '>': '&gt;',
-                            '"': '&quot;',
-                            "'": '&#39;',
-                            '/': '&#x2F;',
-                            '`': '&#x60;',
-                            '=': '&#x3D;'
-                        })[s];
-
-                    }
-                );
-
-            }
-
-        }
-    );
-
-</script>
-
-@endpush
 
 
 <!-- =============================================================
@@ -2527,7 +1882,6 @@
 @if(session('swal_error'))
 
 <script>
-
     document.addEventListener(
         'DOMContentLoaded',
         function() {
@@ -2538,17 +1892,14 @@
 
                 title: 'Gagal',
 
-                text:
-                    "{{ session('swal_error') }}",
+                text: "{{ session('swal_error') }}",
 
-                confirmButtonColor:
-                    '#e74a3b'
+                confirmButtonColor: '#e74a3b'
 
             });
 
         }
     );
-
 </script>
 
 @endif
@@ -2557,7 +1908,6 @@
 @if(session('swal_warning'))
 
 <script>
-
     document.addEventListener(
         'DOMContentLoaded',
         function() {
@@ -2568,17 +1918,14 @@
 
                 title: 'Perhatian',
 
-                text:
-                    "{{ session('swal_warning') }}",
+                text: "{{ session('swal_warning') }}",
 
-                confirmButtonColor:
-                    '#f6c23e'
+                confirmButtonColor: '#f6c23e'
 
             });
 
         }
     );
-
 </script>
 
 @endif
@@ -2587,7 +1934,6 @@
 @if(session('swal_success'))
 
 <script>
-
     document.addEventListener(
         'DOMContentLoaded',
         function() {
@@ -2598,19 +1944,18 @@
 
                 title: 'Berhasil',
 
-                text:
-                    "{{ session('swal_success') }}",
+                text: "{{ session('swal_success') }}",
 
-                confirmButtonColor:
-                    '#1cc88a'
+                confirmButtonColor: '#1cc88a'
 
             });
 
         }
     );
-
 </script>
 
 @endif
+
+@endpush
 
 @endsection
