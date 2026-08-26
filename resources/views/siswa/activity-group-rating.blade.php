@@ -1,13 +1,125 @@
 @extends('layouts.main')
 
 @section('content')
-    <div class="container py-4">
+<style>
+    /* ================================
+       FIX LAYOUT HALAMAN PENILAIAN
+       ================================ */
+
+    html,
+    body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    /* Pastikan area konten tidak melebar keluar viewport */
+    .rating-page {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+
+    .rating-page .container-fluid {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Bootstrap row jangan sampai menyebabkan horizontal overflow */
+    .rating-page .row {
+        max-width: 100%;
+    }
+
+    .rating-page .col-lg-6 {
+        min-width: 0;
+    }
+
+    /* Card tidak boleh melewati kolom */
+    .rating-page .card {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Input group dan textarea tetap mengikuti lebar kolom */
+    .rating-page .input-group,
+    .rating-page .form-control,
+    .rating-page textarea {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Sticky kanan jangan membuat layout melebar */
+    .rating-page .sticky-top {
+        max-width: 100%;
+    }
+
+    /* ================================
+       FOOTER
+       ================================ */
+
+    .rating-page ~ footer {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* ================================
+       TABLET
+       ================================ */
+
+    @media (max-width: 991.98px) {
+        .rating-page .container-fluid {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+
+        .rating-page .sticky-top {
+            position: static !important;
+        }
+    }
+
+    /* ================================
+       HP
+       ================================ */
+
+    @media (max-width: 575.98px) {
+        .rating-page .container-fluid {
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+        }
+
+        .rating-page .card-body {
+            padding: 1rem !important;
+        }
+
+        .rating-page .row {
+            --bs-gutter-x: 1rem;
+        }
+
+        .rating-page .col-sm-5,
+        .rating-page .col-sm-7 {
+            width: 100%;
+        }
+
+        .rating-page h3 {
+            font-size: 1.5rem;
+        }
+
+        .rating-page h5 {
+            font-size: 1.05rem;
+        }
+    }
+</style>
+    <div class="container-fluid rating-page px-4 px-xl-5 py-4">
 
         <!-- Header Info & Tombol Panduan -->
         <div class="mb-4">
-            <a href="javascript:history.back()" class="btn btn-sm btn-outline-primary mb-3 shadow-sm">
-                <i class="fas fa-arrow-left me-1"></i> Kembali
-            </a>
+            {{-- <a href="{{ route('siswa.aktivitas') }}" class="btn btn-sm btn-outline-primary mb-3 shadow-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Kembali ke Daftar Aktivitas
+                </a> --}}
 
             <div class="d-flex align-items-center gap-2 mb-1">
                 <h3 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
@@ -212,59 +324,59 @@
             </div>
         </div>
     </div>
-</div>
+    
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const inputs = document.querySelectorAll('input[type="number"][name^="ratings"]');
-        const btnSubmit = document.querySelector('button[type="submit"]');
-        
-        // Buat elemen visual untuk total secara dinamis
-        const infoText = document.querySelector('.card-body p.text-muted.small.mb-3');
-        const totalDisplay = document.createElement('div');
-        totalDisplay.className = 'alert alert-info fw-bold mb-3 py-2 fs-5 transition-all';
-        totalDisplay.innerHTML = 'Total Poin Terbagi: <span id="currentTotal">0</span> / 100';
-        infoText.parentNode.insertBefore(totalDisplay, infoText.nextSibling);
-        
-        const spanTotal = document.getElementById('currentTotal');
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const inputs = document.querySelectorAll('input[type="number"][name^="ratings"]');
+                const btnSubmit = document.querySelector('button[type="submit"]');
 
-        function calculateTotal() {
-            let total = 0;
-            inputs.forEach(input => {
-                total += parseInt(input.value || 0);
-            });
-            
-            spanTotal.innerText = total;
-            
-            if(total === 100) {
-                totalDisplay.classList.remove('alert-danger', 'alert-info');
-                totalDisplay.classList.add('alert-success');
-                btnSubmit.disabled = false;
-                btnSubmit.innerHTML = '<i class="fas fa-check-circle me-2"></i> Simpan Penilaian & Selesai';
-            } else {
-                totalDisplay.classList.remove('alert-success', 'alert-info');
-                totalDisplay.classList.add('alert-danger');
-                btnSubmit.disabled = true;
-                
-                let selisih = 100 - total;
-                if(selisih > 0) {
-                    btnSubmit.innerHTML = `<i class="fas fa-lock me-2"></i> Kurang ${selisih} Poin Lagi`;
-                } else {
-                    btnSubmit.innerHTML = `<i class="fas fa-lock me-2"></i> Kelebihan ${Math.abs(selisih)} Poin`;
+                // Buat elemen visual untuk total secara dinamis
+                const infoText = document.querySelector('.card-body p.text-muted.small.mb-3');
+                const totalDisplay = document.createElement('div');
+                totalDisplay.className = 'alert alert-info fw-bold mb-3 py-2 fs-5 transition-all';
+                totalDisplay.innerHTML = 'Total Poin Terbagi: <span id="currentTotal">0</span> / 100';
+                infoText.parentNode.insertBefore(totalDisplay, infoText.nextSibling);
+
+                const spanTotal = document.getElementById('currentTotal');
+
+                function calculateTotal() {
+                    let total = 0;
+                    inputs.forEach(input => {
+                        total += parseInt(input.value || 0);
+                    });
+
+                    spanTotal.innerText = total;
+
+                    if (total === 100) {
+                        totalDisplay.classList.remove('alert-danger', 'alert-info');
+                        totalDisplay.classList.add('alert-success');
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = '<i class="fas fa-check-circle me-2"></i> Simpan Penilaian & Selesai';
+                    } else {
+                        totalDisplay.classList.remove('alert-success', 'alert-info');
+                        totalDisplay.classList.add('alert-danger');
+                        btnSubmit.disabled = true;
+
+                        let selisih = 100 - total;
+                        if (selisih > 0) {
+                            btnSubmit.innerHTML = `<i class="fas fa-lock me-2"></i> Kurang ${selisih} Poin Lagi`;
+                        } else {
+                            btnSubmit.innerHTML =
+                                `<i class="fas fa-lock me-2"></i> Kelebihan ${Math.abs(selisih)} Poin`;
+                        }
+                    }
                 }
-            }
-        }
 
-        // Pasang event listener ke setiap inputan
-        inputs.forEach(input => {
-            input.addEventListener('input', calculateTotal);
-        });
-        
-        // Jalankan saat pertama kali halaman dimuat (untuk membaca old input)
-        calculateTotal();
-    });
-</script>
-@endpush
+                // Pasang event listener ke setiap inputan
+                inputs.forEach(input => {
+                    input.addEventListener('input', calculateTotal);
+                });
 
+                // Jalankan saat pertama kali halaman dimuat (untuk membaca old input)
+                calculateTotal();
+            });
+        </script>
+    @endpush
 @endsection

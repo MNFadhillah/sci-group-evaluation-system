@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\aktivitasController;
 use App\Models\ActivityStudentPackage;
+use App\Models\ActivityResult;
 use App\Models\ActivityStudentQuestion;
 
 class ActivityGroupAnswerController extends Controller
@@ -65,121 +66,333 @@ class ActivityGroupAnswerController extends Controller
         }
 
         if ($questions->isEmpty()) abort(404, 'Soal belum tersedia.');
+        $members = $group->members;
 
-        return view('siswa.activity-group-answer', compact('activity', 'group', 'questions', 'answers', 'user', 'isMode1', 'isMode2'));
+        return view('siswa.activity-group-answer', compact('activity', 'group', 'questions', 'answers', 'user', 'isMode1', 'isMode2', 'members'));
     }
 
     public function save(Request $request, $id)
-    {
-        $user = Auth::user();
+{
+    $user = Auth::user();
+
+    try {
+
         $activity = Activity::findOrFail($id);
-        $group = ActivityGroup::where('id_activity', $activity->id)->whereHas('members', function ($q) use ($user) {
-            $q->where('id_user', $user->id);
-        })->first();
 
-        if (!$group) return response()->json(['error' => 'Bukan anggota kelompok'], 403);
+        // Pastikan aktivitas memang kelompok
+        if ($activity->is_group_activity !== 'yes') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Aktivitas ini bukan aktivitas kelompok.'
+            ], 403);
+        }
 
-        // AMBIL ARRAY JAWABAN DARI FETCH AJAX
+        // Cari kelompok user
+        $group = ActivityGroup::where('id_activity', $activity->id)
+            ->whereHas('members', function ($q) use ($user) {
+                $q->where('id_user', $user->id);
+            })
+            ->first();
+
+        if (!$group) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Anda bukan anggota kelompok pada aktivitas ini.'
+            ], 403);
+        }
+
+        // Ambil jawaban dari AJAX
         $jawabanArray = $request->input('jawaban', []);
 
-        // ======================================================
-        // BATCH SAVE & AUTO-GRADING SESUAI MODE
-        // ======================================================
+        if (!is_array($jawabanArray)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format jawaban tidak valid.'
+            ], 422);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MODE 2
+        |--------------------------------------------------------------------------
+        */
         if ($activity->evaluation_mode === 'mode2') {
-            $package = ActivityStudentPackage::where('id_activity', $activity->id)->where('id_user', $user->id)->latest('id')->first();
+
+            $package = ActivityStudentPackage::where(
+                'id_activity',
+                $activity->id
+            )
+                ->where('id_user', $user->id)
+                ->latest('id')
+                ->first();
+
+            if (!$package) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Paket soal belum tersedia.'
+                ], 404);
+            }
 
             $totalSoal = count($jawabanArray);
             $jumlahBenar = 0;
 
             foreach ($jawabanArray as $item) {
-                if ($item['jawaban'] !== null) {
 
-                    $isCorrect = 0; // Default salah
-                    $jawabanSiswa = strtolower(trim((string)$item['jawaban']));
+                if (
+                    !isset($item['soal_id']) ||
+                    !array_key_exists('jawaban', $item)
+                ) {
+                    continue;
+                }
 
-                    // Ambil data soal untuk mencocokkan kunci jawaban
-                    $soal = \App\Models\Question::find($item['soal_id']);
+                $jawaban = $item['jawaban'];
 
-                    if ($soal) {
-                        // 1. KOREKSI PILIHAN GANDA
-                        if ($soal->type === 'MultipleChoice') {
-                            $kunciMC = strtolower(trim((string)$soal->MC_answer));
-                            if ($jawabanSiswa === $kunciMC) {
+                if ($jawaban === null) {
+                    continue;
+                }
+
+                $isCorrect = 0;
+
+                $jawabanSiswa = strtolower(
+                    trim((string) $jawaban)
+                );
+
+                $soal = \App\Models\Question::find(
+                    $item['soal_id']
+                );
+
+                if ($soal) {
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | PILIHAN GANDA
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if ($soal->type === 'MultipleChoice') {
+
+                        $kunciMC = strtolower(
+                            trim((string) $soal->MC_answer)
+                        );
+
+                        if ($jawabanSiswa === $kunciMC) {
+                            $isCorrect = 1;
+                        }
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | ISIAN SINGKAT
+                    |--------------------------------------------------------------------------
+                    */
+
+                    elseif ($soal->type === 'ShortAnswer') {
+
+                        $kunciSA = json_decode(
+                            $soal->SA_answer,
+                            true
+                        );
+
+                        if (is_array($kunciSA)) {
+
+                            foreach ($kunciSA as $kunci) {
+
+                                $kunciBersih = strtolower(
+                                    trim((string) $kunci)
+                                );
+
+                                if (
+                                    $kunciBersih !== '' &&
+                                    (
+                                        str_contains(
+                                            $jawabanSiswa,
+                                            $kunciBersih
+                                        ) ||
+                                        $jawabanSiswa === $kunciBersih
+                                    )
+                                ) {
+                                    $isCorrect = 1;
+                                    break;
+                                }
+                            }
+
+                        } elseif (is_string($soal->SA_answer)) {
+
+                            $kunciBersih = strtolower(
+                                trim((string) $soal->SA_answer)
+                            );
+
+                            if (
+                                $kunciBersih !== '' &&
+                                (
+                                    str_contains(
+                                        $jawabanSiswa,
+                                        $kunciBersih
+                                    ) ||
+                                    $jawabanSiswa === $kunciBersih
+                                )
+                            ) {
                                 $isCorrect = 1;
                             }
                         }
-                        // 2. KOREKSI ISIAN SINGKAT (KEYWORD MATCHING)
-                        elseif ($soal->type === 'ShortAnswer') {
-                            $kunciSA = json_decode($soal->SA_answer, true);
-
-                            if (is_array($kunciSA)) {
-                                foreach ($kunciSA as $kunci) {
-                                    $kunciBersih = strtolower(trim((string)$kunci));
-                                    // Jika jawaban siswa mengandung salah satu kata kunci
-                                    if ($kunciBersih !== '' && (str_contains($jawabanSiswa, $kunciBersih) || $jawabanSiswa === $kunciBersih)) {
-                                        $isCorrect = 1;
-                                        break; // Langsung break jika sudah nemu 1 kecocokan
-                                    }
-                                }
-                            } elseif (is_string($soal->SA_answer)) {
-                                // Fallback jika SA_answer tersimpan sebagai string biasa
-                                $kunciBersih = strtolower(trim((string)$soal->SA_answer));
-                                if ($kunciBersih !== '' && (str_contains($jawabanSiswa, $kunciBersih) || $jawabanSiswa === $kunciBersih)) {
-                                    $isCorrect = 1;
-                                }
-                            }
-                        }
                     }
-
-                    if ($isCorrect === 1) {
-                        $jumlahBenar++;
-                    }
-
-                    // Simpan jawaban individu beserta status benar/salahnya
-                    ActivityAnswer::updateOrCreate(
-                        ['id_activity' => $activity->id, 'id_question' => $item['soal_id'], 'id_user' => $user->id],
-                        ['user_answer' => $item['jawaban'], 'id_package' => $package->id, 'is_correct' => $isCorrect]
-                    );
                 }
+
+                if ($isCorrect === 1) {
+                    $jumlahBenar++;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | SIMPAN JAWABAN MODE 2
+                |--------------------------------------------------------------------------
+                */
+
+                ActivityAnswer::updateOrCreate(
+                    [
+                        'id_activity' => $activity->id,
+                        'id_question' => $item['soal_id'],
+                        'id_user' => $user->id,
+                    ],
+                    [
+                        'user_answer' => $jawaban,
+                        'is_correct' => $isCorrect,
+                    ]
+                );
             }
 
-            // ==================================================
-            // SIMPAN NILAI MURNI LANGSUNG KE ACTIVITY_RESULT
-            // ==================================================
-            $nilaiMurni = $totalSoal > 0 ? round(($jumlahBenar / $totalSoal) * 100, 2) : 0;
 
-            \App\Models\ActivityResult::updateOrCreate(
-                ['id_activity' => $activity->id, 'id_user' => $user->id],
+            /*
+            |--------------------------------------------------------------------------
+            | HITUNG NILAI MODE 2
+            |--------------------------------------------------------------------------
+            */
+
+            $nilaiMurni = $totalSoal > 0
+                ? round(
+                    ($jumlahBenar / $totalSoal) * 100,
+                    2
+                )
+                : 0;
+
+            /*
+            |--------------------------------------------------------------------------
+            | TENTUKAN STATUS BERDASARKAN KKM
+            |--------------------------------------------------------------------------
+            */
+
+            $status = $nilaiMurni >= $activity->kkm
+                ? 'Pass'
+                : 'Remedial';
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SIMPAN HASIL
+            |--------------------------------------------------------------------------
+            */
+
+            ActivityResult::updateOrCreate(
                 [
-                    'result' => $nilaiMurni, // INI ADALAH NILAI KUIS (MURNI)
-                    'total_benar' => $jumlahBenar
-                    // CATATAN: 'nilai_akhir' JANGAN DIISI! Biarkan NULL.
+                    'id_activity' => $activity->id,
+                    'id_user' => $user->id,
+                ],
+                [
+                    'result' => $nilaiMurni,
+                    'total_benar' => $jumlahBenar,
+                    'result_status' => $status,
                 ]
             );
 
-            // Update status paket soal menjadi submitted
-            if ($package) {
-                $package->update([
-                    'status' => 'submitted',
-                    'submitted_at' => now()
-                ]);
-            }
-        } else {
-            // MODE 1: Uraian Kelompok (Tanpa Auto-Grading)
+
+            /*
+            |--------------------------------------------------------------------------
+            | TANDAI PACKAGE SUDAH SUBMIT
+            |--------------------------------------------------------------------------
+            */
+
+            $package->update([
+                'status' => 'submitted',
+                'submitted_at' => now(),
+            ]);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MODE 1
+        |--------------------------------------------------------------------------
+        */
+        else {
+
             foreach ($jawabanArray as $item) {
-                if ($item['jawaban'] !== null) {
-                    ActivityGroupAnswer::updateOrCreate(
-                        ['id_activity' => $activity->id, 'id_group' => $group->id, 'id_question' => $item['soal_id'], 'id_user' => $user->id],
-                        ['answer' => $item['jawaban']]
-                    );
+
+                if (
+                    !isset($item['soal_id']) ||
+                    !array_key_exists('jawaban', $item)
+                ) {
+                    continue;
                 }
+
+                ActivityGroupAnswer::updateOrCreate(
+                    [
+                        'id_activity' => $activity->id,
+                        'id_group' => $group->id,
+                        'id_question' => $item['soal_id'],
+                        'id_user' => $user->id,
+                    ],
+                    [
+                        'answer' => $item['jawaban'] ?? '',
+                    ]
+                );
             }
         }
 
-        // Response untuk Javascript
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSE SUKSES
+        |--------------------------------------------------------------------------
+        */
+
         return response()->json([
             'status' => 'success',
-            'next_url' => route('activity.group.rating', $activity->id) // Arahkan ke SCI!
+            'message' => 'Jawaban berhasil disimpan.',
+            'next_url' => route(
+                'activity.group.rating',
+                $activity->id
+            ),
         ]);
+
+
+    } catch (\Throwable $e) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | CATAT ERROR
+        |--------------------------------------------------------------------------
+        */
+
+        \Log::error(
+            'GAGAL SUBMIT AKTIVITAS KELOMPOK',
+            [
+                'activity_id' => $id,
+                'user_id' => Auth::id(),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]
+        );
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Terjadi kesalahan pada server.',
+            'debug' => config('app.debug')
+                ? $e->getMessage()
+                : null,
+        ], 500);
     }
+}
 }

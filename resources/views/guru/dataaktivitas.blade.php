@@ -119,13 +119,14 @@
                         </div>
                     </div>
 
-                    {{-- BAGIAN 3: MODE EVALUASI --}}
-                    <h6 class="text-uppercase text-muted small fw-bold mb-3">Mode Evaluasi</h6>
-                    <div class="mb-4">
-                        <div class="border rounded p-3 bg-light">
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="evaluation_mode"
-                                    id="evaluation_mode_1" value="mode1" checked>
+                                        {{-- BAGIAN 3: MODE EVALUASI (hanya untuk aktivitas Kelompok) --}}
+                    <div id="evaluationModeSection" class="d-none">
+                        <h6 class="text-uppercase text-muted small fw-bold mb-3">Mode Evaluasi</h6>
+                        <div class="mb-4">
+                            <div class="border rounded p-3 bg-light">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="evaluation_mode"
+                                        id="evaluation_mode_1" value="mode1" checked>
                                 <label class="form-check-label" for="evaluation_mode_1">
                                     <strong>Mode 1</strong>
                                     <div class="text-muted small">Menggunakan sistem pengerjaan aktivitas seperti
@@ -212,6 +213,7 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
 
                     <div class="d-grid d-md-flex justify-content-md-end">
@@ -979,11 +981,14 @@
         });
     </script>
 
-    <script>
+        <script>
         document.addEventListener('DOMContentLoaded', function() {
             const mode1 = document.getElementById('evaluation_mode_1');
             const mode2 = document.getElementById('evaluation_mode_2');
             const mode2Config = document.getElementById('mode2Config');
+            const evalSection = document.getElementById('evaluationModeSection');
+            const individualRadio = document.getElementById('individual_activity_add');
+            const groupRadio = document.getElementById('group_activity_add');
 
             function updateEvaluationMode() {
                 if (mode2.checked) {
@@ -993,9 +998,28 @@
                 }
             }
 
+            function updateJenisPengerjaan() {
+                if (groupRadio.checked) {
+                    evalSection.classList.remove('d-none');
+                    mode1.disabled = false;
+                    mode2.disabled = false;
+                } else {
+                    evalSection.classList.add('d-none');
+                    // pastikan mode1 tetap terkirim sebagai default saat individu
+                    mode1.checked = true;
+                    mode1.disabled = false;
+                    mode2.disabled = false;
+                    mode2Config.classList.add('d-none');
+                }
+            }
+
             mode1.addEventListener('change', updateEvaluationMode);
             mode2.addEventListener('change', updateEvaluationMode);
+            individualRadio.addEventListener('change', updateJenisPengerjaan);
+            groupRadio.addEventListener('change', updateJenisPengerjaan);
+
             updateEvaluationMode();
+            updateJenisPengerjaan();
         });
     </script>
 @endpush

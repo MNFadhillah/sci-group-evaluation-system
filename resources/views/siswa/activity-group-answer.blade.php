@@ -49,7 +49,7 @@
            CUSTOM UI/UX DASHBOARD STYLE (Asli)
            ======================================= */
         .quiz-container {
-            max-width: 1200px;
+            width: 100%;
             margin: 0 auto;
         }
 
@@ -146,6 +146,11 @@
             background-color: #f8f9fa;
             border-radius: 0 12px 12px 0;
         }
+
+        .top-navbar,
+        nav.navbar {
+            padding: 10px 24px !important;
+        }
     </style>
 </head>
 
@@ -154,40 +159,46 @@
          NAVBAR MANDIRI (HEADER KUIS)
          ======================================= -->
     <nav class="navbar sticky-top bg-white shadow-sm py-3 mb-4 border-bottom z-3">
-        <div class="container">
+        <div class="container-fluid px-4 px-xl-5">
             <!-- Menggunakan Grid System agar lebar kiri, tengah, kanan sama rata. Timer pasti presisi di tengah layar -->
             <div class="row w-100 align-items-center m-0">
 
                 <!-- KIRI: Judul & Info Kelompok (Porsi 1/3 Kiri) -->
                 <div class="col-12 col-lg-4 d-flex flex-column justify-content-center mb-3 mb-lg-0 px-0">
                     <h4 class="fw-bolder text-dark mb-1 text-center text-lg-start">{{ $activity->title }}</h4>
-                    <div class="text-muted small d-flex flex-wrap justify-content-center justify-content-lg-start gap-3">
+                    <div
+                        class="text-muted small d-flex flex-wrap justify-content-center justify-content-lg-start gap-3">
                         <span>
-                            <i class="fas fa-users text-primary me-1"></i> Kelompok: <strong class="text-dark">{{ $group->name }}</strong>
+                            <i class="fas fa-users text-primary me-1"></i> Kelompok: <strong
+                                class="text-dark">{{ $group->name }}</strong>
                         </span>
                         <span>
-                            <i class="fas fa-list-ol text-primary me-1"></i> Total: <strong class="text-dark">{{ $questions->count() }} Soal</strong>
+                            <i class="fas fa-list-ol text-primary me-1"></i> Total: <strong
+                                class="text-dark">{{ $questions->count() }} Soal</strong>
                         </span>
                     </div>
                 </div>
 
                 <!-- TENGAH: UI Timer (Porsi 1/3 Tengah) -->
                 <div class="col-12 col-lg-4 d-flex justify-content-center mb-3 mb-lg-0 px-0">
-                    <div id="timerContainer" class="fw-bold text-danger d-none bg-white border border-danger px-4 py-2 rounded-pill shadow-sm" style="font-size: 1.1rem; letter-spacing: 1px;">
+                    <div id="timerContainer"
+                        class="fw-bold text-danger d-none bg-white border border-danger px-4 py-2 rounded-pill shadow-sm"
+                        style="font-size: 1.1rem; letter-spacing: 1px;">
                         <i class="fas fa-stopwatch me-1"></i> <span id="countdownTimer">00:00:00</span>
                     </div>
                 </div>
 
                 <!-- KANAN: Badge Mode (Porsi 1/3 Kanan) -->
                 <div class="col-12 col-lg-4 d-flex justify-content-center justify-content-lg-end px-0">
-                    @if($isMode2)
-                    <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.9rem;">
-                        <i class="fas fa-user-edit me-1"></i> Mode Kuis Individu
-                    </span>
+                    @if ($isMode2)
+                        <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.9rem;">
+                            <i class="fas fa-user-edit me-1"></i> Mode Kuis Individu
+                        </span>
                     @else
-                    <span class="badge bg-info text-dark px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.9rem;">
-                        <i class="fas fa-users-cog me-1"></i> Mode Tugas Kelompok
-                    </span>
+                        <span class="badge bg-info text-dark px-3 py-2 rounded-pill shadow-sm"
+                            style="font-size: 0.9rem;">
+                            <i class="fas fa-users-cog me-1"></i> Mode Tugas Kelompok
+                        </span>
                     @endif
                 </div>
 
@@ -198,7 +209,7 @@
     <!-- =======================================
          KONTEN UTAMA
          ======================================= -->
-    <div class="container py-2 quiz-container">
+    <div class="container-fluid py-2 quiz-container px-4 px-xl-5">
 
         <!-- HALAMAN PETUNJUK -->
         <div id="instructionPage" class="card border-0 shadow-sm rounded-4">
@@ -209,14 +220,20 @@
 
                 <div class="bg-light p-4 rounded-4 mx-auto mb-4" style="max-width: 900px;">
                     <ul class="text-muted mb-0" style="line-height: 1.8; font-size: 1.05rem;">
-                        <li>Aktivitas ini terdiri dari <strong class="text-dark">{{ $questions->count() }} butir soal</strong>.</li>
-                        @if($isMode2)
-                        <li>Paket soal ini adalah <strong>milik Anda secara individu</strong>. Nilai akan digabung untuk menjadi rata-rata kelompok.</li>
+                        <li>Aktivitas ini terdiri dari <strong class="text-dark">{{ $questions->count() }} butir
+                                soal</strong>.</li>
+                        @if ($isMode2)
+                            <li>Paket soal ini adalah <strong>milik Anda secara individu</strong>. Nilai akan digabung
+                                untuk menjadi rata-rata kelompok.</li>
                         @else
-                        <li>Ini adalah <strong>Tugas Kelompok</strong>. Anda dapat melihat progres teman secara <i>real-time</i> di bagian bawah kolom jawaban Anda.</li>
+                            <li>Ini adalah <strong>Tugas Kelompok</strong>. Anda dapat melihat progres teman secara
+                                <i>real-time</i> di bagian bawah kolom jawaban Anda.
+                            </li>
                         @endif
-                        <li>Setiap jawaban yang Anda pilih/ketik akan <strong>tersimpan otomatis secara sementara</strong> (Draft).</li>
-                        <li>Jangan lupa menekan tombol <strong>Kumpulkan Jawaban</strong> di akhir agar dapat melanjutkan ke tahap Penilaian Teman (SCI).</li>
+                        <li>Setiap jawaban yang Anda pilih/ketik akan <strong>tersimpan otomatis secara
+                                sementara</strong> (Draft).</li>
+                        <li>Jangan lupa menekan tombol <strong>Kumpulkan Jawaban</strong> di akhir agar dapat
+                            melanjutkan ke tahap Penilaian Teman (SCI).</li>
                     </ul>
                 </div>
 
@@ -236,41 +253,51 @@
                 <div class="{{ $isMode2 ? 'col-lg-8' : 'col-lg-12' }}">
                     <div class="card border-0 shadow-sm rounded-4 h-100">
                         <!-- Header Soal -->
-                        <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 rounded-top-4 d-flex justify-content-between align-items-center">
+                        <div
+                            class="card-header bg-white border-bottom pt-4 pb-3 px-4 rounded-top-4 d-flex justify-content-between align-items-center">
                             <h5 class="fw-bold text-primary mb-0">Soal <span id="qIndex">1</span></h5>
-                            <div>
-                                <button id="flagBtn" class="btn btn-sm btn-outline-warning rounded-pill fw-bold text-dark shadow-sm px-3">
-                                    <i class="fas fa-flag"></i> Tandai Ragu
-                                </button>
-                            </div>
+                            @if ($isMode2)
+                                <div>
+                                    <button id="flagBtn"
+                                        class="btn btn-sm btn-outline-warning rounded-pill fw-bold text-dark shadow-sm px-3">
+                                        <i class="fas fa-flag"></i> Tandai Ragu
+                                    </button>
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Area Konten Soal -->
-                        <div class="card-body p-4 p-md-5 d-flex flex-column">
+                        <div class="card-body p-4 d-flex flex-column">
                             <div id="questionArea" class="flex-grow-1">
                                 <!-- Injeksi JS ada di sini -->
                             </div>
                         </div>
 
                         <!-- Footer Soal (Tombol Prev/Next & Submit Mode 1) -->
-                        <div class="card-footer bg-white border-top-0 pt-0 pb-4 px-4 rounded-bottom-4">
+                        <div class="card-footer bg-white border-top-0 pt-0 pb-3 px-4 rounded-bottom-4">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                <div>
-                                    <button id="prevBtn" class="btn btn-outline-secondary px-4 fw-bold rounded-pill" disabled>
-                                        <i class="fas fa-chevron-left me-1"></i> Sebelumnya
-                                    </button>
-                                    <button id="nextBtn" class="btn btn-primary px-4 fw-bold rounded-pill shadow-sm">
-                                        Berikutnya <i class="fas fa-chevron-right ms-1"></i>
-                                    </button>
-                                </div>
+                                @if ($isMode2)
+                                    <div>
+                                        <button id="prevBtn"
+                                            class="btn btn-outline-secondary px-4 fw-bold rounded-pill" disabled>
+                                            <i class="fas fa-chevron-left me-1"></i> Sebelumnya
+                                        </button>
+                                        <button id="nextBtn"
+                                            class="btn btn-primary px-4 fw-bold rounded-pill shadow-sm">
+                                            Berikutnya <i class="fas fa-chevron-right ms-1"></i>
+                                        </button>
+                                    </div>
+                                @else
+                                    <div></div>
+                                @endif
 
-                                @if(!$isMode2)
-                                <!-- Tombol Kumpul Khusus Mode 1 -->
-                                <div>
-                                    <button id="finishBtnMode1" class="btn btn-success px-4 fw-bold rounded-pill shadow-sm">
-                                        <i class="fas fa-paper-plane me-1"></i> Kumpulkan Jawaban
-                                    </button>
-                                </div>
+                                @if (!$isMode2)
+                                    <div>
+                                        <button id="finishBtnMode1"
+                                            class="btn btn-success px-4 fw-bold rounded-pill shadow-sm">
+                                            <i class="fas fa-paper-plane me-1"></i> Kumpulkan Jawaban
+                                        </button>
+                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -278,34 +305,43 @@
                 </div>
 
                 <!-- SISI KANAN: NAVIGASI PALET (HANYA MUNCUL DI MODE 2) -->
-                @if($isMode2)
-                <div class="col-lg-4">
-                    <div class="position-sticky" style="top: 100px;"> <!-- Disesuaikan agar tidak tertutup navbar -->
-                        <div class="card border-0 shadow-sm rounded-4">
-                            <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 rounded-top-4">
-                                <h6 class="fw-bold text-dark mb-0 text-center">Navigasi Soal</h6>
-                            </div>
-                            <div class="card-body p-4">
-                                <!-- Legenda Palet -->
-                                <div class="d-flex flex-wrap justify-content-center gap-3 mb-4 small fw-semibold text-secondary">
-                                    <div class="d-flex align-items-center"><span class="rounded-circle border" style="width:12px;height:12px;background:#fff;margin-right:6px;"></span> Belum</div>
-                                    <div class="d-flex align-items-center"><span class="rounded-circle" style="width:12px;height:12px;background:#0d6efd;margin-right:6px;"></span> Dijawab</div>
-                                    <div class="d-flex align-items-center"><span class="rounded-circle" style="width:12px;height:12px;background:#ffc107;margin-right:6px;"></span> Ragu</div>
+                @if ($isMode2)
+                    <div class="col-lg-4">
+                        <div class="position-sticky" style="top: 100px;">
+                            <!-- Disesuaikan agar tidak tertutup navbar -->
+                            <div class="card border-0 shadow-sm rounded-4">
+                                <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 rounded-top-4">
+                                    <h6 class="fw-bold text-dark mb-0 text-center">Navigasi Soal</h6>
                                 </div>
+                                <div class="card-body p-4">
+                                    <!-- Legenda Palet -->
+                                    <div
+                                        class="d-flex flex-wrap justify-content-center gap-3 mb-4 small fw-semibold text-secondary">
+                                        <div class="d-flex align-items-center"><span class="rounded-circle border"
+                                                style="width:12px;height:12px;background:#fff;margin-right:6px;"></span>
+                                            Belum</div>
+                                        <div class="d-flex align-items-center"><span class="rounded-circle"
+                                                style="width:12px;height:12px;background:#0d6efd;margin-right:6px;"></span>
+                                            Dijawab</div>
+                                        <div class="d-flex align-items-center"><span class="rounded-circle"
+                                                style="width:12px;height:12px;background:#ffc107;margin-right:6px;"></span>
+                                            Ragu</div>
+                                    </div>
 
-                                <!-- Grid Palet -->
-                                <div id="palette" class="nav-palette mb-4"></div>
+                                    <!-- Grid Palet -->
+                                    <div id="palette" class="nav-palette mb-4"></div>
 
-                                <hr class="text-muted opacity-25 my-4">
+                                    <hr class="text-muted opacity-25 my-4">
 
-                                <!-- Tombol Kumpul Mode 2 -->
-                                <button id="finishBtnMode2" class="btn btn-success btn-lg w-100 fw-bold shadow-sm rounded-pill">
-                                    <i class="fas fa-paper-plane me-2"></i> Kumpulkan Jawaban
-                                </button>
+                                    <!-- Tombol Kumpul Mode 2 -->
+                                    <button id="finishBtnMode2"
+                                        class="btn btn-success btn-lg w-100 fw-bold shadow-sm rounded-pill">
+                                        <i class="fas fa-paper-plane me-2"></i> Kumpulkan Jawaban
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 @endif
 
             </div>
@@ -315,29 +351,13 @@
     <!-- =======================================
          DATA BRIDGE (PHP TO JAVASCRIPT)
          ======================================= -->
-    <div id="quizConfig" class="d-none"
-        data-ismode2="{{ $isMode2 ? 'true' : 'false' }}"
-        data-userid="{{ $user->id }}"
-        data-activityid="{{ $activity->id }}"
+    <div id="quizConfig" class="d-none" data-ismode2="{{ $isMode2 ? 'true' : 'false' }}"
+        data-userid="{{ $user->id }}" data-activityid="{{ $activity->id }}"
         data-duration="{{ $activity->durasi_pengerjaan ?? 0 }}"
         data-submiturl="{{ route('activity.group.answer.save', $activity->id) }}"
         data-csrftoken="{{ csrf_token() }}">
     </div>
-    <script id="data-questions" type="application/json">
-        {
-            !!json_encode($questions) !!
-        }
-    </script>
-    <script id="data-answers" type="application/json">
-        {
-            !!json_encode($answers) !!
-        }
-    </script>
-    <script id="data-members" type="application/json">
-        {
-            !!json_encode($group - > members - > load('user')) !!
-        }
-    </script>
+
 
     <!-- =======================================
          LIBRARY TAMBAHAN & SCRIPTS
@@ -347,16 +367,15 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <div id="quizDataBridge" class="d-none"
-         data-questions="{{ base64_encode(json_encode($questions ?? [])) }}"
-         data-answers="{{ base64_encode(json_encode($answers ?? [])) }}"
-         data-members="{{ base64_encode(json_encode($members ?? [])) }}">
+    <div id="quizDataBridge" class="d-none" data-questions="{{ base64_encode(json_encode($questions ?? [])) }}"
+        data-answers="{{ base64_encode(json_encode($answers ?? [])) }}"
+        data-members="{{ base64_encode(json_encode($members ?? [])) }}">
     </div>
 
-<script>
+    <script>
         /* =======================================
-           1. DEKLARASI VARIABEL DARI SERVER
-           ======================================= */
+                   1. DEKLARASI VARIABEL DARI SERVER
+                   ======================================= */
         const configEl = document.getElementById('quizConfig');
 
         const IS_MODE_2 = configEl.dataset.ismode2 === 'true';
@@ -366,13 +385,31 @@
         const SUBMIT_URL = configEl.dataset.submiturl;
         const CSRF_TOKEN = configEl.dataset.csrftoken;
 
-        // Tarik dan terjemahkan data (DIJAMIN 100% BEBAS GARIS MERAH & ANTI ERROR)
         const dataBridge = document.getElementById('quizDataBridge');
-        const rawQuestions = JSON.parse(atob(dataBridge.dataset.questions));
-        const existingAnswers = JSON.parse(atob(dataBridge.dataset.answers));
-        const groupMembers = JSON.parse(atob(dataBridge.dataset.members));
+const rawQuestions = JSON.parse(atob(dataBridge.dataset.questions));
+const existingAnswers = JSON.parse(atob(dataBridge.dataset.answers));
+const groupMembers = JSON.parse(atob(dataBridge.dataset.members));
 
-        let timerInterval;
+let timerInterval;
+
+// PINDAH KE SINI — supaya sudah siap sebelum auto-resume (startBtn.click()) mungkin terpanggil
+const prevBtnEl = document.getElementById('prevBtn');
+const nextBtnEl = document.getElementById('nextBtn');
+const flagBtnEl = document.getElementById('flagBtn');
+
+function updateFlagButtonUI() {
+    if (!flagBtnEl) return;
+    flagBtnEl.classList.toggle('btn-warning', !!flagged[idx]);
+    flagBtnEl.classList.toggle('btn-outline-warning', !flagged[idx]);
+}
+
+if (flagBtnEl) {
+    flagBtnEl.onclick = () => {
+        flagged[idx] = !flagged[idx];
+        updatePalette();
+        updateFlagButtonUI();
+    };
+}
 
 
         // =======================================
@@ -444,7 +481,8 @@
                 }
             }
 
-            let finalSoalText = typeof parsedText === 'string' ? parsedText : (parsedText.text || parsedText.teks || '');
+            let finalSoalText = typeof parsedText === 'string' ? parsedText : (parsedText.text || parsedText.teks ||
+                '');
 
             return {
                 id: q.id,
@@ -537,7 +575,8 @@
 
         function renderQuestion(i) {
             if (!questions || questions.length === 0 || !questions[i]) {
-                document.getElementById('questionArea').innerHTML = '<div class="alert alert-danger shadow-sm"><i class="fas fa-exclamation-triangle me-2"></i>Gagal memuat soal. Pastikan data soal tersedia atau silakan refresh halaman.</div>';
+                document.getElementById('questionArea').innerHTML =
+                    '<div class="alert alert-danger shadow-sm"><i class="fas fa-exclamation-triangle me-2"></i>Gagal memuat soal. Pastikan data soal tersedia atau silakan refresh halaman.</div>';
                 return;
             }
 
@@ -548,7 +587,8 @@
 
             let html = ``;
             if (q.image) {
-                html += `<div class="text-center mb-4"><img src="${q.image}" class="img-fluid rounded-3 shadow-sm border" style="max-height: 280px;"></div>`;
+                html +=
+                    `<div class="text-center mb-4"><img src="${q.image}" class="img-fluid rounded-3 shadow-sm border" style="max-height: 280px;"></div>`;
             }
             if (q.text) {
                 html += `<div class="mb-4 fs-5 text-dark" style="line-height: 1.7;">${q.text.replace(/\n/g, '<br>')}</div>`;
@@ -567,17 +607,11 @@
                 });
             }
 
-            const flagBtn = document.getElementById('flagBtn');
-            if (flagged[i]) {
-                flagBtn.className = "btn btn-sm btn-warning rounded-pill fw-bold text-dark shadow-sm px-3";
-                flagBtn.innerHTML = '<i class="fas fa-flag"></i> Batal Tandai';
-            } else {
-                flagBtn.className = "btn btn-sm btn-outline-warning rounded-pill fw-bold text-dark shadow-sm px-3";
-                flagBtn.innerHTML = '<i class="far fa-flag"></i> Tandai Ragu';
-            }
 
-            document.getElementById('prevBtn').disabled = i === 0;
-            document.getElementById('nextBtn').disabled = i === questions.length - 1;
+
+            if (prevBtnEl) prevBtnEl.disabled = i === 0;
+            if (nextBtnEl) nextBtnEl.disabled = i === questions.length - 1;
+            updateFlagButtonUI();
         }
 
         function renderOptions(q) {
@@ -588,7 +622,8 @@
                     html += `<div class="row g-3">`;
                     Object.entries(q.options || {}).forEach(([key, opt]) => {
                         let isSelected = answers[idx] === key;
-                        let className = isSelected ? 'quiz-option p-2 px-3 h-100 selected shadow-sm' : 'quiz-option p-2 px-3 h-100';
+                        let className = isSelected ? 'quiz-option p-2 px-3 h-100 selected shadow-sm' :
+                            'quiz-option p-2 px-3 h-100';
                         html += `
                             <div class="col-md-6">
                                 <div class="${className}" data-key="${key}">
@@ -611,19 +646,21 @@
                 html += `
                     <div class="mb-5">
                         <label class="form-label fw-bold text-primary mb-2"><i class="fas fa-edit me-1"></i> Area Jawaban Anda:</label>
-                        <textarea class="form-control bg-primary bg-opacity-10 border-primary border-opacity-25 shadow-sm" rows="5" placeholder="Tuliskan analisis atau pemikiran Anda di sini..." 
+                        <textarea class="form-control bg-primary bg-opacity-10 border-primary border-opacity-25 shadow-sm" rows="4" placeholder="Tuliskan analisis atau pemikiran Anda di sini..." 
                         oninput="answers[idx] = this.value; updatePalette();">${answers[idx] || ''}</textarea>
                     </div>
                 `;
 
-                html += `<h6 class="fw-bold text-secondary mb-3"><i class="fas fa-users me-1"></i> Progres Jawaban Anggota Lain:</h6>`;
+                html +=
+                    `<h6 class="fw-bold text-secondary mb-3"><i class="fas fa-users me-1"></i> Progres Jawaban Anggota Lain:</h6>`;
                 let hasPeers = false;
 
                 groupMembers.forEach(member => {
                     if (member.id_user !== MY_USER_ID) {
                         hasPeers = true;
                         let key = q.id + '_' + member.id_user;
-                        let peerAns = existingAnswers[key] ? existingAnswers[key].answer : '<span class="text-muted fst-italic">Belum menuliskan jawaban...</span>';
+                        let peerAns = existingAnswers[key] ? existingAnswers[key].answer :
+                            '<span class="text-muted fst-italic">Belum menuliskan jawaban...</span>';
                         let name = member.user ? member.user.name : 'Anggota';
 
                         html += `
@@ -664,14 +701,10 @@
             });
         }
 
-        document.getElementById('flagBtn').onclick = () => {
-            flagged[idx] = !flagged[idx];
-            updatePalette();
-            renderQuestion(idx);
-        };
 
-        document.getElementById('prevBtn').onclick = () => idx > 0 && renderQuestion(idx - 1);
-        document.getElementById('nextBtn').onclick = () => idx < questions.length - 1 && renderQuestion(idx + 1);
+
+        if (prevBtnEl) prevBtnEl.onclick = () => { idx > 0 && renderQuestion(idx - 1); updatePalette(); };
+if (nextBtnEl) nextBtnEl.onclick = () => { idx < questions.length - 1 && renderQuestion(idx + 1); updatePalette(); };
 
         /* =======================================
            5. LOGIKA PENGUMPULAN (AJAX BATCH)
@@ -738,7 +771,9 @@
                     });
                 })
                 .catch(err => {
-                    Swal.fire('Gagal Menyimpan!', 'Terjadi masalah pada server. Periksa koneksi internet Anda lalu coba lagi.', 'error');
+                    Swal.fire('Gagal Menyimpan!',
+                        'Terjadi masalah pada server. Periksa koneksi internet Anda lalu coba lagi.',
+                        'error');
                 });
         };
 

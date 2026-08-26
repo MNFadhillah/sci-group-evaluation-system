@@ -72,7 +72,7 @@ class aktivitasController extends Controller
                 'activities.created_at',
                 'activities.deadline',
                 DB::raw('COALESCE(activity_result.nilai_akhir, activity_result.result, "-") as result'), // Jika belum ada nilai akhir, tampilkan nilai murni
-                DB::raw('
+                                DB::raw('
                     CASE
                         -- JIKA siswa sudah menilai teman, pastikan statusnya "Selesai" (atau ikuti nilai akhir jika sudah dinilai guru)
                         WHEN activity_group_ratings.id IS NOT NULL THEN COALESCE(activity_result.result_status, "Selesai")
@@ -81,6 +81,10 @@ class aktivitasController extends Controller
                         WHEN activity_result.nilai_akhir IS NOT NULL THEN activity_result.result_status
                         WHEN activity_result.result IS NOT NULL AND activities.evaluation_mode = "mode2" AND activity_group_ratings.id IS NULL THEN "Belum Menilai Teman"
                         WHEN activity_result.result IS NOT NULL THEN activity_result.result_status
+                        
+                        -- BARU: Mode 1 kelompok tanpa nilai numerik, cek langsung result_status
+                        WHEN activity_result.result_status IS NOT NULL THEN activity_result.result_status
+                        
                         ELSE "Belum Dikerjakan"
                     END as result_status
                 ')

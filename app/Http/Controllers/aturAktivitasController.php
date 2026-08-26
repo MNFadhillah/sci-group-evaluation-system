@@ -45,9 +45,15 @@ class aturAktivitasController extends Controller
 
         // Ambil semua soal yang punya id_topic = $idTopic (tidak dibatasi created_by)
         // Karena kamu mau soal walau dibuat guru lain tetap tersedia selama topiknya sama
-        $questions = Question::where('id_topic', $idTopic)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $questionsQuery = Question::where('id_topic', $idTopic);
+
+        if ($aktivitas->evaluation_mode === 'mode1') {
+            $questionsQuery->where('type', 'Essay');
+        } elseif ($aktivitas->evaluation_mode === 'mode2') {
+            $questionsQuery->whereIn('type', ['MultipleChoice', 'ShortAnswer']);
+        }
+
+        $questions = $questionsQuery->orderBy('created_at', 'desc')->get();
 
         // Ambil selected ids dari pivot (activity_question)
         $selectedIds = DB::table('activity_question')
@@ -67,6 +73,7 @@ class aturAktivitasController extends Controller
         ));
     }
 
+    
     public function ambilSoalAjax(Request $request, $idAktivitas)
     {
         $request->validate([
@@ -98,6 +105,12 @@ class aturAktivitasController extends Controller
 
         // Base query: semua soal yang punya topik sama (tanpa membatasi created_by)
         $baseQuery = Question::where('id_topic', $idTopic);
+
+        if ($aktivitas->evaluation_mode === 'mode1') {
+            $baseQuery->where('type', 'Essay');
+        } elseif ($aktivitas->evaluation_mode === 'mode2') {
+            $baseQuery->whereIn('type', ['MultipleChoice', 'ShortAnswer']);
+        }
 
         if ($isAdaptive) {
             $easyCount = max(0, $n - 2);
@@ -152,15 +165,44 @@ class aturAktivitasController extends Controller
         ]);
     }
     public function simpanAturSoal(Request $request, $idAktivitas)
-    {
-        $request->validate([
-            'id_question' => 'nullable|array',
-            'id_question.*' => 'integer',
-            'jumlah' => 'nullable|integer|min:0'
-        ]);
+{
+    $request->validate([
+        'id_question' => 'nullable|array',
+        'id_question.*' => 'integer',
+        'jumlah' => 'nullable|integer|min:0'
+    ]);
 
-        $ids = $request->input('id_question', []);
-        $jumlah = $request->input('jumlah', null);
+    $ids = $request->input('id_question', []);
+    $jumlah = $request->input('jumlah', null);
+
+    // ===== VALIDASI SESUAI MODE =====
+    $aktivitas = Activity::findOrFail($idAktivitas);
+    $questions = Question::whereIn('id', array_map('intval', $ids))->get();
+
+    if ($aktivitas->evaluation_mode === 'mode1') {
+        if (count($ids) !== 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mode 1 hanya boleh memiliki tepat 1 soal.'
+            ], 422);
+        }
+
+        if ($questions->isEmpty() || $questions->first()->type !== 'Essay') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mode 1 hanya menerima soal bertipe Essay.'
+            ], 422);
+        }
+    } elseif ($aktivitas->evaluation_mode === 'mode2') {
+        $invalidTypes = $questions->pluck('type')->diff(['MultipleChoice', 'ShortAnswer']);
+
+        if ($invalidTypes->isNotEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mode 2 hanya menerima soal Pilihan Ganda atau Isian Singkat (Essay tidak diperbolehkan).'
+            ], 422);
+        }
+    }
 
         DB::beginTransaction();
         try {
@@ -207,16 +249,38 @@ class aturAktivitasController extends Controller
     }
 
     public function tambahSoalManual(Request $req, $idAktivitas)
-    {
-        DB::table('activity_question')->insert([
-            'id_activity' => $idAktivitas,
-            'id_question' => $req->id_question,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+{
+    $aktivitas = Activity::findOrFail($idAktivitas);
+    $question = Question::find($req->id_question);
 
-        return response()->json(['success' => true]);
+    if (!$question) {
+        return response()->json(['success' => false, 'message' => 'Soal tidak ditemukan.'], 404);
     }
+
+    if ($aktivitas->evaluation_mode === 'mode1') {
+        $existingCount = DB::table('activity_question')->where('id_activity', $idAktivitas)->count();
+
+        if ($existingCount >= 1) {
+            return response()->json(['success' => false, 'message' => 'Mode 1 hanya boleh memiliki 1 soal.'], 422);
+        }
+        if ($question->type !== 'Essay') {
+            return response()->json(['success' => false, 'message' => 'Mode 1 hanya menerima soal Essay.'], 422);
+        }
+    } elseif ($aktivitas->evaluation_mode === 'mode2') {
+        if (!in_array($question->type, ['MultipleChoice', 'ShortAnswer'])) {
+            return response()->json(['success' => false, 'message' => 'Mode 2 tidak menerima soal Essay.'], 422);
+        }
+    }
+
+    DB::table('activity_question')->insert([
+        'id_activity' => $idAktivitas,
+        'id_question' => $req->id_question,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return response()->json(['success' => true]);
+}
 
     public function hapusSoalManual(Request $req, $idAktivitas)
     {

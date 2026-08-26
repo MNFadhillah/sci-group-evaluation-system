@@ -176,7 +176,7 @@
 
 <body class="p-4">
 
-    <div class="container">
+    <div class="container-fluid px-4 px-xl-5">
 
         <h3 class="text-center mb-4">
             {{ $judul }} <small class="text-muted">({{ ucfirst($topik) }})</small>
@@ -219,7 +219,7 @@
 
 
         <!-- AREA SOAL -->
-        <div id="soal-test" hidden>
+        <div id="soal-test" hidden class="mx-auto" style="max-width: 900px;">
 
             <!-- Header Soal -->
             <div class="soal-meta d-flex justify-content-between align-items-start">
@@ -264,14 +264,16 @@
 
     </div>
     <!-- COMBO METER -->
-    <div id="comboMeter" style="position:fixed; top:20px; left:20px; 
+    <div id="comboMeter"
+        style="position:fixed; top:20px; left:20px; 
             font-size:2rem; font-weight:bold; 
             color:#ff9800; text-shadow:2px 2px 8px rgba(0,0,0,.4);
             display:none; z-index:9999;">
     </div>
 
     <!-- ON FIRE EFFECT -->
-    <div id="onFire" style="position:fixed; bottom:20px; right:20px;
+    <div id="onFire"
+        style="position:fixed; bottom:20px; right:20px;
             font-size:2.5rem; font-weight:bold; 
             color:#ff3b3b; text-shadow:0 0 15px orange;
             display:none; z-index:9999;">
@@ -308,6 +310,7 @@
                 }
             }, 1000);
         }
+
         function mulai() {
             fetch(`/activity/{{ $id_activity }}/start`)
                 .then(async r => {
@@ -335,9 +338,9 @@
                     document.getElementById("info-test").hidden = true;
                     document.getElementById("soal-test").hidden = false;
 
-                    const durasiMenit = Number.isInteger(data.durasi_pengerjaan)
-                        ? data.durasi_pengerjaan
-                        : 30;
+                    const durasiMenit = Number.isInteger(data.durasi_pengerjaan) ?
+                        data.durasi_pengerjaan :
+                        30;
 
                     timeLeft = durasiMenit * 60;
 
@@ -446,16 +449,16 @@
             answers[currentIndex] = finalAnswer;
 
             fetch(`/activity/{{ $id_activity }}/submit`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify({
-                    question_id: currentQuestionID,
-                    user_answer: finalAnswer
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({
+                        question_id: currentQuestionID,
+                        user_answer: finalAnswer
+                    })
                 })
-            })
                 .then(r => r.json())
                 .then(res => {
 
@@ -533,12 +536,12 @@
             clearInterval(timerInterval);
 
             fetch(`/activity/{{ $id_activity }}/finish`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                }
-            })
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    }
+                })
                 .then(r => r.json())
                 .then(res => {
                     // result_db prioritas utama
@@ -564,7 +567,8 @@
                     const nilaiAkhir = db ? (db.nilai_akhir ?? (res.nilai_akhir ?? null)) : (res.nilai_akhir ?? null);
 
                     // status teks (prioritas DB)
-                    const statusText = db ? (db.result_status ?? (res.status_benar ? 'Pass' : 'Remedial')) : (res.status_benar ? 'Pass' : 'Remedial');
+                    const statusText = db ? (db.result_status ?? (res.status_benar ? 'Pass' : 'Remedial')) : (res
+                        .status_benar ? 'Pass' : 'Remedial');
 
                     // helper formatting (tunjukkan '-' jika null)
                     const fmt = v => (v === null || v === undefined) ? '-' : v;
@@ -601,6 +605,7 @@
                         .then(() => location.href = "{{ route('siswa.aktivitas') }}");
                 });
         }
+
         function updateProgress() {
             if (totalQuestions === 0) return;
 
@@ -611,8 +616,6 @@
             bar.innerText = percent + "%";
             bar.setAttribute("aria-valuenow", percent);
         }
-
-
     </script>
 
 </body>
