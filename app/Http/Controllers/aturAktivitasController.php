@@ -62,15 +62,58 @@ class aturAktivitasController extends Controller
             ->toArray();
 
         $selectedQuestions = Question::whereIn('id', $selectedIds)->get();
+        if (
+    $aktivitas->evaluation_mode === 'mode2'
+    && empty($selectedIds)
+    && !empty($aktivitas->jumlah_soal)
+) {
+    $n = (int) $aktivitas->jumlah_soal;
+
+    $types = $aktivitas->mode2_question_types ?? ['MultipleChoice', 'ShortAnswer'];
+    if (!is_array($types) || empty($types)) {
+        $types = ['MultipleChoice', 'ShortAnswer'];
+    }
+
+    $baseAuto = Question::where('id_topic', $idTopic)->whereIn('type', $types);
+
+    if ($aktivitas->addaptive === 'yes') {
+        // ikuti rumus adaptif yang sama seperti ambilSoalAjax()
+        $easyCount   = max(0, $n - 2);
+        $hardCount   = max(0, $n - 2);
+        $mediumCount = $n;
+
+        $autoSelected = (clone $baseAuto)->where('difficulty', 'mudah')->inRandomOrder()->take($easyCount)->get()
+            ->merge((clone $baseAuto)->where('difficulty', 'sedang')->inRandomOrder()->take($mediumCount)->get())
+            ->merge((clone $baseAuto)->where('difficulty', 'sulit')->inRandomOrder()->take($hardCount)->get());
+    } else {
+        $autoSelected = (clone $baseAuto)->inRandomOrder()->take($n)->get();
+    }
+
+    if ($autoSelected->isNotEmpty()) {
+        $now = now();
+        $rows = $autoSelected->map(fn($q) => [
+            'id_activity' => $idAktivitas,
+            'id_question' => $q->id,
+            'created_at'  => $now,
+            'updated_at'  => $now,
+        ])->toArray();
+
+        DB::table('activity_question')->insert($rows);
+
+        $selectedIds       = $autoSelected->pluck('id')->toArray();
+        $selectedQuestions = $autoSelected;
+    }
+}
+
 
         return view('guru.atursoal', compact(
-            'aktivitas',
-            'questions',
-            'selectedIds',
-            'selectedQuestions',
-            'topic',
-            'subject'
-        ));
+    'aktivitas',
+    'questions',
+    'selectedIds',
+    'selectedQuestions',
+    'topic',
+    'subject'
+));
     }
 
     

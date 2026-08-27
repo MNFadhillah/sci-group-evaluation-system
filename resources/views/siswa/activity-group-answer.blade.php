@@ -151,6 +151,52 @@
         nav.navbar {
             padding: 10px 24px !important;
         }
+
+        /* Instruction Page baru */
+        .instruction-icon-badge {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .instruction-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .instruction-item:last-child {
+            border-bottom: none;
+        }
+
+        .instruction-mode-banner {
+            border-radius: 16px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            margin-bottom: 28px;
+        }
+
+        .instruction-mode-banner.mode-individu {
+            background: linear-gradient(135deg, #eaf1ff, #f5f9ff);
+            color: #0d6efd;
+            border: 1px solid #cfe2ff;
+        }
+
+        .instruction-mode-banner.mode-kelompok {
+            background: linear-gradient(135deg, #e6fbff, #f3feff);
+            color: #087990;
+            border: 1px solid #b6effa;
+        }
     </style>
 </head>
 
@@ -214,27 +260,90 @@
         <!-- HALAMAN PETUNJUK -->
         <div id="instructionPage" class="card border-0 shadow-sm rounded-4">
             <div class="card-body p-4 p-md-5">
+
                 <div class="text-center mb-4">
-                    <h3 class="fw-bolder text-dark">Petunjuk Pengerjaan</h3>
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10"
+                        style="width:64px;height:64px;">
+                        <i class="fas fa-clipboard-list text-primary" style="font-size:1.6rem;"></i>
+                    </div>
+                    <h3 class="fw-bolder text-dark mb-1">Petunjuk Pengerjaan</h3>
+                    <p class="text-muted mb-0">Baca dulu sebelum mulai, biar jawabanmu tersimpan dengan aman.</p>
                 </div>
 
-                <div class="bg-light p-4 rounded-4 mx-auto mb-4" style="max-width: 900px;">
-                    <ul class="text-muted mb-0" style="line-height: 1.8; font-size: 1.05rem;">
-                        <li>Aktivitas ini terdiri dari <strong class="text-dark">{{ $questions->count() }} butir
-                                soal</strong>.</li>
+                <div class="mx-auto" style="max-width: 720px;">
+
+                    @if ($isMode2)
+                        <div class="instruction-mode-banner mode-individu">
+                            <i class="fas fa-user-edit fs-4"></i>
+                            <div>
+                                <div>Mode Kuis Individu</div>
+                                <div class="fw-normal small opacity-75">Paket soal ini milik kamu sendiri, nilai
+                                    digabung jadi rata-rata kelompok.</div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="instruction-mode-banner mode-kelompok">
+                            <i class="fas fa-users-cog fs-4"></i>
+                            <div>
+                                <div>Mode Tugas Kelompok</div>
+                                <div class="fw-normal small opacity-75">Kamu bisa lihat progres jawaban teman secara
+                                    real-time.</div>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="bg-light p-4 rounded-4 mb-4">
+
+                        <div class="instruction-item">
+                            <div class="instruction-icon-badge bg-primary bg-opacity-10 text-primary">
+                                <i class="fas fa-list-ol"></i>
+                            </div>
+                            <div class="text-dark">
+                                Aktivitas ini terdiri dari <strong>{{ $questions->count() }} butir soal</strong>.
+                            </div>
+                        </div>
+
                         @if ($isMode2)
-                            <li>Paket soal ini adalah <strong>milik Anda secara individu</strong>. Nilai akan digabung
-                                untuk menjadi rata-rata kelompok.</li>
+                            <div class="instruction-item">
+                                <div class="instruction-icon-badge bg-primary bg-opacity-10 text-primary">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="text-dark">
+                                    Nilai akan digabung menjadi <strong>rata-rata kelompok</strong>.
+                                </div>
+                            </div>
                         @else
-                            <li>Ini adalah <strong>Tugas Kelompok</strong>. Anda dapat melihat progres teman secara
-                                <i>real-time</i> di bagian bawah kolom jawaban Anda.
-                            </li>
+                            <div class="instruction-item">
+                                <div class="instruction-icon-badge bg-info bg-opacity-10 text-info">
+                                    <i class="fas fa-eye"></i>
+                                </div>
+                                <div class="text-dark">
+                                    Progres jawaban anggota lain tampil <strong>real-time</strong> di bawah kolom
+                                    jawabanmu.
+                                </div>
+                            </div>
                         @endif
-                        <li>Setiap jawaban yang Anda pilih/ketik akan <strong>tersimpan otomatis secara
-                                sementara</strong> (Draft).</li>
-                        <li>Jangan lupa menekan tombol <strong>Kumpulkan Jawaban</strong> di akhir agar dapat
-                            melanjutkan ke tahap Penilaian Teman (SCI).</li>
-                    </ul>
+
+                        <div class="instruction-item">
+                            <div class="instruction-icon-badge bg-success bg-opacity-10 text-success">
+                                <i class="fas fa-save"></i>
+                            </div>
+                            <div class="text-dark">
+                                Setiap jawaban otomatis <strong>tersimpan sementara</strong> (Draft).
+                            </div>
+                        </div>
+
+                        <div class="instruction-item">
+                            <div class="instruction-icon-badge bg-warning bg-opacity-10 text-warning">
+                                <i class="fas fa-paper-plane"></i>
+                            </div>
+                            <div class="text-dark">
+                                Tekan <strong>Kumpulkan Jawaban</strong> di akhir untuk lanjut ke tahap Penilaian Teman
+                                (SCI).
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
                 <div class="text-center">
@@ -374,8 +483,8 @@
 
     <script>
         /* =======================================
-                   1. DEKLARASI VARIABEL DARI SERVER
-                   ======================================= */
+                           1. DEKLARASI VARIABEL DARI SERVER
+                           ======================================= */
         const configEl = document.getElementById('quizConfig');
 
         const IS_MODE_2 = configEl.dataset.ismode2 === 'true';
@@ -386,30 +495,30 @@
         const CSRF_TOKEN = configEl.dataset.csrftoken;
 
         const dataBridge = document.getElementById('quizDataBridge');
-const rawQuestions = JSON.parse(atob(dataBridge.dataset.questions));
-const existingAnswers = JSON.parse(atob(dataBridge.dataset.answers));
-const groupMembers = JSON.parse(atob(dataBridge.dataset.members));
+        const rawQuestions = JSON.parse(atob(dataBridge.dataset.questions));
+        const existingAnswers = JSON.parse(atob(dataBridge.dataset.answers));
+        const groupMembers = JSON.parse(atob(dataBridge.dataset.members));
 
-let timerInterval;
+        let timerInterval;
 
-// PINDAH KE SINI — supaya sudah siap sebelum auto-resume (startBtn.click()) mungkin terpanggil
-const prevBtnEl = document.getElementById('prevBtn');
-const nextBtnEl = document.getElementById('nextBtn');
-const flagBtnEl = document.getElementById('flagBtn');
+        // PINDAH KE SINI — supaya sudah siap sebelum auto-resume (startBtn.click()) mungkin terpanggil
+        const prevBtnEl = document.getElementById('prevBtn');
+        const nextBtnEl = document.getElementById('nextBtn');
+        const flagBtnEl = document.getElementById('flagBtn');
 
-function updateFlagButtonUI() {
-    if (!flagBtnEl) return;
-    flagBtnEl.classList.toggle('btn-warning', !!flagged[idx]);
-    flagBtnEl.classList.toggle('btn-outline-warning', !flagged[idx]);
-}
+        function updateFlagButtonUI() {
+            if (!flagBtnEl) return;
+            flagBtnEl.classList.toggle('btn-warning', !!flagged[idx]);
+            flagBtnEl.classList.toggle('btn-outline-warning', !flagged[idx]);
+        }
 
-if (flagBtnEl) {
-    flagBtnEl.onclick = () => {
-        flagged[idx] = !flagged[idx];
-        updatePalette();
-        updateFlagButtonUI();
-    };
-}
+        if (flagBtnEl) {
+            flagBtnEl.onclick = () => {
+                flagged[idx] = !flagged[idx];
+                updatePalette();
+                updateFlagButtonUI();
+            };
+        }
 
 
         // =======================================
@@ -703,8 +812,14 @@ if (flagBtnEl) {
 
 
 
-        if (prevBtnEl) prevBtnEl.onclick = () => { idx > 0 && renderQuestion(idx - 1); updatePalette(); };
-if (nextBtnEl) nextBtnEl.onclick = () => { idx < questions.length - 1 && renderQuestion(idx + 1); updatePalette(); };
+        if (prevBtnEl) prevBtnEl.onclick = () => {
+            idx > 0 && renderQuestion(idx - 1);
+            updatePalette();
+        };
+        if (nextBtnEl) nextBtnEl.onclick = () => {
+            idx < questions.length - 1 && renderQuestion(idx + 1);
+            updatePalette();
+        };
 
         /* =======================================
            5. LOGIKA PENGUMPULAN (AJAX BATCH)
