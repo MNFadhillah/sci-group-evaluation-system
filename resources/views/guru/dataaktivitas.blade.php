@@ -16,6 +16,16 @@
         @if (session('success'))
             <div class="alert alert-success text-center shadow-sm">{{ session('success') }}</div>
         @endif
+        @if ($errors->any())
+            <div class="alert alert-danger shadow-sm">
+                <strong>Gagal menyimpan aktivitas:</strong>
+                <ul class="mb-0 mt-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         {{-- FORM TAMBAH AKTIVITAS --}}
         <div class="card shadow-sm mb-4 border-0">
@@ -72,8 +82,8 @@
 
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">KKM</label>
-                            <input type="number" name="kkm" class="form-control shadow-sm" min="0" max="100"
-                                placeholder="Isi nilai KKM yang Anda inginkan" required>
+                            <input type="number" name="kkm" class="form-control shadow-sm" min="0"
+                                max="100" placeholder="Isi nilai KKM yang Anda inginkan" required>
                             @error('kkm')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
@@ -102,7 +112,7 @@
                             @enderror
                         </div>
 
-                        <div class="col-md-6">
+                        {{-- <div class="col-md-6">
                             <label class="form-label fw-semibold">Mode Adaptif</label>
                             <div class="border rounded p-2 bg-light">
                                 <div class="form-check mb-0">
@@ -116,10 +126,11 @@
                             @error('addaptive')
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
-                        </div>
+                        </div> --}}
+                        <input type="hidden" name="addaptive" value="no">
                     </div>
 
-                                        {{-- BAGIAN 3: MODE EVALUASI (hanya untuk aktivitas Kelompok) --}}
+                    {{-- BAGIAN 3: MODE EVALUASI (hanya untuk aktivitas Kelompok) --}}
                     <div id="evaluationModeSection" class="d-none">
                         <h6 class="text-uppercase text-muted small fw-bold mb-3">Mode Evaluasi</h6>
                         <div class="mb-4">
@@ -127,93 +138,94 @@
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="radio" name="evaluation_mode"
                                         id="evaluation_mode_1" value="mode1" checked>
-                                <label class="form-check-label" for="evaluation_mode_1">
-                                    <strong>Mode 1</strong>
-                                    <div class="text-muted small">Menggunakan sistem pengerjaan aktivitas seperti
-                                        biasa.</div>
-                                </label>
-                            </div>
-                            <div class="form-check mb-0">
-                                <input class="form-check-input" type="radio" name="evaluation_mode"
-                                    id="evaluation_mode_2" value="mode2">
-                                <label class="form-check-label" for="evaluation_mode_2">
-                                    <strong>Mode 2</strong>
-                                    <div class="text-muted small">Setiap siswa mendapatkan paket soal yang dapat
-                                        berbeda.</div>
-                                </label>
-                            </div>
-                        </div>
-                        @error('evaluation_mode')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-
-                        {{-- KONFIGURASI MODE 2 --}}
-                        <div class="d-none mt-3" id="mode2Config">
-                            <div class="card border-primary shadow-sm">
-                                <div class="card-header bg-primary text-white fw-semibold">
-                                    <i class="bi bi-sliders me-2"></i> Konfigurasi Mode 2
+                                    <label class="form-check-label" for="evaluation_mode_1">
+                                        <strong>Mode 1</strong>
+                                        <div class="text-muted small">Menggunakan sistem pengerjaan aktivitas seperti
+                                            biasa.</div>
+                                    </label>
                                 </div>
-                                <div class="card-body">
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label fw-semibold">Jumlah Soal</label>
-                                            <input type="number" name="jumlah_soal" id="jumlah_soal"
-                                                class="form-control" value="10" min="1" max="100">
-                                            <small class="text-muted">Jumlah soal per siswa.</small>
-                                        </div>
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input" type="radio" name="evaluation_mode"
+                                        id="evaluation_mode_2" value="mode2">
+                                    <label class="form-check-label" for="evaluation_mode_2">
+                                        <strong>Mode 2</strong>
+                                        <div class="text-muted small">Setiap siswa mendapatkan paket soal yang dapat
+                                            berbeda.</div>
+                                    </label>
+                                </div>
+                            </div>
+                            @error('evaluation_mode')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
 
-                                        <div class="col-md-8">
-                                            <label class="form-label fw-semibold">Jenis Soal</label>
-                                            <div class="d-flex gap-4 mt-2">
+                            {{-- KONFIGURASI MODE 2 --}}
+                            <div class="d-none mt-3" id="mode2Config">
+                                <div class="card border-primary shadow-sm">
+                                    <div class="card-header bg-primary text-white fw-semibold">
+                                        <i class="bi bi-sliders me-2"></i> Konfigurasi Mode 2
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-semibold">Jumlah Soal</label>
+                                                <input type="number" name="jumlah_soal" id="jumlah_soal"
+                                                    class="form-control" value="10" min="1" max="100">
+                                                <small class="text-muted">Jumlah soal per siswa.</small>
+                                            </div>
+
+                                            <div class="col-md-8">
+                                                <label class="form-label fw-semibold">Jenis Soal</label>
+                                                <div class="d-flex gap-4 mt-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox"
+                                                            name="mode2_question_types[]" value="MultipleChoice"
+                                                            id="mode2_mc" checked>
+                                                        <label class="form-check-label" for="mode2_mc">Pilihan
+                                                            Ganda</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox"
+                                                            name="mode2_question_types[]" value="ShortAnswer"
+                                                            id="mode2_sa" checked>
+                                                        <label class="form-check-label" for="mode2_sa">Isian
+                                                            Singkat</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-semibold">Pengacakan Soal</label>
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="checkbox"
-                                                        name="mode2_question_types[]" value="MultipleChoice"
-                                                        id="mode2_mc" checked>
-                                                    <label class="form-check-label" for="mode2_mc">Pilihan Ganda</label>
+                                                        name="mode2_random_questions" value="1"
+                                                        id="mode2_random_questions" checked>
+                                                    <label class="form-check-label" for="mode2_random_questions">Acak
+                                                        soal</label>
                                                 </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-semibold">Urutan Soal</label>
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="checkbox"
-                                                        name="mode2_question_types[]" value="ShortAnswer"
-                                                        id="mode2_sa" checked>
-                                                    <label class="form-check-label" for="mode2_sa">Isian
-                                                        Singkat</label>
+                                                        name="mode2_random_order" value="1" id="mode2_random_order"
+                                                        checked>
+                                                    <label class="form-check-label" for="mode2_random_order">Acak
+                                                        urutan soal</label>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div class="col-md-4">
-                                            <label class="form-label fw-semibold">Pengacakan Soal</label>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox"
-                                                    name="mode2_random_questions" value="1"
-                                                    id="mode2_random_questions" checked>
-                                                <label class="form-check-label" for="mode2_random_questions">Acak
-                                                    soal</label>
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-semibold">Sumber Soal</label>
+                                                <select name="mode2_question_source" class="form-select">
+                                                    <option value="bank" selected>Bank Soal</option>
+                                                </select>
                                             </div>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <label class="form-label fw-semibold">Urutan Soal</label>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox"
-                                                    name="mode2_random_order" value="1" id="mode2_random_order"
-                                                    checked>
-                                                <label class="form-check-label" for="mode2_random_order">Acak
-                                                    urutan soal</label>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <label class="form-label fw-semibold">Sumber Soal</label>
-                                            <select name="mode2_question_source" class="form-select">
-                                                <option value="bank" selected>Bank Soal</option>
-                                            </select>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
                     </div>
 
                     <div class="d-grid d-md-flex justify-content-md-end">
@@ -231,7 +243,8 @@
                 <div class="card-body">
 
                     {{-- Kontrol kustom: Tampilkan entri (kiri) & Cari (kanan) --}}
-                    <div id="dtControlsRow" class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                    <div id="dtControlsRow"
+                        class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
                         <div class="d-flex align-items-center gap-2">
                             <label for="dtPageLength" class="fw-semibold mb-0 text-nowrap">Tampilkan</label>
                             <select id="dtPageLength" class="form-select form-select-sm" style="width:auto">
@@ -256,13 +269,14 @@
                                     <th style="width:60px">No</th>
                                     <th>Judul</th>
                                     <th>Deadline</th>
-                                    <th>Adaptif</th>
+                                    {{-- <th>Adaptif</th> --}}
                                     <th>Topik</th>
                                     <th>Mapel</th>
                                     <th>Kelas</th>
                                     <th>Semester</th>
                                     <th>Jenis Pengerjaan</th>
-                                    <th style="width:320px">Aksi</th>
+                                    <th>Mode</th>
+                                    <th style="width:110px">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -273,15 +287,16 @@
                                         <td class="align-middle">
                                             {{ $r->deadline ? date('Y-m-d H:i', strtotime($r->deadline)) : '-' }}
                                         </td>
-                                        <td class="align-middle text-center">
+                                        {{-- <td class="align-middle text-center">
                                             @if ($r->addaptive === 'yes')
                                                 <span class="badge bg-success">Ya</span>
                                             @else
                                                 <span class="badge bg-secondary">Tidak</span>
                                             @endif
-                                        </td>
+                                        </td> --}}
                                         <td class="align-middle col-title">
-                                            <div class="cell-inner" title="{{ $r->title }}">{{ $r->title }}</div>
+                                            <div class="cell-inner" title="{{ $r->title }}">{{ $r->title }}
+                                            </div>
                                         </td>
                                         <td class="align-middle col-subject hide-sm">
                                             <div class="cell-inner" title="{{ $r->subject_name ?? '-' }}">
@@ -314,51 +329,77 @@
                                             @endif
                                         </td>
                                         <td class="align-middle text-center">
-                                            <div class="action-group" role="group" aria-label="Aksi aktivitas">
-                                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                                    data-bs-target="#modalEdit{{ $r->id }}" title="Edit"
-                                                    aria-label="Edit">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-
-                                                @if ($r->is_group_activity !== 'yes')
-                                                    <button type="button"
-                                                        class="btn btn-success btn-sm btn-create-package"
-                                                        data-url="{{ route('activity.package.create', $r->id) }}"
-                                                        title="Buat Paket Soal">
-                                                        <i class="bi bi-archive"></i>
-                                                    </button>
+                                            @if ($r->is_group_activity === 'yes')
+                                                @if (($r->evaluation_mode ?? null) === 'mode2')
+                                                    <span class="badge bg-warning text-dark">Mode 2</span>
+                                                @else
+                                                    <span class="badge bg-info text-dark">Mode 1</span>
                                                 @endif
-
-                                                <a href="{{ url('/guru/aktivitas/' . $r->id . '/atur-soal?topic=' . $r->topic_id) }}"
-                                                    class="btn btn-warning btn-sm" title="Atur Soal"
-                                                    aria-label="Atur Soal">
-                                                    <i class="bi bi-gear"></i>
-                                                </a>
-
-                                                @if ($r->is_group_activity === 'yes')
-                                                    <a href="{{ route('guru.activity.groups', $r->id) }}"
-                                                        class="btn btn-primary btn-sm" title="Kelola Kelompok"
-                                                        aria-label="Kelola Kelompok">
-                                                        <i class="bi bi-people-fill"></i>
-                                                    </a>
-                                                @endif
-
-                                                <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal"
-                                                    data-bs-target="#lihatSoal{{ $r->id }}" title="Lihat Soal"
-                                                    aria-label="Lihat Soal">
-                                                    <i class="bi bi-eye"></i>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-three-dots"></i> Aksi
                                                 </button>
-
-                                                <form action="{{ route('guru.aktivitas.hapus', $r->id) }}" method="POST"
-                                                    class="d-inline delete-form">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="btn btn-danger btn-sm btn-delete"
-                                                        title="Hapus" aria-label="Hapus">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                    <li>
+                                                        <button class="dropdown-item" type="button"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#modalEdit{{ $r->id }}">
+                                                            <i class="bi bi-pencil me-2 text-primary"></i> Edit
+                                                        </button>
+                                                    </li>
+                                                    @if ($r->is_group_activity !== 'yes')
+                                                        {{-- <li>
+                                                            <button type="button"
+                                                                class="dropdown-item btn-create-package"
+                                                                data-url="{{ route('activity.package.create', $r->id) }}">
+                                                                <i class="bi bi-archive me-2 text-success"></i> Buat Paket
+                                                                Soal
+                                                            </button>
+                                                        </li> --}}
+                                                    @endif
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                            href="{{ url('/guru/aktivitas/' . $r->id . '/atur-soal?topic=' . $r->topic_id) }}">
+                                                            <i class="bi bi-gear me-2 text-warning"></i> Atur Soal
+                                                        </a>
+                                                    </li>
+                                                    @if ($r->is_group_activity === 'yes')
+                                                        <li>
+                                                            <a class="dropdown-item"
+                                                                href="{{ route('guru.activity.groups', $r->id) }}">
+                                                                <i class="bi bi-people-fill me-2 text-primary"></i> Kelola
+                                                                Kelompok
+                                                            </a>
+                                                        </li>
+                                                    @endif
+                                                    <li>
+                                                        <button class="dropdown-item" type="button"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#lihatSoal{{ $r->id }}">
+                                                            <i class="bi bi-eye me-2 text-info"></i> Lihat Soal
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <hr class="dropdown-divider">
+                                                    </li>
+                                                    <li>
+                                                        <form action="{{ route('guru.aktivitas.hapus', $r->id) }}"
+                                                            method="POST" class="delete-form">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="button"
+                                                                class="dropdown-item text-danger btn-delete">
+                                                                <i class="bi bi-trash me-2"></i> Hapus
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
                                             </div>
                                         </td>
                                     </tr>
@@ -398,11 +439,11 @@
                         </div>
 
                         <div class="d-flex flex-wrap gap-2 mb-3">
-                            @if ($r->addaptive === 'yes')
+                            {{-- @if ($r->addaptive === 'yes')
                                 <span class="badge bg-success">Adaptif</span>
                             @else
                                 <span class="badge bg-secondary">Non-adaptif</span>
-                            @endif
+                            @endif --}}
 
                             @if ($r->semester === 'odd')
                                 <span class="badge bg-info text-dark">Ganjil</span>
@@ -414,11 +455,17 @@
                                 <span class="badge bg-primary">
                                     <i class="bi bi-people-fill me-1"></i> Kelompok
                                 </span>
+                                @if (($r->evaluation_mode ?? null) === 'mode2')
+                                    <span class="badge bg-warning text-dark">Mode 2</span>
+                                @else
+                                    <span class="badge bg-info text-dark">Mode 1</span>
+                                @endif
                             @else
                                 <span class="badge bg-secondary">
                                     <i class="bi bi-person-fill me-1"></i> Individu
                                 </span>
                             @endif
+
                         </div>
 
                         <div class="d-flex flex-wrap gap-2">
@@ -533,12 +580,12 @@
                                     </select>
                                 </div>
 
-                                <div class="form-check mb-1">
+                                {{-- <div class="form-check mb-1">
                                     <input type="hidden" name="addaptive" value="no">
                                     <input class="form-check-input" type="checkbox" name="addaptive" value="yes"
                                         {{ $r->addaptive === 'yes' ? 'checked' : '' }}>
                                     <label class="form-check-label">Adaptif</label>
-                                </div>
+                                </div> --}}
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -687,8 +734,8 @@
                             <ul class="ps-3 mb-0">
                                 <li><i class="bi bi-pencil text-primary me-1"></i><strong>Edit</strong> — mengubah
                                     data aktivitas</li>
-                                <li><i class="bi bi-archive text-success me-1"></i><strong>Buat Paket
-                                        Soal</strong> — mengemas soal berdasarkan topik</li>
+                                {{-- <li><i class="bi bi-archive text-success me-1"></i><strong>Buat Paket
+                                        Soal</strong> — mengemas soal berdasarkan topik</li> --}}
                                 <li><i class="bi bi-sliders text-warning me-1"></i><strong>Atur Soal</strong> —
                                     menentukan soal yang digunakan</li>
                                 <li><i class="bi bi-people text-primary me-1"></i><strong>Kelompok</strong> —
@@ -827,19 +874,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             var table = $('#activitiesTable').DataTable({
                 dom: 'rt<"d-flex justify-content-between align-items-center flex-wrap mt-3"ip>',
-                responsive: {
-                    details: {
-                        type: 'column',
-                        target: -1
-                    }
-                },
-                scrollX: true,
+                responsive: true,
                 autoWidth: false,
                 lengthChange: true,
                 pageLength: 10,
-                order: [
-                    [1, 'asc']
-                ],
+                order: [],
                 columnDefs: [{
                         orderable: false,
                         targets: [0, 9]
@@ -850,11 +889,19 @@
                     },
                     {
                         responsivePriority: 1,
-                        targets: 1
+                        targets: 1 // Judul
                     },
                     {
                         responsivePriority: 2,
-                        targets: 9
+                        targets: 9 // Aksi
+                    },
+                    {
+                        responsivePriority: 3,
+                        targets: 8 // Mode
+                    },
+                    {
+                        responsivePriority: 10000,
+                        targets: [4, 5] // Mapel, Kelas — disembunyikan duluan kalau sempit
                     }
                 ],
                 language: {
@@ -964,7 +1011,8 @@
                             .then(res => res.json())
                             .then(res => {
                                 if (!res.success) {
-                                    throw new Error(res.message ?? 'Gagal membuat paket');
+                                    throw new Error(res.message ??
+                                        'Gagal membuat paket');
                                 }
                                 Swal.fire({
                                     icon: 'success',
@@ -981,7 +1029,7 @@
         });
     </script>
 
-        <script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
             const mode1 = document.getElementById('evaluation_mode_1');
             const mode2 = document.getElementById('evaluation_mode_2');

@@ -10,52 +10,99 @@ use Illuminate\Support\Facades\DB;
 class SoalController extends Controller
 {
   public function showGenerator()
-  {
+{
     $guruId = Auth::id();
 
-    // 🔹 Ambil TOPIC + LEVEL (jenjang) via JOIN
     $topics = DB::table('topics')
-      ->join('subject', 'topics.id_subject', '=', 'subject.id')
-      ->join('classes', 'subject.id_class', '=', 'classes.id')
-      ->join('teacher_classes', 'classes.id', '=', 'teacher_classes.id_class')
-      ->where('teacher_classes.id_teacher', $guruId)
-      ->where('topics.created_by', $guruId)
-      ->select(
-        'topics.id',
-        'topics.title',
-        'classes.level as jenjang'
-      )
-      ->orderBy('topics.title')
-      ->get();
+        ->join('subject', 'topics.id_subject', '=', 'subject.id')
+        ->join('classes', 'subject.id_class', '=', 'classes.id')
+        ->join('teacher_classes', 'classes.id', '=', 'teacher_classes.id_class')
+        ->where('teacher_classes.id_teacher', $guruId)
+        ->where('topics.created_by', $guruId)
+        ->select('topics.id', 'topics.title', 'classes.level as jenjang')
+        ->orderBy('topics.title')
+        ->get();
 
-    // 🔹 Ambil daftar jenjang dari kelas guru
     $jenjangList = DB::table('classes')
-      ->join('teacher_classes', 'classes.id', '=', 'teacher_classes.id_class')
-      ->where('teacher_classes.id_teacher', $guruId)
-      ->select('classes.level')
-      ->distinct()
-      ->orderBy('classes.level')
-      ->pluck('classes.level');
+        ->join('teacher_classes', 'classes.id', '=', 'teacher_classes.id_class')
+        ->where('teacher_classes.id_teacher', $guruId)
+        ->select('classes.level')
+        ->distinct()
+        ->orderBy('classes.level')
+        ->pluck('classes.level');
 
-    return view('guru.generateSoal', compact('topics', 'jenjangList'));
-  }
+    $subjects = DB::table('subject')
+        ->join('classes', 'subject.id_class', '=', 'classes.id')
+        ->join('teacher_classes', 'classes.id', '=', 'teacher_classes.id_class')
+        ->where('teacher_classes.id_teacher', $guruId)
+        ->select('subject.id', 'subject.name')
+        ->distinct()
+        ->orderBy('subject.name')
+        ->get();
+
+    return view('guru.generateSoal', compact('topics', 'jenjangList', 'subjects'));
+}
 
   public function generateAI(Request $request)
-  {
+{
+    $guruId = Auth::id();
+
     $request->validate([
-      'topic' => 'required|integer|exists:topics,id',   // karena dari dropdown (ID)
-      'jenjang' => 'required|string',
-      'jumlah' => 'required|integer|min:3|max:30',
+        'topic' => 'nullable|integer|exists:topics,id',
+        'jenjang' => 'required|string',
+        'jumlah' => 'required|integer|min:3|max:30',
+        'new_topic_title' => 'nullable|string|max:255',
+        'new_topic_subject' => 'nullable|exists:subject,id',
     ]);
-    $topics = Topic::where('created_by', Auth::id())
-      ->orderBy('title', 'asc')
-      ->get();
-    // 🔹 Ambil data topic berdasarkan ID
-    $topic = Topic::findOrFail($request->topic);
+
+    // ===== Tentukan topik: yang sudah ada, atau buat baru =====
+    if ($request->filled('topic')) {
+        $topic = Topic::findOrFail($request->topic);
+    } elseif ($request->filled('new_topic_title')) {
+        if (!$request->filled('new_topic_subject')) {
+            return back()->withErrors(['new_topic_subject' => 'Pilih Mata Pelajaran untuk topik baru.'])->withInput();
+        }
+
+        $subject = DB::table('subject')->where('id', $request->new_topic_subject)->first();
+        if (!$subject) {
+            return back()->withErrors(['new_topic_subject' => 'Mata pelajaran tidak ditemukan.'])->withInput();
+        }
+
+        $teaches = DB::table('teacher_classes')
+            ->where('id_teacher', $guruId)
+            ->where('id_class', $subject->id_class)
+            ->exists();
+
+        if (!$teaches) {
+            return back()->withErrors(['new_topic_subject' => 'Anda tidak berwenang membuat topik pada mata pelajaran ini.'])->withInput();
+        }
+
+        $topic = Topic::firstOrCreate(
+            [
+                'title' => trim($request->new_topic_title),
+                'id_subject' => $request->new_topic_subject,
+            ],
+            [
+                'created_by' => $guruId,
+            ]
+        );
+    } else {
+        return back()->withErrors(['topic' => 'Topik wajib dipilih atau dibuat.'])->withInput();
+    }
+
+    $topics = Topic::where('created_by', $guruId)->orderBy('title', 'asc')->get();
+
+    $subjects = DB::table('subject')
+        ->join('classes', 'subject.id_class', '=', 'classes.id')
+        ->join('teacher_classes', 'classes.id', '=', 'teacher_classes.id_class')
+        ->where('teacher_classes.id_teacher', $guruId)
+        ->select('subject.id', 'subject.name')
+        ->distinct()
+        ->orderBy('subject.name')
+        ->get();
 
     $jenjangList = [$request->jenjang];
     $selectedJenjang = $request->jenjang;
-
     $jumlah = (int) $request->jumlah;
 
     // prompt sesuai instruksi kamu
@@ -67,7 +114,9 @@ Tolong buatkan soal dan jawaban untuk topik {$topic->title} jenjang {$selectedJe
 - Pertahankan id_topic sesuai dengan ID topik yang diberikan: {$topic->id}
 - MC_option (multiple choice option) format: [{\"a\": {url, teks}, ..., \"e\": {url, teks}}]. Pilihan ganda memiliki 5 opsi (a sampai e)
 - SA_option (shortanswer option) berisi 3 pilihan jawaban isian singkat dengan format [jawaban1, jawaban2, jawaban3].
-- Selanjutnya ada MC_Answer berisi jawaban dari pilihan ganda.
+- Selain pilihan ganda dan isian singkat, buat juga beberapa soal Essay (uraian).
+- Soal Essay TIDAK memerlukan kunci jawaban (SA_option dikosongkan/tidak perlu disertakan), karena akan diperiksa manual oleh guru.
+- Distribusikan jenis soal secara merata: campuran MultipleChoice, ShortAnswer, dan Essay di setiap tingkat kesulitan.
 
 ikuti contoh dibawah ini :
 
@@ -211,6 +260,27 @@ ikuti contoh dibawah ini :
       "url": "https://i.imgur.com/kRjA7zG.png"
     },
     "SA_option": ["4", "4 unit", "4ms"]
+  },
+    
+
+  {
+    "id_topic":"{$topic->id}",
+    "difficulty": "sedang",
+    "type": "Essay",
+    "pertanyaan": {
+      "text": "Jelaskan perbedaan antara proses (process) dan thread dalam sistem operasi, serta berikan satu contoh kasus penggunaan multithreading.",
+      "url": null
+    }
+  },
+
+  {
+    "id_topic":"{$topic->id}",
+    "difficulty": "sulit",
+    "type": "Essay",
+    "pertanyaan": {
+      "text": "Sebuah sistem memiliki 3 proses yang saling meminta resource sehingga terjadi deadlock. Jelaskan dua strategi (selain pencegahan) yang dapat digunakan sistem operasi untuk menangani situasi ini, lengkap dengan mekanismenya.",
+      "url": null
+    }
   }
 ]
 
@@ -218,12 +288,13 @@ PROMPT;
 
 
     return view('guru.generateSoal', [
-      'topics' => $topics,
-      'prompt' => $prompt,
-      'selectedTopic' => $request->topic,
-      'selectedJenjang' => $request->jenjang,
-      'jenjangList' => $jenjangList,
-      'jumlahInput' => $request->jumlah,
+        'topics' => $topics,
+        'subjects' => $subjects,
+        'prompt' => $prompt,
+        'selectedTopic' => $topic->id,
+        'selectedJenjang' => $selectedJenjang,
+        'jenjangList' => $jenjangList,
+        'jumlahInput' => $jumlah,
     ]);
 
   }

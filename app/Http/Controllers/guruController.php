@@ -541,22 +541,25 @@ class guruController extends Controller
             $semester = $subject && $subject->classes ? $subject->classes->semester : null;
 
             foreach ($topic->activities as $a) {
-                $rows->push((object) [
-                    'id' => $a->id,
-                    'title' => $a->title,
-                    'deadline' => $a->deadline,
-                    'kkm' => $a->kkm,
-                    'addaptive' => $a->addaptive,
-                    'topic_id' => $topic->id,
-                    'topic_title' => $topic->title,
-                    'subject_name' => $subject->name ?? null,
-                    'class_name' => $className,
-                    'semester' => $semester,
-                    'durasi_pengerjaan' => $a->durasi_pengerjaan,
-                    'created_at' => $a->created_at,
-                    'is_group_activity' => $a->is_group_activity,
-                ]);
-            }
+    $rows->push((object) [
+        'id' => $a->id,
+        'title' => $a->title,
+        'deadline' => $a->deadline,
+        'kkm' => $a->kkm,
+        'addaptive' => $a->addaptive,
+        'topic_id' => $topic->id,
+        'topic_title' => $topic->title,
+        'subject_name' => $subject->name ?? null,
+        'class_name' => $className,
+        'semester' => $semester,
+        'durasi_pengerjaan' => $a->durasi_pengerjaan,
+        'created_at' => $a->created_at,
+        'is_group_activity' => $a->is_group_activity,
+        'evaluation_mode' => $a->evaluation_mode,   
+    ]);
+    // Urutkan dari aktivitas yang paling baru dibuat
+$rows = $rows->sortByDesc('created_at')->values();
+}
         }
 
         if ($rows->isEmpty()) {
@@ -1022,64 +1025,102 @@ return response()->json([
 
     // simpan soal baru
     public function simpanSoal(Request $request)
-    {
-        $request->validate([
-            'type' => 'required|in:MultipleChoice,ShortAnswer,Essay',
-            'question_text' => 'required|string',
-            'difficulty' => 'nullable|in:mudah,sedang,sulit',
-            'id_topic' => 'nullable|exists:topics,id'
-        ]);
+{
+    $request->validate([
+        'type' => 'required|in:MultipleChoice,ShortAnswer,Essay',
+        'question_text' => 'required|string',
+        'difficulty' => 'nullable|in:mudah,sedang,sulit',
+        'id_topic' => 'nullable|exists:topics,id',
+        'new_topic_title' => 'nullable|string|max:255',
+        'new_topic_subject' => 'nullable|exists:subject,id',
+    ]);
 
-        $questionData = [
-            'text' => $request->question_text,
-            'URL' => $request->question_url ?? null,
-        ];
+    // ===== Tentukan id_topic final: pakai yang sudah ada, atau buat topik baru =====
+    $idTopic = $request->id_topic ?: null;
 
-        // jika user upload file gambar, kamu bisa simpan file dan set URL di $questionData['URL']
-        if ($request->hasFile('question_image')) {
-            $f = $request->file('question_image');
-            $path = $f->store('public/question_images'); // sesuaikan disk
-            $questionData['URL'] = \Storage::url($path);
+    if (!$idTopic && $request->filled('new_topic_title')) {
+        if (!$request->filled('new_topic_subject')) {
+            return back()->withErrors(['new_topic_subject' => 'Pilih Mata Pelajaran untuk topik baru.'])->withInput();
         }
 
-        $mcOption = null;
-        $saAnswer = null;
-        $mcAnswer = null;
-
-        if ($request->type === 'MultipleChoice') {
-            $options = [];
-            $texts = $request->input('option_text', []);
-            $urls = $request->input('option_url', []);
-            // option_image file handling jika diperlukan (saat upload file, butuh loop melalui request->file('option_image'))
-            foreach ($texts as $index => $text) {
-                $label = chr(97 + $index); // a,b,c,d,e
-                $options[] = [
-                    $label => [
-                        'teks' => $text ?? '',
-                        'url' => $urls[$index] ?? null
-                    ]
-                ];
-            }
-            $mcOption = !empty($options) ? json_encode($options) : null;
-            $mcAnswer = $request->mc_answer ?? null;
-        } else {
-            $saAnswer = $request->input('sa_answer') ? json_encode(array_values(array_filter($request->input('sa_answer')))) : null;
+        $subject = DB::table('subject')->where('id', $request->new_topic_subject)->first();
+        if (!$subject) {
+            return back()->withErrors(['new_topic_subject' => 'Mata pelajaran tidak ditemukan.'])->withInput();
         }
 
-        $question = Question::create([
-            'type' => $request->type,
-            'question' => json_encode($questionData),
-            'MC_option' => $mcOption,
-            'SA_answer' => $saAnswer,
-            'MC_answer' => $mcAnswer,
-            'difficulty' => $request->difficulty ?? 'sedang',
-            'id_topic' => $request->id_topic ?? null,
-            'created_by' => Auth::id(),
-        ]);
+        $teaches = DB::table('teacher_classes')
+            ->where('id_teacher', Auth::id())
+            ->where('id_class', $subject->id_class)
+            ->exists();
 
-        return back()->with('success', 'Soal berhasil disimpan!');
+        if (!$teaches) {
+            return back()->withErrors(['new_topic_subject' => 'Anda tidak berwenang membuat topik pada mata pelajaran ini.'])->withInput();
+        }
 
+        $topic = Topic::firstOrCreate(
+            [
+                'title' => trim($request->new_topic_title),
+                'id_subject' => $request->new_topic_subject,
+            ],
+            [
+                'created_by' => Auth::id(),
+            ]
+        );
+
+        $idTopic = $topic->id;
     }
+
+    if (!$idTopic) {
+        return back()->withErrors(['id_topic' => 'Topik wajib dipilih atau dibuat.'])->withInput();
+    }
+
+    $questionData = [
+        'text' => $request->question_text,
+        'URL' => $request->question_url ?? null,
+    ];
+
+    if ($request->hasFile('question_image')) {
+        $f = $request->file('question_image');
+        $path = $f->store('public/question_images');
+        $questionData['URL'] = \Storage::url($path);
+    }
+
+    $mcOption = null;
+    $saAnswer = null;
+    $mcAnswer = null;
+
+    if ($request->type === 'MultipleChoice') {
+        $options = [];
+        $texts = $request->input('option_text', []);
+        $urls = $request->input('option_url', []);
+        foreach ($texts as $index => $text) {
+            $label = chr(97 + $index);
+            $options[] = [
+                $label => [
+                    'teks' => $text ?? '',
+                    'url' => $urls[$index] ?? null
+                ]
+            ];
+        }
+        $mcOption = !empty($options) ? json_encode($options) : null;
+        $mcAnswer = $request->mc_answer ?? null;
+    } else {
+        $saAnswer = $request->input('sa_answer') ? json_encode(array_values(array_filter($request->input('sa_answer')))) : null;
+    }
+
+    $question = Question::create([
+        'type' => $request->type,
+        'question' => json_encode($questionData),
+        'MC_option' => $mcOption,
+        'SA_answer' => $saAnswer,
+        'MC_answer' => $mcAnswer,
+        'difficulty' => $request->difficulty ?? 'sedang',
+        'id_topic' => $idTopic,
+        'created_by' => Auth::id(),
+    ]);
+
+    return back()->with('success', 'Soal berhasil disimpan!');
+}
     // 🔹 Edit soal
     public function editSoal($id)
     {

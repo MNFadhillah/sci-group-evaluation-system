@@ -8,7 +8,7 @@
             <h4 class="fw-bold mb-0 d-flex align-items-center gap-2 flex-wrap">
                 Atur Soal untuk: {{ $aktivitas->title }}
 
-                @if ($aktivitas->addaptive === 'yes')
+                {{-- @if ($aktivitas->addaptive === 'yes')
                     <span class="badge bg-success">
                         <i class="bi bi-cpu me-1"></i> Adaptif
                     </span>
@@ -16,7 +16,7 @@
                     <span class="badge bg-secondary">
                         <i class="bi bi-slash-circle me-1"></i> Non-Adaptif
                     </span>
-                @endif
+                @endif --}}
             </h4>
 
             <button type="button"
@@ -151,46 +151,40 @@
 
                             {{-- Kontrol atas (kiri: jumlah & tombol, kanan: instruksi singkat) --}}
                                                     <div class="d-flex flex-column flex-md-row gap-3 align-items-start mb-3">
-                            @if ($aktivitas->evaluation_mode === 'mode1')
-                            <div>
-                                <div class="alert alert-info py-2 px-3 mb-2 small">
-                                    <i class="bi bi-info-circle me-1"></i> Mode 1 hanya memerlukan <strong>1 soal Essay</strong>. Klik tombol <strong>+</strong> pada soal di daftar bawah untuk memilihnya.
-                                </div>
-                                <div class="d-flex flex-wrap gap-2">
-                                    <button class="btn btn-outline-secondary btn-sm"
-                                        id="btnUnselectAllModal">Bersihkan</button>
-                                </div>
-                            </div>
-                            @else
-                            <div>
-                                <h6 class="mb-2 text-muted">Pilih Jumlah Soal</h6>
+@if ($aktivitas->evaluation_mode === 'mode1' && $aktivitas->is_group_activity === 'yes')
+    <div>
+        <div class="alert alert-info py-2 px-3 mb-2 small">
+            <i class="bi bi-info-circle me-1"></i> Mode 1 (Kelompok) hanya memerlukan <strong>1 soal Essay</strong>. Klik tombol <strong>+</strong> pada soal di daftar bawah untuk memilihnya.
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-outline-secondary btn-sm" id="btnUnselectAllModal">Bersihkan</button>
+        </div>
+    </div>
+@else
+    <div>
+        <h6 class="mb-2 text-muted">Pilih Jumlah Soal</h6>
 
-                                @php $savedJumlah = $aktivitas->jumlah_soal ?? null; @endphp
+        @php $savedJumlah = $aktivitas->jumlah_soal ?? null; @endphp
 
-                                <div class="btn-group btn-group-sm mb-2 flex-wrap" role="group" aria-label="jumlah soal">
-                                    @foreach ([1, 2, 3, 5, 10, 15, 20, 25, 30] as $opt)
-                                    <label class="btn btn-outline-primary {{ $savedJumlah == $opt ? 'active' : '' }}">
-                                        <input type="radio" name="modalJumlahRadio" value="{{ $opt }}" class="me-1" {{ $savedJumlah == $opt ? 'checked' : '' }}>
-                                        {{ $opt }}
-                                    </label>
-                                    @endforeach
-                                </div>
+        <div class="btn-group btn-group-sm mb-2 flex-wrap" role="group" aria-label="jumlah soal">
+            @foreach ([1, 2, 3, 5, 10, 15, 20, 25, 30] as $opt)
+            <label class="btn btn-outline-primary {{ $savedJumlah == $opt ? 'active' : '' }}">
+                <input type="radio" name="modalJumlahRadio" value="{{ $opt }}" class="me-1" {{ $savedJumlah == $opt ? 'checked' : '' }}>
+                {{ $opt }}
+            </label>
+            @endforeach
+        </div>
 
-                                <div class="d-flex flex-wrap gap-2">
-                                    <button class="btn btn-primary btn-sm" id="btnAmbilModal">Ambil Soal
-                                        Otomatis</button>
-
-                                    <button class="btn btn-outline-primary btn-sm" id="btnSelectAllModal"
-                                        title="Pilih semua soal pada daftar">
-                                        <i class="bi bi-check2-all me-1"></i> Ambil Semua
-                                    </button>
-
-                                    <button class="btn btn-outline-secondary btn-sm"
-                                        id="btnUnselectAllModal">Bersihkan</button>
-                                </div>
-                            </div>
-                            @endif
-                        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-primary btn-sm" id="btnAmbilModal">Ambil Soal Otomatis</button>
+            <button class="btn btn-outline-primary btn-sm" id="btnSelectAllModal" title="Pilih semua soal pada daftar">
+                <i class="bi bi-check2-all me-1"></i> Ambil Semua
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" id="btnUnselectAllModal">Bersihkan</button>
+        </div>
+    </div>
+@endif
+</div>
 
                             <hr class="my-2">
 
@@ -369,16 +363,16 @@
                         <li>Langkah pertama yang <strong>wajib dilakukan</strong> adalah memilih
                             <strong>jumlah soal</strong> (1, 2, 3, 5, 10, dst).
                         </li>
-                        <li>Jumlah soal ini menjadi acuan untuk:
+                        {{-- <li>Jumlah soal ini menjadi acuan untuk:
                             <ul>
                                 <li>Pengambilan soal otomatis</li>
                                 <li>Validasi aktivitas adaptif</li>
                                 <li>Penyimpanan konfigurasi soal</li>
                             </ul>
-                        </li>
+                        </li> --}}
                     </ul>
 
-                    <div class="bg-light rounded p-3 mb-3">
+                    {{-- <div class="bg-light rounded p-3 mb-3">
                         <div class="fw-semibold mb-2">Ketentuan jika Aktivitas Adaptif</div>
                         <p class="mb-2">
                             Jika aktivitas berstatus <strong>Adaptif</strong> dan guru memilih
@@ -395,7 +389,7 @@
                             <br>
                             <strong>n + (n − 2) + (n − 2) = 3n − 4</strong>
                         </p>
-                    </div>
+                    </div> --}}
 
                     <p class="text-muted small">
                         Contoh: jika memilih n = 10, maka dibutuhkan minimal
@@ -428,7 +422,7 @@
                         <i class="bi bi-3-circle me-1"></i>
                         Langkah 3 – Ambil Soal Otomatis
                     </h6>
-                    <ul>
+                    {{-- <ul>
                         <li>Pastikan jumlah soal sudah dipilih.</li>
                         <li>Klik tombol <strong>Ambil Soal Otomatis</strong>.</li>
                         <li>Jika aktivitas <strong>Non-Adaptif</strong>:
@@ -442,7 +436,7 @@
                                 <li>Distribusi minimal harus terpenuhi sebelum bisa disimpan.</li>
                             </ul>
                         </li>
-                    </ul>
+                    </ul> --}}
 
                     <hr>
 
@@ -553,7 +547,7 @@
         // GLOBALS (Sudah diperbaiki formatnya)
         const ACTIVITAS_ID = {{ $aktivitas->id }};
         const CSRF = "{{ csrf_token() }}";
-        const IS_MODE1 = {{ $aktivitas->evaluation_mode === 'mode1' ? 'true' : 'false' }};
+        const IS_MODE1 = {{ $aktivitas->evaluation_mode === 'mode1' && $aktivitas->is_group_activity === 'yes' ? 'true' : 'false' }};
 
         // modalSelected: array id soal yang dipilih di modal (temp)
         let modalSelected = @json($selectedIds); // mulai dari server selection

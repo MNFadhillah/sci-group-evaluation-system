@@ -197,13 +197,22 @@
                                                             <i class="fas fa-tasks text-primary me-2"></i> {{ $act['title'] }}
                                                         </div>
                                                         <div class="d-flex align-items-center gap-2">
-                                                            <span class="badge {{ $badgeClass }} px-2 py-1">
-                                                                {{ $cnt }} Dinilai
-                                                            </span>
-                                                            <a href="{{ route('detail.nilai', $act['id']) }}" class="btn btn-primary btn-sm fw-bold">
-                                                                <i class="fas fa-eye"></i> Nilai Akhir
-                                                            </a>
-                                                        </div>
+    <span class="badge {{ $badgeClass }} px-2 py-1">
+        {{ $cnt }} Dinilai
+    </span>
+    <a href="{{ route('detail.nilai', $act['id']) }}" class="btn btn-primary btn-sm fw-bold">
+        <i class="fas fa-eye"></i> Nilai Akhir
+    </a>
+    @if ($cnt > 0)
+        <form action="{{ route('guru.nilai.hapus', $act['id']) }}" method="POST" class="d-inline hapus-nilai-form">
+            @csrf
+            @method('DELETE')
+            <button type="button" class="btn btn-outline-danger btn-sm fw-bold btn-hapus-nilai">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </form>
+    @endif
+</div>
                                                     </div>
                                                 </div>
                                                 @empty
@@ -236,16 +245,25 @@
                                                             <i class="fas fa-tasks text-primary me-2"></i> {{ $act['title'] }}
                                                         </div>
                                                         <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                            <span class="badge {{ $badgeClass }} px-2 py-1">
-                                                                {{ $cnt }} Dinilai
-                                                            </span>
-                                                            <a href="{{ route('guru.monitoring', $act['id']) }}" class="btn btn-warning btn-sm fw-bold text-dark">
-                                                                <i class="bi bi-people-fill me-1"></i> Nilai Kelompok
-                                                            </a>
-                                                            <a href="{{ route('detail.nilai', $act['id']) }}" class="btn btn-primary btn-sm fw-bold">
-                                                                <i class="fas fa-eye"></i> Nilai Akhir
-                                                            </a>
-                                                        </div>
+    <span class="badge {{ $badgeClass }} px-2 py-1">
+        {{ $cnt }} Dinilai
+    </span>
+    <a href="{{ route('guru.monitoring', $act['id']) }}" class="btn btn-warning btn-sm fw-bold text-dark">
+        <i class="bi bi-people-fill me-1"></i> Nilai Kelompok
+    </a>
+    <a href="{{ route('detail.nilai', $act['id']) }}" class="btn btn-primary btn-sm fw-bold">
+        <i class="fas fa-eye"></i> Nilai Akhir
+    </a>
+    @if ($cnt > 0)
+        <form action="{{ route('guru.nilai.hapus', $act['id']) }}" method="POST" class="d-inline hapus-nilai-form">
+            @csrf
+            @method('DELETE')
+            <button type="button" class="btn btn-outline-danger btn-sm fw-bold btn-hapus-nilai">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </form>
+    @endif
+</div>
                                                     </div>
                                                 </div>
                                                 @empty
@@ -333,4 +351,28 @@
     });
 </script>
 @endif
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btn-hapus-nilai').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const form = this.closest('.hapus-nilai-form');
+
+                Swal.fire({
+                    title: 'Hapus Semua Nilai?',
+                    text: 'Semua nilai, jawaban, dan penilaian SCI untuk aktivitas ini akan dihapus permanen. Siswa perlu mengerjakan ulang.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, hapus semua',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    });
+</script>
 @endpush

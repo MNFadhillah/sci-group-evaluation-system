@@ -257,4 +257,6 @@ class ActivityMatrixController extends Controller
             'Cache-Control' => 'max-age=0',
         ]);
     }
+    
+    
 }

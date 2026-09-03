@@ -93,6 +93,8 @@ Route::middleware(['auth', RoleMiddleware::class . ':teacher'])->group(function 
     Route::post('/aktivitas/simpan', [guruController::class, 'simpanAktivitas'])->name('guru.aktivitas.simpan');
     Route::put('/aktivitas/ubah/{id}', [guruController::class, 'ubahAktivitas'])->name('guru.aktivitas.ubah');
     Route::delete('/aktivitas/hapus/{id}', [guruController::class, 'hapusAktivitas'])->name('guru.aktivitas.hapus');
+    Route::delete('/guru/aktivitas/{id}/hapus-nilai', [nilaicontroller::class, 'hapusNilai'])->name('guru.nilai.hapus');
+    
     // =============================
     // 🟦 1. Halaman Atur Soal (GET)
     // =============================

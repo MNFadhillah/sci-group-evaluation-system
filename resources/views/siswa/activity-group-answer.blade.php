@@ -238,7 +238,7 @@
                 <div class="col-12 col-lg-4 d-flex justify-content-center justify-content-lg-end px-0">
                     @if ($isMode2)
                         <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.9rem;">
-                            <i class="fas fa-user-edit me-1"></i> Mode Kuis Individu
+                            <i class="fas fa-user-edit me-1"></i> Mode Kelompok (Mode 2)
                         </span>
                     @else
                         <span class="badge bg-info text-dark px-3 py-2 rounded-pill shadow-sm"
@@ -276,7 +276,7 @@
                         <div class="instruction-mode-banner mode-individu">
                             <i class="fas fa-user-edit fs-4"></i>
                             <div>
-                                <div>Mode Kuis Individu</div>
+                                <div>engerjaan Kelompok (Mode 2)</div>
                                 <div class="fw-normal small opacity-75">Paket soal ini milik kamu sendiri, nilai
                                     digabung jadi rata-rata kelompok.</div>
                             </div>
@@ -483,8 +483,8 @@
 
     <script>
         /* =======================================
-                           1. DEKLARASI VARIABEL DARI SERVER
-                           ======================================= */
+                               1. DEKLARASI VARIABEL DARI SERVER
+                               ======================================= */
         const configEl = document.getElementById('quizConfig');
 
         const IS_MODE_2 = configEl.dataset.ismode2 === 'true';
@@ -605,6 +605,20 @@
         let answers = new Array(questions.length).fill(null);
         let flagged = new Array(questions.length).fill(false);
         let idx = 0;
+        const STORAGE_KEY_GROUP = `graflearn_group_progress_${ACTIVITY_ID}_${MY_USER_ID}`;
+
+        function saveGroupDraft() {
+            try {
+                localStorage.setItem(STORAGE_KEY_GROUP, JSON.stringify({
+                    idx,
+                    answers,
+                    flagged,
+                    savedAt: Date.now()
+                }));
+            } catch (e) {
+                console.warn('Gagal menyimpan draf lokal:', e);
+            }
+        }
 
         questions.forEach((q, i) => {
             let key = q.id + '_' + MY_USER_ID;
@@ -674,7 +688,8 @@
             document.getElementById('quizPage').classList.remove('d-none');
             renderQuestion(0);
             updatePalette();
-            startTimer(); // Mulai timer saat tombol Mulai ditekan
+            startTimer();
+            activateExamGuard(); // ← TAMBAHKAN INI
         };
 
         // Otomatis langsung masuk jika user reload halaman dan waktu masih berjalan di session
@@ -872,6 +887,7 @@
                     return res.json();
                 })
                 .then(data => {
+                    deactivateExamGuard();
                     // Hapus session storage timer agar bersih
                     sessionStorage.removeItem(`quiz_endtime_${MY_USER_ID}_${ACTIVITY_ID}`);
 
@@ -896,7 +912,84 @@
         const btnMode1 = document.getElementById('finishBtnMode1');
         if (btnMode2) btnMode2.onclick = () => submitQuizAction(false);
         if (btnMode1) btnMode1.onclick = () => submitQuizAction(false);
+        /* =======================================
+       PROTEKSI: REFRESH/TUTUP TAB & PINDAH TAB
+       Catatan: browser modern tidak mengizinkan JavaScript
+       benar-benar memblokir refresh/tutup tab/navigasi Back
+       (ini pembatasan keamanan browser). Yang bisa kita lakukan
+       adalah memicu dialog konfirmasi bawaan browser, mencegat
+       kombinasi tombol refresh, dan mendeteksi + mencatat
+       perpindahan tab.
+       ======================================= */
+        let examGuardActive = false;
+        let tabSwitchCount = 0;
+        const MAX_TAB_SWITCH = 3;
 
+        function activateExamGuard() {
+            if (examGuardActive) return;
+            examGuardActive = true;
+            window.addEventListener('beforeunload', beforeUnloadHandler);
+            window.addEventListener('keydown', blockRefreshKeys);
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+        }
+
+        function deactivateExamGuard() {
+            examGuardActive = false;
+            window.removeEventListener('beforeunload', beforeUnloadHandler);
+            window.removeEventListener('keydown', blockRefreshKeys);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        }
+
+        function beforeUnloadHandler(e) {
+            if (!examGuardActive) return;
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
+        }
+
+        // Cegat tombol refresh keyboard (F5 / Ctrl+R / Cmd+R) selagi kuis berjalan
+        function blockRefreshKeys(e) {
+            if (!examGuardActive) return;
+            const isRefreshCombo = e.key === 'F5' ||
+                ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R'));
+
+            if (isRefreshCombo) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Jangan Refresh Halaman',
+                    text: 'Kuis sedang berjalan. Memuat ulang halaman bisa mengganggu pengerjaanmu.',
+                    confirmButtonText: 'Mengerti'
+                });
+            }
+        }
+
+        function handleVisibilityChange() {
+            if (!examGuardActive) return;
+            if (document.hidden) {
+                tabSwitchCount++;
+
+                if (tabSwitchCount >= MAX_TAB_SWITCH) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Pelanggaran Terdeteksi',
+                        text: `Anda telah berpindah tab/aplikasi sebanyak ${tabSwitchCount} kali. Jawaban akan dikumpulkan secara otomatis.`,
+                        confirmButtonText: 'OK',
+                        allowOutsideClick: false
+                    }).then(() => {
+                        submitQuizAction(true);
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan!',
+                        text: `Anda terdeteksi berpindah tab/aplikasi (${tabSwitchCount}/${MAX_TAB_SWITCH}). Jangan diulangi, atau jawaban akan otomatis dikumpulkan.`,
+                        confirmButtonText: 'Mengerti',
+                        timer: 4000
+                    });
+                }
+            }
+        }
         /* =======================================
            FITUR PROTEKSI TOMBOL BACK BROWSER
            ======================================= */
@@ -904,23 +997,17 @@
         history.pushState(null, null, location.href);
 
         window.addEventListener('popstate', function(event) {
-            // Begitu tombol back ditekan, kita dorong lagi state-nya agar tidak benar-benar kembali
+            if (!examGuardActive) return; // hanya larang saat kuis sedang berlangsung
+
             history.pushState(null, null, location.href);
 
             Swal.fire({
-                title: 'Ingin meninggalkan kuis?',
-                text: "Selesaikan kuis terlebih dahulu agar jawaban Anda tersimpan dengan aman.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Keluar',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Jika dikonfirmasi, arahkan ke route aktivitas
-                    window.location.href = "{{ route('siswa.aktivitas') }}";
-                }
+                icon: 'error',
+                title: 'Tidak Diizinkan',
+                text: 'Anda tidak dapat meninggalkan halaman ini sebelum mengumpulkan jawaban.',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#d33',
+                allowOutsideClick: false
             });
         });
     </script>

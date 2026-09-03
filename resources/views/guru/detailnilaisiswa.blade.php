@@ -48,7 +48,7 @@
                     <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
                         <h3 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                             {{ $activity->title }}
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width:28px;height:28px" data-bs-toggle="modal" data-bs-target="#modalInfoActivity" title="Informasi Evaluasi">
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width:28px;height:28px" data-bs-toggle="modal" data-bs-target="#modalInfoDetailNilai" title="Informasi Evaluasi">
                                 <i class="fas fa-info fa-sm"></i>
                             </button>
                         </h3>
@@ -233,12 +233,23 @@
                 </table>
             </div>
 
+            
             {{-- tombol export sederhana --}}
-            <div class="mt-3">
-                <a href="{{ route('detail.nilai', $activity->id) }}?export=xlsx" class="btn btn-sm btn-outline-success">
-                    <i class="fas fa-file-excel me-1"></i> Export Excel (XLSX)
-                </a>
-            </div>
+<div class="mt-3 d-flex gap-2">
+    <a href="{{ route('detail.nilai', $activity->id) }}?export=xlsx" class="btn btn-sm btn-outline-success">
+        <i class="fas fa-file-excel me-1"></i> Export Excel (XLSX)
+    </a>
+
+    @if($countWithNilai > 0)
+        <form action="{{ route('guru.nilai.hapus', $activity->id) }}" method="POST" class="d-inline hapus-nilai-form">
+            @csrf
+            @method('DELETE')
+            <button type="button" class="btn btn-sm btn-outline-danger btn-hapus-nilai">
+                <i class="fas fa-trash-alt me-1"></i> Hapus Semua Nilai
+            </button>
+        </form>
+    @endif
+</div>
             @endif
         </div>
     </div>
@@ -337,3 +348,30 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#nilaiTable').DataTable();
+
+        document.querySelectorAll('.btn-hapus-nilai').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const form = this.closest('.hapus-nilai-form');
+
+                Swal.fire({
+                    title: 'Hapus Semua Nilai?',
+                    text: 'Semua nilai, jawaban, dan penilaian SCI untuk aktivitas "{{ $activity->title }}" akan dihapus permanen. Siswa perlu mengerjakan ulang.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, hapus semua',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    });
+</script>
+@endsection
