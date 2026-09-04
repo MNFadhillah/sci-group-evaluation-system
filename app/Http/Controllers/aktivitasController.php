@@ -72,7 +72,7 @@ class aktivitasController extends Controller
                 'activities.created_at',
                 'activities.deadline',
                 DB::raw('COALESCE(activity_result.nilai_akhir, activity_result.result, "-") as result'), // Jika belum ada nilai akhir, tampilkan nilai murni
-                                DB::raw('
+                DB::raw('
                     CASE
                         -- JIKA siswa sudah menilai teman, pastikan statusnya "Selesai" (atau ikuti nilai akhir jika sudah dinilai guru)
                         WHEN activity_group_ratings.id IS NOT NULL THEN COALESCE(activity_result.result_status, "Selesai")
@@ -180,7 +180,8 @@ class aktivitasController extends Controller
             'mapel' => $info->mapel,
             'topik' => $info->topik,
             'id_activity' => $activity->id,
-            'addaptive' => $activity->addaptive,
+            // 'addaptive' => $activity->addaptive, 
+            'addaptive' => 'no', // Paksa menjadi 'no' sementara
             'durasi' => $activity->durasi_pengerjaan,
             'jumlah_soal' => $activity->jumlah_soal,
         ]);
@@ -244,7 +245,7 @@ class aktivitasController extends Controller
         }
 
         // 3️⃣ mode adaptive?
-        $adaptive = ($activity->addaptive === 'yes');
+        $adaptive = false;
 
         // 4️⃣ tentukan jumlah soal yang akan dipakai
         $jumlahSoal = $activity->jumlah_soal !== null
@@ -595,7 +596,8 @@ class aktivitasController extends Controller
     public function getQuestion(Request $req, $id)
     {
         $activity = Activity::findOrFail($id);
-        $adaptive = $activity->addaptive === 'yes';
+        // $adaptive = $activity->addaptive === 'yes';
+        $adaptive = false; // Matikan mode adaptif sementara
         $index = $req->query('index');
 
         // Ambil daftar soal yang sudah digunakan
@@ -655,7 +657,7 @@ class aktivitasController extends Controller
     public function submitAnswer(Request $req, $id)
     {
         $question = Question::findOrFail($req->question_id);
-        $adaptive = Activity::find($id)->addaptive === 'yes';
+        $adaptive = false;
 
         // ====================================================
         // TAHAP 1: KOREKSI JAWABAN (PG & ISIAN) + NORMALISASI
@@ -814,7 +816,8 @@ class aktivitasController extends Controller
         $pointMedium = (float) (Settings::where('name', 'soal_sedang')->value('value') ?? 0);
         $pointHard = (float) (Settings::where('name', 'soal_sulit')->value('value') ?? 0);
 
-        if ($activity->addaptive === 'yes') {
+        // if ($activity->addaptive === 'yes') {
+        if (false) { // Matikan mode adaptif sementara
             // Logika Adaptif
             $mediumBest = min(2, $jumlahSoal);
             $hardBest = max(0, $jumlahSoal - $mediumBest);

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Evolevel – Sistem Evaluasi SCI</title>
+    <title>Groupizone – Sistem Evaluasi SCI</title>
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -638,7 +638,7 @@
 
             <a class="navbar-brand" href="#">
                 <i class="bi bi-layers-fill me-1"></i>
-                Evolevel
+                Groupizone
             </a>
 
             <div class="ms-auto">
@@ -723,7 +723,7 @@
             <div class="info-content">
 
                 <div class="section-label">
-                    Tentang Evolevel
+                    Tentang Groupizone
                 </div>
 
 
@@ -734,7 +734,7 @@
 
                 <p class="info-description">
 
-                    Evolevel menggabungkan evaluasi yang transparan,
+                    Groupizone menggabungkan evaluasi yang transparan,
                     pengukuran kontribusi siswa melalui SCI,
                     dan gamifikasi dalam satu sistem evaluasi.
 
@@ -826,7 +826,7 @@
     <!-- FOOTER -->
 
     <footer>
-        &copy; 2026 Evolevel
+        &copy; 2026 Groupizone
     </footer>
 
 

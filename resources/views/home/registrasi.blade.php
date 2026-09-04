@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Registrasi · Evolevel</title>
+    <title>Registrasi · Groupizone</title>
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -304,7 +304,7 @@
                 Kembali ke beranda
             </a>
 
-            <h1>Daftar Evolevel</h1>
+            <h1>Daftar Groupizone</h1>
             <p class="lead">Buat akun baru sebagai murid atau guru</p>
 
             <form id="regForm" novalidate>

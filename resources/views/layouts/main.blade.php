@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Evolevel - @yield('title', 'Dashboard')</title>
+    <title>Groupizone - @yield('title', 'Dashboard')</title>
 
     <!-- Font & Icons -->
     <link href="{{ asset('vendor-assets/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
@@ -186,7 +186,7 @@
                 <div class="sidebar-brand-icon rotate-n-15">
                     <i class="fas fa-laugh-wink"></i>
                 </div>
-                <div class="sidebar-brand-text mx-3">Evolevel</div>
+                <div class="sidebar-brand-text mx-3">Groupizone</div>
             </a>
 
             <hr class="sidebar-divider my-0">
@@ -314,7 +314,7 @@
 
             <footer class="sticky-footer bg-white py-3 mt-auto">
                 <div class="container text-center">
-                    &copy; Evolevel {{ date('Y') }}
+                    &copy; Groupizone {{ date('Y') }}
                 </div>
             </footer>
         </div>

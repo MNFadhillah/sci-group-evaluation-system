@@ -1,1184 +1,1160 @@
 @extends('layouts.main')
 
 @section('aktivitas')
-    @if (request()->is('*aktivitassiswa*'))
-        active
-    @endif
+@if (request()->is('*aktivitassiswa*'))
+active
+@endif
 @endsection
 
 @section('content')
 
-    <style>
-        /* =========================================================
+<style>
+    /* =========================================================
            AKTIVITAS SISWA
            ========================================================= */
 
-        .activity-page {
-            padding: 8px 4px 30px;
-        }
+    .activity-page {
+        padding: 8px 4px 30px;
+    }
 
-        /* ---------- Header ---------- */
+    /* ---------- Header ---------- */
 
-        .activity-page-header {
-            margin-bottom: 28px;
-        }
+    .activity-page-header {
+        margin-bottom: 28px;
+    }
 
-        .activity-page-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 0 0 5px;
-            color: #1f2937;
-            font-size: 1.65rem;
-            font-weight: 700;
-        }
+    .activity-page-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 5px;
+        color: #1f2937;
+        font-size: 1.65rem;
+        font-weight: 700;
+    }
 
-        .activity-page-title i {
-            color: #4e73df;
-            font-size: 1.5rem;
-        }
+    .activity-page-title i {
+        color: #4e73df;
+        font-size: 1.5rem;
+    }
 
-        .activity-page-description {
-            margin: 0;
-            color: #6b7280;
-            font-size: .98rem;
-        }
+    .activity-page-description {
+        margin: 0;
+        color: #6b7280;
+        font-size: .98rem;
+    }
 
-        .activity-info-btn {
-            width: 34px;
-            height: 34px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            border-radius: 50%;
-            font-size: .9rem;
-        }
+    .activity-info-btn {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border-radius: 50%;
+        font-size: .9rem;
+    }
 
 
-        /* =========================================================
+    /* =========================================================
            SECTION
            ========================================================= */
 
-        .activity-section {
-            margin-bottom: 40px;
-        }
+    .activity-section {
+        margin-bottom: 40px;
+    }
 
-        .activity-section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-            margin-bottom: 17px;
-        }
+    .activity-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 17px;
+    }
 
-        .activity-section-title {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            margin: 0;
-            color: #1f2937;
-            font-size: 1.12rem;
-            font-weight: 700;
-        }
+    .activity-section-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin: 0;
+        color: #1f2937;
+        font-size: 1.12rem;
+        font-weight: 700;
+    }
 
-        .activity-section-title i {
-            color: #dc3545;
-        }
+    .activity-section-title i {
+        color: #dc3545;
+    }
 
 
-        /* =========================================================
+    /* =========================================================
            CLASS HEADER
            ========================================================= */
 
-        .class-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+    .class-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
 
-            padding: 11px 16px;
+        padding: 11px 16px;
 
-            background: #fff;
-            border: 1px solid #e3e8ef;
-            border-radius: 12px;
+        background: #fff;
+        border: 1px solid #e3e8ef;
+        border-radius: 12px;
 
-            box-shadow: 0 3px 10px rgba(0, 0, 0, .035);
-        }
+        box-shadow: 0 3px 10px rgba(0, 0, 0, .035);
+    }
 
-        .class-header-icon {
-            width: 36px;
-            height: 36px;
+    .class-header-icon {
+        width: 36px;
+        height: 36px;
 
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
-            flex-shrink: 0;
+        flex-shrink: 0;
 
-            background: #edf3ff;
-            color: #4e73df;
+        background: #edf3ff;
+        color: #4e73df;
 
-            border-radius: 10px;
+        border-radius: 10px;
 
-            font-size: 1rem;
-        }
+        font-size: 1rem;
+    }
 
-        .class-header h6 {
-            margin: 0;
-            color: #263449;
-            font-size: 1rem;
-            font-weight: 700;
-        }
+    .class-header h6 {
+        margin: 0;
+        color: #263449;
+        font-size: 1rem;
+        font-weight: 700;
+    }
 
-        .class-sub {
-            margin-top: 2px;
-            color: #7b8491;
-            font-size: .82rem;
-        }
+    .class-sub {
+        margin-top: 2px;
+        color: #7b8491;
+        font-size: .82rem;
+    }
 
 
-        /* =========================================================
+    /* =========================================================
            ACTIVITY CARD
            ========================================================= */
 
-        .activity-card {
-            position: relative;
+    .activity-card {
+        position: relative;
 
-            display: flex;
-            flex-direction: column;
+        display: flex;
+        flex-direction: column;
 
-            height: 100%;
-            min-height: 405px;
+        height: 100%;
+        min-height: 405px;
 
-            overflow: hidden;
+        overflow: hidden;
 
-            background: #fff;
+        background: #fff;
 
-            border: 1px solid #e2e7ee;
-            border-radius: 16px;
+        border: 1px solid #e2e7ee;
+        border-radius: 16px;
 
-            box-shadow: 0 3px 12px rgba(15, 23, 42, .045);
+        box-shadow: 0 3px 12px rgba(15, 23, 42, .045);
 
-            transition:
-                transform .2s ease,
-                box-shadow .2s ease,
-                border-color .2s ease;
-        }
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease,
+            border-color .2s ease;
+    }
 
-        .activity-card:hover {
-            transform: translateY(-3px);
-            border-color: #cfd9eb;
-            box-shadow: 0 9px 24px rgba(15, 23, 42, .08);
-        }
-
-
-        /* ---------- Image ---------- */
-
-        .activity-image-wrapper {
-            position: relative;
-            height: 150px;
-            overflow: hidden;
-            background: #eef2f7;
-        }
-
-        .activity-card .card-img-top {
-            width: 100%;
-            height: 100%;
-
-            display: block;
-
-            object-fit: cover;
-
-            transition: transform .3s ease;
-        }
-
-        .activity-card:hover .card-img-top {
-            transform: scale(1.025);
-        }
-
-        .activity-image-overlay {
-            position: absolute;
-            inset: 0;
-
-            background: linear-gradient(to bottom,
-                    rgba(0, 0, 0, 0) 50%,
-                    rgba(0, 0, 0, .18));
-
-            pointer-events: none;
-        }
+    .activity-card:hover {
+        transform: translateY(-3px);
+        border-color: #cfd9eb;
+        box-shadow: 0 9px 24px rgba(15, 23, 42, .08);
+    }
 
 
-        /* =========================================================
+    /* ---------- Image ---------- */
+
+    .activity-image-wrapper {
+        position: relative;
+        height: 150px;
+        overflow: hidden;
+        background: #eef2f7;
+    }
+
+    .activity-card .card-img-top {
+        width: 100%;
+        height: 100%;
+
+        display: block;
+
+        object-fit: cover;
+
+        transition: transform .3s ease;
+    }
+
+    .activity-card:hover .card-img-top {
+        transform: scale(1.025);
+    }
+
+    .activity-image-overlay {
+        position: absolute;
+        inset: 0;
+
+        background: linear-gradient(to bottom,
+                rgba(0, 0, 0, 0) 50%,
+                rgba(0, 0, 0, .18));
+
+        pointer-events: none;
+    }
+
+
+    /* =========================================================
            CARD BODY
            ========================================================= */
 
-        .activity-card .card-body {
-            display: flex;
-            flex-direction: column;
+    .activity-card .card-body {
+        display: flex;
+        flex-direction: column;
 
-            flex: 1;
+        flex: 1;
 
-            padding: 18px;
-        }
+        padding: 18px;
+    }
 
-        .activity-title {
-            min-height: 46px;
-            margin: 0 0 12px;
+    .activity-title {
+        min-height: 46px;
+        margin: 0 0 12px;
 
-            color: #1769ff;
+        color: #1769ff;
 
-            font-size: 1.05rem;
-            font-weight: 700;
-            line-height: 1.4;
+        font-size: 1.05rem;
+        font-weight: 700;
+        line-height: 1.4;
 
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
 
-            overflow: hidden;
-        }
+        overflow: hidden;
+    }
 
 
-        /* =========================================================
+    /* =========================================================
            BADGES
            ========================================================= */
 
-        .activity-badges {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 6px;
+    .activity-badges {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
 
-            margin-bottom: 13px;
-        }
+        margin-bottom: 13px;
+    }
 
-        .activity-badges .badge {
-            max-width: 145px;
+    .activity-badges .badge {
+        max-width: 145px;
 
-            padding: 5px 9px;
+        padding: 5px 9px;
 
-            border-radius: 999px;
+        border-radius: 999px;
 
-            font-size: .73rem;
-            font-weight: 600;
+        font-size: .73rem;
+        font-weight: 600;
 
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
 
-        /* =========================================================
+    /* =========================================================
            META INFORMATION
            ========================================================= */
 
-        .activity-meta {
-            display: flex;
-            align-items: flex-start;
-            gap: 9px;
+    .activity-meta {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
 
-            margin-bottom: 8px;
+        margin-bottom: 8px;
 
-            color: #6b7280;
+        color: #6b7280;
 
-            font-size: .88rem;
-            line-height: 1.4;
-        }
+        font-size: .88rem;
+        line-height: 1.4;
+    }
 
-        .activity-meta i {
-            width: 17px;
-            flex-shrink: 0;
+    .activity-meta i {
+        width: 17px;
+        flex-shrink: 0;
 
-            margin-top: 2px;
+        margin-top: 2px;
 
-            color: #7d8794;
-            text-align: center;
-        }
+        color: #7d8794;
+        text-align: center;
+    }
 
-        .activity-meta strong,
-        .activity-meta .meta-value {
-            color: #374151;
-            font-weight: 600;
-        }
+    .activity-meta strong,
+    .activity-meta .meta-value {
+        color: #374151;
+        font-weight: 600;
+    }
 
 
-        /* =========================================================
+    /* =========================================================
            STATUS AREA
            ========================================================= */
 
-        .activity-status-box {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+    .activity-status-box {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
 
-            gap: 12px;
+        gap: 12px;
 
-            margin-top: 6px;
-            padding: 10px 12px;
+        margin-top: 6px;
+        padding: 10px 12px;
 
-            background: #f8fafc;
+        background: #f8fafc;
 
-            border: 1px solid #edf0f4;
-            border-radius: 10px;
-        }
+        border: 1px solid #edf0f4;
+        border-radius: 10px;
+    }
 
-        .activity-status-label {
-            color: #7b8491;
-            font-size: .77rem;
-        }
+    .activity-status-label {
+        color: #7b8491;
+        font-size: .77rem;
+    }
 
-        .activity-status-value {
-            margin-top: 1px;
+    .activity-status-value {
+        margin-top: 1px;
 
-            color: #252b33;
-            font-size: .92rem;
-            font-weight: 700;
-        }
+        color: #252b33;
+        font-size: .92rem;
+        font-weight: 700;
+    }
 
-        .activity-status-box .badge {
-            padding: 7px 10px;
-            border-radius: 999px;
-            font-size: .72rem;
-            white-space: nowrap;
-        }
+    .activity-status-box .badge {
+        padding: 7px 10px;
+        border-radius: 999px;
+        font-size: .72rem;
+        white-space: nowrap;
+    }
 
 
-        /* =========================================================
+    /* =========================================================
            DEADLINE
            ========================================================= */
 
-        .activity-deadline {
-            display: flex;
-            align-items: center;
-            gap: 7px;
+    .activity-deadline {
+        display: flex;
+        align-items: center;
+        gap: 7px;
 
-            margin-top: 10px;
+        margin-top: 10px;
 
-            color: #6b7280;
-            font-size: .82rem;
-        }
+        color: #6b7280;
+        font-size: .82rem;
+    }
 
-        .activity-deadline i {
-            color: #7d8794;
-        }
+    .activity-deadline i {
+        color: #7d8794;
+    }
 
-        .activity-deadline.is-late {
-            color: #dc3545;
-            font-weight: 600;
-        }
+    .activity-deadline.is-late {
+        color: #dc3545;
+        font-weight: 600;
+    }
 
 
-        /* =========================================================
+    /* =========================================================
            ACTION BUTTON
            ========================================================= */
 
-        .activity-action {
-            margin-top: auto;
-            padding-top: 16px;
-        }
+    .activity-action {
+        margin-top: auto;
+        padding-top: 16px;
+    }
 
-        .activity-action .btn {
-            min-height: 42px;
+    .activity-action .btn {
+        min-height: 42px;
 
-            border-radius: 10px;
+        border-radius: 10px;
 
-            font-size: .88rem;
-            font-weight: 700;
-        }
+        font-size: .88rem;
+        font-weight: 700;
+    }
 
-        .activity-action .btn-success {
-            box-shadow: 0 3px 8px rgba(25, 135, 84, .12);
-        }
+    .activity-action .btn-success {
+        box-shadow: 0 3px 8px rgba(25, 135, 84, .12);
+    }
 
-        .activity-action .btn-warning {
-            box-shadow: 0 3px 8px rgba(255, 193, 7, .12);
-        }
+    .activity-action .btn-warning {
+        box-shadow: 0 3px 8px rgba(255, 193, 7, .12);
+    }
 
-        .activity-action .btn-secondary {
-            color: #fff;
-            background: #9aa3af;
-            border-color: #9aa3af;
-        }
+    .activity-action .btn-secondary {
+        color: #fff;
+        background: #9aa3af;
+        border-color: #9aa3af;
+    }
 
 
-        /* =========================================================
+    /* =========================================================
            BELUM ADA AKTIVITAS
            ========================================================= */
 
-        .empty-activity {
-            padding: 55px 20px;
+    .empty-activity {
+        padding: 55px 20px;
 
-            background: #fff;
+        background: #fff;
 
-            border: 1px dashed #d8dee7;
-            border-radius: 16px;
+        border: 1px dashed #d8dee7;
+        border-radius: 16px;
 
-            text-align: center;
-        }
+        text-align: center;
+    }
 
-        .empty-activity i {
-            color: #b8c0cb;
-            font-size: 2.5rem;
-        }
+    .empty-activity i {
+        color: #b8c0cb;
+        font-size: 2.5rem;
+    }
 
-        .empty-activity p {
-            margin: 12px 0 0;
-            color: #7b8491;
-            font-size: .95rem;
-        }
+    .empty-activity p {
+        margin: 12px 0 0;
+        color: #7b8491;
+        font-size: .95rem;
+    }
 
 
-        /* =========================================================
+    /* =========================================================
            MODAL INFORMASI
            ========================================================= */
 
-        #modalInfoAktivitas .modal-content {
-            overflow: hidden;
-            border: 0;
-            border-radius: 18px;
-            box-shadow: 0 15px 45px rgba(15, 23, 42, .16);
-        }
+    #modalInfoAktivitas .modal-content {
+        overflow: hidden;
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 15px 45px rgba(15, 23, 42, .16);
+    }
 
-        #modalInfoAktivitas .modal-header {
-            padding: 18px 22px;
+    #modalInfoAktivitas .modal-header {
+        padding: 18px 22px;
 
-            background: #4e73df;
-            color: #fff;
+        background: #4e73df;
+        color: #fff;
 
-            border: 0;
-        }
+        border: 0;
+    }
 
-        #modalInfoAktivitas .modal-title {
-            font-size: 1.08rem;
-            font-weight: 700;
-        }
+    #modalInfoAktivitas .modal-title {
+        font-size: 1.08rem;
+        font-weight: 700;
+    }
 
-        #modalInfoAktivitas .modal-body {
-            padding: 24px;
-        }
+    #modalInfoAktivitas .modal-body {
+        padding: 24px;
+    }
 
-        #modalInfoAktivitas .modal-body section {
-            padding: 2px 0;
-        }
+    #modalInfoAktivitas .modal-body section {
+        padding: 2px 0;
+    }
 
-        #modalInfoAktivitas .modal-body h6 {
-            display: flex;
-            align-items: center;
-            gap: 7px;
+    #modalInfoAktivitas .modal-body h6 {
+        display: flex;
+        align-items: center;
+        gap: 7px;
 
-            color: #4e73df;
-            font-size: .98rem;
-        }
+        color: #4e73df;
+        font-size: .98rem;
+    }
 
-        #modalInfoAktivitas .modal-body p,
-        #modalInfoAktivitas .modal-body li {
-            color: #6b7280;
-            font-size: .9rem;
-            line-height: 1.65;
-        }
+    #modalInfoAktivitas .modal-body p,
+    #modalInfoAktivitas .modal-body li {
+        color: #6b7280;
+        font-size: .9rem;
+        line-height: 1.65;
+    }
 
-        #modalInfoAktivitas .modal-body hr {
-            margin: 20px 0;
-            border-color: #edf0f4;
-        }
+    #modalInfoAktivitas .modal-body hr {
+        margin: 20px 0;
+        border-color: #edf0f4;
+    }
 
-        #modalInfoAktivitas .list-group-item {
-            background: transparent;
-            color: #6b7280;
-            font-size: .88rem;
-            border-color: #edf0f4;
-        }
+    #modalInfoAktivitas .list-group-item {
+        background: transparent;
+        color: #6b7280;
+        font-size: .88rem;
+        border-color: #edf0f4;
+    }
 
-        #modalInfoAktivitas .calculation-box {
-            padding: 15px;
+    #modalInfoAktivitas .calculation-box {
+        padding: 15px;
 
-            background: #f7f9fc;
+        background: #f7f9fc;
 
-            border: 1px solid #e9edf3;
-            border-radius: 12px;
-        }
+        border: 1px solid #e9edf3;
+        border-radius: 12px;
+    }
 
-        #modalInfoAktivitas .modal-footer {
-            padding: 14px 22px;
-            border-color: #edf0f4;
-        }
+    #modalInfoAktivitas .modal-footer {
+        padding: 14px 22px;
+        border-color: #edf0f4;
+    }
 
 
-        /* =========================================================
+    /* =========================================================
            RESPONSIVE
            ========================================================= */
 
-        @media (max-width: 991.98px) {
+    @media (max-width: 991.98px) {
 
-            .activity-page {
-                padding-left: 2px;
-                padding-right: 2px;
-            }
-
-            .activity-card {
-                min-height: 390px;
-            }
+        .activity-page {
+            padding-left: 2px;
+            padding-right: 2px;
         }
 
+        .activity-card {
+            min-height: 390px;
+        }
+    }
 
-        @media (max-width: 767.98px) {
 
-            .activity-page-title {
-                font-size: 1.4rem;
-            }
+    @media (max-width: 767.98px) {
 
-            .activity-page-description {
-                font-size: .9rem;
-            }
-
-            .activity-section {
-                margin-bottom: 32px;
-            }
-
-            .activity-card {
-                min-height: 0;
-            }
-
-            .activity-image-wrapper {
-                height: 145px;
-            }
-
-            .activity-card .card-body {
-                padding: 16px;
-            }
+        .activity-page-title {
+            font-size: 1.4rem;
         }
 
-
-        @media (max-width: 575.98px) {
-
-            .activity-page {
-                padding: 5px 0 25px;
-            }
-
-            .activity-page-header {
-                margin-bottom: 22px;
-            }
-
-            .activity-page-title {
-                font-size: 1.25rem;
-            }
-
-            .activity-page-title i {
-                font-size: 1.2rem;
-            }
-
-            .activity-page-description {
-                font-size: .85rem;
-            }
-
-            .activity-section-title {
-                font-size: 1rem;
-            }
-
-            .class-header {
-                padding: 10px 12px;
-            }
-
-            .class-header h6 {
-                font-size: .92rem;
-            }
-
-            .class-sub {
-                font-size: .76rem;
-            }
-
-            .activity-image-wrapper {
-                height: 130px;
-            }
-
-            .activity-title {
-                font-size: 1rem;
-            }
-
-            .activity-meta {
-                font-size: .84rem;
-            }
-
-            .activity-status-box {
-                padding: 9px 10px;
-            }
-
-            #modalInfoAktivitas .modal-body {
-                padding: 19px;
-            }
+        .activity-page-description {
+            font-size: .9rem;
         }
-    </style>
+
+        .activity-section {
+            margin-bottom: 32px;
+        }
+
+        .activity-card {
+            min-height: 0;
+        }
+
+        .activity-image-wrapper {
+            height: 145px;
+        }
+
+        .activity-card .card-body {
+            padding: 16px;
+        }
+    }
 
 
-    <div class="container-fluid px-4 py-4">
+    @media (max-width: 575.98px) {
 
-        <div class="activity-page">
+        .activity-page {
+            padding: 5px 0 25px;
+        }
 
-            <!-- =====================================================
+        .activity-page-header {
+            margin-bottom: 22px;
+        }
+
+        .activity-page-title {
+            font-size: 1.25rem;
+        }
+
+        .activity-page-title i {
+            font-size: 1.2rem;
+        }
+
+        .activity-page-description {
+            font-size: .85rem;
+        }
+
+        .activity-section-title {
+            font-size: 1rem;
+        }
+
+        .class-header {
+            padding: 10px 12px;
+        }
+
+        .class-header h6 {
+            font-size: .92rem;
+        }
+
+        .class-sub {
+            font-size: .76rem;
+        }
+
+        .activity-image-wrapper {
+            height: 130px;
+        }
+
+        .activity-title {
+            font-size: 1rem;
+        }
+
+        .activity-meta {
+            font-size: .84rem;
+        }
+
+        .activity-status-box {
+            padding: 9px 10px;
+        }
+
+        #modalInfoAktivitas .modal-body {
+            padding: 19px;
+        }
+    }
+</style>
+
+
+<div class="container-fluid px-4 py-4">
+
+    <div class="activity-page">
+
+        <!-- =====================================================
                  HEADER
                  ===================================================== -->
 
-            <div class="activity-page-header">
+        <div class="activity-page-header">
 
-                <h1 class="activity-page-title">
+            <h1 class="activity-page-title">
 
-                    <i class="bi bi-journal-check"></i>
+                <i class="bi bi-journal-check"></i>
 
-                    Aktivitas
+                Aktivitas
 
-                    <button type="button" class="btn btn-outline-primary activity-info-btn" data-bs-toggle="modal"
-                        data-bs-target="#modalInfoAktivitas" title="Informasi Evaluasi">
+                <button type="button" class="btn btn-outline-primary activity-info-btn" data-bs-toggle="modal"
+                    data-bs-target="#modalInfoAktivitas" title="Informasi Evaluasi">
 
-                        <i class="bi bi-info-lg"></i>
+                    <i class="bi bi-info-lg"></i>
 
-                    </button>
+                </button>
 
-                </h1>
+            </h1>
 
-                <p class="activity-page-description">
-                    Lihat dan kerjakan aktivitas pembelajaranmu di sini.
-                </p>
+            <p class="activity-page-description">
+                Lihat dan kerjakan aktivitas pembelajaranmu di sini.
+            </p>
+
+        </div>
+
+
+        <!-- =====================================================
+                 BELUM DIKERJAKAN
+                 ===================================================== -->
+
+        @if (!empty($belumDikerjakan) && $belumDikerjakan->count())
+        <section class="activity-section">
+
+            <div class="activity-section-header">
+
+                <h2 class="activity-section-title">
+
+                    <i class="bi bi-exclamation-circle"></i>
+
+                    Belum Dikerjakan — Deadline Terdekat
+
+                </h2>
 
             </div>
 
 
-            <!-- =====================================================
-                 BELUM DIKERJAKAN
-                 ===================================================== -->
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
 
-            @if (!empty($belumDikerjakan) && $belumDikerjakan->count())
-                <section class="activity-section">
+                @foreach ($belumDikerjakan as $sub)
+                @php
+                $nilai = $sub->result ?? '-';
+                $status = $sub->result_status ?? '-';
+                $statusLower = strtolower($status);
 
-                    <div class="activity-section-header">
+                // Tambahkan 'selesai' ke dalam pengecekan warna badge
+                $cls = $statusLower === 'remedial' ? 'danger'
+                : (in_array($statusLower, ['pass', 'selesai']) ? 'success' : 'secondary');
 
-                        <h2 class="activity-section-title">
+                $isAlreadyGraded = $nilai !== '-';
+                $isSelesai = in_array($statusLower, ['pass', 'selesai']);
 
-                            <i class="bi bi-exclamation-circle"></i>
+                $isPastDeadline = false;
+                if (!empty($sub->deadline)) {
+                try {
+                $isPastDeadline = \Carbon\Carbon::parse($sub->deadline)->isPast();
+                } catch (\Exception $e) {
+                $isPastDeadline = false;
+                }
+                }
 
-                            Belum Dikerjakan — Deadline Terdekat
+                // BUG FIX: Tambahkan $isSelesai agar sistem tahu aktivitas sudah beres
+                $cannotStart = $isAlreadyGraded || $isSelesai || $isPastDeadline;
+                @endphp
 
-                        </h2>
 
-                    </div>
+                <div class="col">
 
+                    <article class="activity-card">
 
-                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                        <div class="activity-image-wrapper">
 
-                        @foreach ($belumDikerjakan as $sub)
-                            @php
+                            <img class="card-img-top"
+                                src="https://picsum.photos/800/400?random=belum{{ $loop->iteration }}"
+                                alt="Gambar Aktivitas">
 
-                                $nilai = $sub->nilai_akhir ?? null;
+                            <div class="activity-image-overlay"></div>
 
-                                $status = $sub->result_status ?? '-';
+                        </div>
 
-                                $statusLower = strtolower($status);
 
-                                $cls =
-                                    $statusLower === 'remedial'
-                                        ? 'danger'
-                                        : ($statusLower === 'pass'
-                                            ? 'success'
-                                            : 'secondary');
+                        <div class="card-body">
 
-                                $isAlreadyGraded = !is_null($nilai) && $nilai !== '-';
+                            <h5 class="activity-title" title="{{ $sub->aktivitas }}">
 
-                                $isPastDeadline = false;
+                                {{ $sub->aktivitas }}
 
-                                if (!empty($sub->deadline)) {
-                                    try {
-                                        $isPastDeadline = \Carbon\Carbon::parse($sub->deadline)->isPast();
-                                    } catch (\Exception $e) {
-                                        $isPastDeadline = false;
-                                    }
-                                }
+                            </h5>
 
-                                $cannotStart = $isAlreadyGraded || $isPastDeadline;
 
-                            @endphp
+                            <div class="activity-meta">
 
+                                <i class="bi bi-book"></i>
 
-                            <div class="col">
-
-                                <article class="activity-card">
-
-                                    <div class="activity-image-wrapper">
-
-                                        <img class="card-img-top"
-                                            src="https://picsum.photos/800/400?random=belum{{ $loop->iteration }}"
-                                            alt="Gambar Aktivitas">
-
-                                        <div class="activity-image-overlay"></div>
-
-                                    </div>
-
-
-                                    <div class="card-body">
-
-                                        <h5 class="activity-title" title="{{ $sub->aktivitas }}">
-
-                                            {{ $sub->aktivitas }}
-
-                                        </h5>
-
-
-                                        <div class="activity-meta">
-
-                                            <i class="bi bi-book"></i>
-
-                                            <div>
-                                                Mata Pelajaran:
-                                                <span class="meta-value">
-                                                    {{ $sub->mapel ?? '-' }}
-                                                </span>
-                                            </div>
-
-                                        </div>
-
-
-                                        <div class="activity-meta">
-
-                                            <i class="bi bi-bookmark"></i>
-
-                                            <div>
-                                                Topik:
-                                                <span class="meta-value">
-                                                    {{ $sub->topik ?? '-' }}
-                                                </span>
-                                            </div>
-
-                                        </div>
-
-
-                                        <div class="activity-meta">
-
-                                            <i class="bi bi-people"></i>
-
-                                            <div>
-                                                Kelas:
-                                                <span class="meta-value">
-                                                    {{ $sub->nama_kelas ?? '-' }}
-                                                </span>
-                                            </div>
-
-                                        </div>
-
-
-                                        <div class="activity-meta">
-
-                                            <i class="bi bi-person-workspace"></i>
-
-                                            <div>
-                                                Pengerjaan:
-
-                                                @if ($sub->is_group_activity === 'yes')
-                                                    <span class="badge bg-primary ms-1">
-                                                        <i class="bi bi-people-fill me-1"></i>
-                                                        Kelompok
-                                                    </span>
-                                                @else
-                                                    <span class="badge bg-secondary ms-1">
-                                                        <i class="bi bi-person-fill me-1"></i>
-                                                        Individu
-                                                    </span>
-                                                @endif
-
-                                            </div>
-
-                                        </div>
-
-
-                                        @php
-                                            $tanggal = $sub->deadline ?? $sub->created_at;
-                                        @endphp
-
-
-                                        <div class="activity-deadline {{ $isPastDeadline ? 'is-late' : '' }}">
-
-                                            <i class="bi bi-calendar-event"></i>
-
-                                            <span>
-
-                                                {{ $tanggal ? \Carbon\Carbon::parse($tanggal)->format('d M Y H:i') : '-' }}
-
-                                                @if ($isPastDeadline)
-                                                    — deadline lewat
-                                                @endif
-
-                                            </span>
-
-                                        </div>
-
-
-                                        <div class="activity-status-box">
-
-                                            <div>
-
-                                                <div class="activity-status-label">
-                                                    Status
-                                                </div>
-
-                                                <div class="activity-status-value">
-                                                    {{ ucfirst($status) }}
-                                                </div>
-
-                                            </div>
-
-
-                                            <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
-
-                                                @if ($isPastDeadline)
-                                                    <span class="badge bg-danger" title="Deadline sudah lewat">
-
-                                                        Deadline Lewat
-
-                                                    </span>
-                                                @endif
-
-                                                <span class="badge bg-{{ $cls }}">
-
-                                                    {{ ucfirst($status) }}
-
-                                                </span>
-
-                                            </div>
-
-                                        </div>
-
-
-                                        <div class="activity-meta mt-2 mb-0">
-
-                                            <i class="bi bi-clock-history"></i>
-
-                                            <div>
-
-                                                Dibuat:
-
-                                                <span class="meta-value">
-
-                                                    {{ $sub->created_at ? \Carbon\Carbon::parse($sub->created_at)->format('d M Y') : '-' }}
-
-                                                </span>
-
-                                            </div>
-
-                                        </div>
-
-
-                                        <div class="activity-action">
-
-                                            @if ($cannotStart)
-                                                <button class="btn btn-secondary w-100" disabled>
-
-                                                    <i class="bi bi-x-circle me-1"></i>
-
-                                                    {{ $isAlreadyGraded ? 'Sudah Selesai' : 'Tidak Bisa Dikerjakan' }}
-
-                                                </button>
-                                            @elseif($statusLower === 'belum menilai teman')
-                                                <a href="{{ route('activity.group.rating', $sub->id_activity) }}"
-                                                    class="btn btn-warning text-dark w-100">
-
-                                                    <i class="bi bi-star-fill me-1"></i>
-
-                                                    Nilai Teman Kelompok
-
-                                                </a>
-                                            @else
-                                                <button class="btn btn-success w-100"
-                                                    onclick="mulaiAktivitas('{{ $sub->id_activity }}', '{{ $sub->is_group_activity }}')">
-
-                                                    <i class="bi bi-play-fill me-1"></i>
-
-                                                    Kerjakan Sekarang
-
-                                                </button>
-                                            @endif
-
-                                        </div>
-
-                                    </div>
-
-                                </article>
+                                <div>
+                                    Mata Pelajaran:
+                                    <span class="meta-value">
+                                        {{ $sub->mapel ?? '-' }}
+                                    </span>
+                                </div>
 
                             </div>
-                        @endforeach
-
-                    </div>
-
-                </section>
-            @endif
 
 
-            <!-- =====================================================
-                 AKTIVITAS PER KELAS
-                 ===================================================== -->
+                            <div class="activity-meta">
 
-            @forelse ($activitiesByClass as $kelas)
-                <section class="activity-section">
+                                <i class="bi bi-bookmark"></i>
 
-                    <div class="activity-section-header">
+                                <div>
+                                    Topik:
+                                    <span class="meta-value">
+                                        {{ $sub->topik ?? '-' }}
+                                    </span>
+                                </div>
 
-                        <div class="class-header">
+                            </div>
 
-                            <div class="class-header-icon">
+
+                            <div class="activity-meta">
 
                                 <i class="bi bi-people"></i>
 
+                                <div>
+                                    Kelas:
+                                    <span class="meta-value">
+                                        {{ $sub->nama_kelas ?? '-' }}
+                                    </span>
+                                </div>
+
                             </div>
 
-                            <div>
 
-                                <h6>
-                                    Kelas {{ $kelas->nama_kelas }}
-                                </h6>
+                            <div class="activity-meta">
 
-                                <div class="class-sub">
+                                <i class="bi bi-person-workspace"></i>
 
-                                    Level {{ $kelas->level_kelas }}
+                                <div>
+                                    Pengerjaan:
 
-                                    • {{ $kelas->list->count() }} aktivitas
+                                    @if ($sub->is_group_activity === 'yes')
+                                    <span class="badge bg-primary ms-1">
+                                        <i class="bi bi-people-fill me-1"></i>
+                                        Kelompok
+                                    </span>
+                                    @else
+                                    <span class="badge bg-secondary ms-1">
+                                        <i class="bi bi-person-fill me-1"></i>
+                                        Individu
+                                    </span>
+                                    @endif
 
                                 </div>
 
                             </div>
 
+
+                            @php
+                            $tanggal = $sub->deadline ?? $sub->created_at;
+                            @endphp
+
+
+                            <div class="activity-deadline {{ $isPastDeadline ? 'is-late' : '' }}">
+
+                                <i class="bi bi-calendar-event"></i>
+
+                                <span>
+
+                                    {{ $tanggal ? \Carbon\Carbon::parse($tanggal)->format('d M Y H:i') : '-' }}
+
+                                    @if ($isPastDeadline)
+                                    — deadline lewat
+                                    @endif
+
+                                </span>
+
+                            </div>
+
+
+                            <div class="activity-status-box">
+
+                                <div>
+
+                                    <div class="activity-status-label">
+                                        Status
+                                    </div>
+
+                                    <div class="activity-status-value">
+                                        {{ ucfirst($status) }}
+                                    </div>
+
+                                </div>
+
+
+                                <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+
+                                    @if ($isPastDeadline)
+                                    <span class="badge bg-danger" title="Deadline sudah lewat">
+
+                                        Deadline Lewat
+
+                                    </span>
+                                    @endif
+
+                                    <span class="badge bg-{{ $cls }}">
+
+                                        {{ ucfirst($status) }}
+
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="activity-meta mt-2 mb-0">
+
+                                <i class="bi bi-clock-history"></i>
+
+                                <div>
+
+                                    Dibuat:
+
+                                    <span class="meta-value">
+
+                                        {{ $sub->created_at ? \Carbon\Carbon::parse($sub->created_at)->format('d M Y') : '-' }}
+
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="activity-action">
+                                @if ($cannotStart)
+                                <button class="btn btn-secondary w-100" disabled
+                                    title="{{ ($isAlreadyGraded || $isSelesai) ? 'Sudah diselesaikan' : ($isPastDeadline ? 'Deadline sudah lewat' : '') }}">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    {{ ($isAlreadyGraded || $isSelesai) ? 'Sudah Selesai' : 'Tidak Bisa Dikerjakan' }}
+                                </button>
+                                @elseif($statusLower === 'belum menilai teman')
+                                <a href="{{ route('activity.group.rating', $sub->id_activity) }}"
+                                    class="btn btn-warning text-dark w-100">
+                                    <i class="bi bi-star-fill me-1"></i>
+                                    Nilai Teman Kelompok
+                                </a>
+                                @else
+                                <button class="btn btn-success w-100"
+                                    onclick="mulaiAktivitas('{{ $sub->id_activity }}', '{{ $sub->is_group_activity }}')">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Kerjakan Sekarang
+                                </button>
+                                @endif
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                </div>
+                @endforeach
+
+            </div>
+
+        </section>
+        @endif
+
+
+        <!-- =====================================================
+                 AKTIVITAS PER KELAS
+                 ===================================================== -->
+
+        @forelse ($activitiesByClass as $kelas)
+        <section class="activity-section">
+
+            <div class="activity-section-header">
+
+                <div class="class-header">
+
+                    <div class="class-header-icon">
+
+                        <i class="bi bi-people"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h6>
+                            Kelas {{ $kelas->nama_kelas }}
+                        </h6>
+
+                        <div class="class-sub">
+
+                            Level {{ $kelas->level_kelas }}
+
+                            • {{ $kelas->list->count() }} aktivitas
+
                         </div>
 
                     </div>
 
+                </div>
 
-                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            </div>
 
-                        @foreach ($kelas->list as $sub)
+
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+
+                @foreach ($kelas->list as $sub)
+                @php
+                $nilai = $sub->result ?? '-';
+                $status = $sub->result_status ?? '-';
+                $statusLower = strtolower($status);
+
+                // Tambahkan 'selesai' ke dalam pengecekan warna badge
+                $cls = $statusLower === 'remedial' ? 'danger'
+                : (in_array($statusLower, ['pass', 'selesai']) ? 'success' : 'secondary');
+
+                $isAlreadyGraded = $nilai !== '-';
+                $isSelesai = in_array($statusLower, ['pass', 'selesai']);
+
+                $isPastDeadline = false;
+                if (!empty($sub->deadline)) {
+                try {
+                $isPastDeadline = \Carbon\Carbon::parse($sub->deadline)->isPast();
+                } catch (\Exception $e) {
+                $isPastDeadline = false;
+                }
+                }
+
+                // BUG FIX: Masukkan variabel $isSelesai
+                $cannotStart = $isAlreadyGraded || $isSelesai || $isPastDeadline;
+                @endphp
+
+
+                <div class="col">
+
+                    <article class="activity-card">
+
+                        <div class="activity-image-wrapper">
+
+                            <img class="card-img-top"
+                                src="https://picsum.photos/800/400?random={{ $kelas->id_class }}{{ $loop->iteration }}"
+                                alt="Gambar Aktivitas">
+
+                            <div class="activity-image-overlay"></div>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            <h5 class="activity-title" title="{{ $sub->aktivitas }}">
+
+                                {{ $sub->aktivitas }}
+
+                            </h5>
+
+
+                            <div class="activity-badges">
+
+                                <span class="badge bg-primary" title="{{ $sub->mapel ?? '' }}">
+
+                                    {{ $sub->mapel ?? '-' }}
+
+                                </span>
+
+
+                                <span class="badge bg-info text-white" title="{{ $sub->topik ?? '' }}">
+
+                                    {{ $sub->topik ?? '-' }}
+
+                                </span>
+
+
+                                <span class="badge bg-warning text-dark"
+                                    title="Kelas {{ $kelas->nama_kelas ?? '' }}">
+
+                                    Kls {{ $kelas->nama_kelas ?? '-' }}
+
+                                </span>
+
+
+                                <span class="badge bg-secondary" title="{{ ucfirst($status) }}">
+
+                                    {{ ucfirst($status) }}
+
+                                </span>
+
+                            </div>
+
+
+                            <div class="activity-meta">
+
+                                <i class="bi bi-collection"></i>
+
+                                <div>
+
+                                    Status:
+
+                                    <span class="meta-value">
+
+                                        {{ ucfirst($status) }}
+
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
                             @php
-
-                                $nilai = $sub->result ?? null;
-
-                                $status = $sub->result_status ?? '-';
-
-                                $statusLower = strtolower($status);
-
-                                $cls =
-                                    $statusLower === 'remedial'
-                                        ? 'danger'
-                                        : ($statusLower === 'pass'
-                                            ? 'success'
-                                            : 'secondary');
-
-                                $isAlreadyGraded = !is_null($nilai) && $nilai !== '-';
-
-                                $isPastDeadline = false;
-
-                                if (!empty($sub->deadline)) {
-                                    try {
-                                        $isPastDeadline = \Carbon\Carbon::parse($sub->deadline)->isPast();
-                                    } catch (\Exception $e) {
-                                        $isPastDeadline = false;
-                                    }
-                                }
-
-                                $cannotStart = $isAlreadyGraded || $isPastDeadline;
-
+                            $tanggal = $sub->deadline ?? $sub->created_at;
                             @endphp
 
 
-                            <div class="col">
+                            <div class="activity-deadline {{ $isPastDeadline ? 'is-late' : '' }}">
 
-                                <article class="activity-card">
+                                <i class="bi bi-calendar-event"></i>
 
-                                    <div class="activity-image-wrapper">
+                                <span>
 
-                                        <img class="card-img-top"
-                                            src="https://picsum.photos/800/400?random={{ $kelas->id_class }}{{ $loop->iteration }}"
-                                            alt="Gambar Aktivitas">
+                                    {{ $tanggal ? \Carbon\Carbon::parse($tanggal)->format('d M Y H:i') : '-' }}
 
-                                        <div class="activity-image-overlay"></div>
+                                    @if ($isPastDeadline)
+                                    — deadline lewat
+                                    @endif
 
-                                    </div>
-
-
-                                    <div class="card-body">
-
-                                        <h5 class="activity-title" title="{{ $sub->aktivitas }}">
-
-                                            {{ $sub->aktivitas }}
-
-                                        </h5>
-
-
-                                        <div class="activity-badges">
-
-                                            <span class="badge bg-primary" title="{{ $sub->mapel ?? '' }}">
-
-                                                {{ $sub->mapel ?? '-' }}
-
-                                            </span>
-
-
-                                            <span class="badge bg-info text-white" title="{{ $sub->topik ?? '' }}">
-
-                                                {{ $sub->topik ?? '-' }}
-
-                                            </span>
-
-
-                                            <span class="badge bg-warning text-dark"
-                                                title="Kelas {{ $kelas->nama_kelas ?? '' }}">
-
-                                                Kls {{ $kelas->nama_kelas ?? '-' }}
-
-                                            </span>
-
-
-                                            <span class="badge bg-secondary" title="{{ ucfirst($status) }}">
-
-                                                {{ ucfirst($status) }}
-
-                                            </span>
-
-                                        </div>
-
-
-                                        <div class="activity-meta">
-
-                                            <i class="bi bi-collection"></i>
-
-                                            <div>
-
-                                                Status:
-
-                                                <span class="meta-value">
-
-                                                    {{ ucfirst($status) }}
-
-                                                </span>
-
-                                            </div>
-
-                                        </div>
-
-
-                                        @php
-                                            $tanggal = $sub->deadline ?? $sub->created_at;
-                                        @endphp
-
-
-                                        <div class="activity-deadline {{ $isPastDeadline ? 'is-late' : '' }}">
-
-                                            <i class="bi bi-calendar-event"></i>
-
-                                            <span>
-
-                                                {{ $tanggal ? \Carbon\Carbon::parse($tanggal)->format('d M Y H:i') : '-' }}
-
-                                                @if ($isPastDeadline)
-                                                    — deadline lewat
-                                                @endif
-
-                                            </span>
-
-                                        </div>
-
-
-                                        <div class="activity-status-box">
-
-                                            <div>
-
-                                                <div class="activity-status-label">
-                                                    Nilai
-                                                </div>
-
-                                                <div class="activity-status-value">
-
-                                                    @if ($nilai !== null)
-                                                        {{ $nilai }}
-                                                    @else
-                                                        <span class="text-muted">
-                                                            Belum Ada
-                                                        </span>
-                                                    @endif
-
-                                                </div>
-
-                                            </div>
-
-
-                                            <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
-
-                                                @if ($isPastDeadline)
-                                                    <span class="badge bg-danger" title="Deadline sudah lewat">
-
-                                                        Deadline Lewat
-
-                                                    </span>
-                                                @endif
-
-
-                                                <span class="badge bg-{{ $cls }}">
-
-                                                    {{ ucfirst($status) }}
-
-                                                </span>
-
-                                            </div>
-
-                                        </div>
-
-
-                                        <div class="activity-action">
-
-                                            @if ($cannotStart)
-                                                <button class="btn btn-secondary w-100" disabled
-                                                    title="{{ $isAlreadyGraded ? 'Sudah dinilai' : ($isPastDeadline ? 'Deadline sudah lewat' : '') }}">
-
-                                                    <i class="bi bi-x-circle me-1"></i>
-
-                                                    {{ $isAlreadyGraded ? 'Sudah Dinilai' : 'Tidak Bisa Dikerjakan' }}
-
-                                                </button>
-                                            @else
-                                                <button class="btn btn-success w-100"
-                                                    onclick="mulaiAktivitas('{{ $sub->id_activity }}', '{{ $sub->is_group_activity }}')">
-
-                                                    <i class="bi bi-play-fill me-1"></i>
-
-                                                    Kerjakan Sekarang
-
-                                                </button>
-                                            @endif
-
-                                        </div>
-
-                                    </div>
-
-                                </article>
+                                </span>
 
                             </div>
-                        @endforeach
 
-                    </div>
 
-                </section>
+                            <div class="activity-status-box">
 
-            @empty
+                                <div>
 
-                <div class="empty-activity">
+                                    <div class="activity-status-label">
+                                        Nilai
+                                    </div>
 
-                    <i class="bi bi-emoji-frown"></i>
+                                    <div class="activity-status-value">
 
-                    <p>
-                        Belum ada aktivitas untukmu.
-                    </p>
+                                        @if ($nilai !== null)
+                                        {{ $nilai }}
+                                        @else
+                                        <span class="text-muted">
+                                            Belum Ada
+                                        </span>
+                                        @endif
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+
+                                    @if ($isPastDeadline)
+                                    <span class="badge bg-danger" title="Deadline sudah lewat">
+
+                                        Deadline Lewat
+
+                                    </span>
+                                    @endif
+
+
+                                    <span class="badge bg-{{ $cls }}">
+
+                                        {{ ucfirst($status) }}
+
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="activity-action">
+                                @if ($cannotStart)
+                                <button class="btn btn-secondary w-100" disabled
+                                    title="{{ ($isAlreadyGraded || $isSelesai) ? 'Sudah diselesaikan' : ($isPastDeadline ? 'Deadline sudah lewat' : '') }}">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    {{ ($isAlreadyGraded || $isSelesai) ? 'Sudah Selesai' : 'Tidak Bisa Dikerjakan' }}
+                                </button>
+                                @elseif($statusLower === 'belum menilai teman')
+                                <a href="{{ route('activity.group.rating', $sub->id_activity) }}"
+                                    class="btn btn-warning text-dark w-100">
+                                    <i class="bi bi-star-fill me-1"></i>
+                                    Nilai Teman Kelompok
+                                </a>
+                                @else
+                                <button class="btn btn-success w-100"
+                                    onclick="mulaiAktivitas('{{ $sub->id_activity }}', '{{ $sub->is_group_activity }}')">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Kerjakan Sekarang
+                                </button>
+                                @endif
+                            </div>
+
+                        </div>
+
+                    </article>
 
                 </div>
-            @endforelse
+                @endforeach
+
+            </div>
+
+        </section>
+
+        @empty
+
+        <div class="empty-activity">
+
+            <i class="bi bi-emoji-frown"></i>
+
+            <p>
+                Belum ada aktivitas untukmu.
+            </p>
 
         </div>
+        @endforelse
 
     </div>
 
+</div>
 
-    <!-- =============================================================
+
+<!-- =============================================================
      MODAL INFORMASI AKTIVITAS
      ============================================================= -->
 
@@ -1481,51 +1457,51 @@
 
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script>
-        function mulaiAktivitas(id, jenisPengerjaan) {
+<script>
+    function mulaiAktivitas(id, jenisPengerjaan) {
 
-            Swal.fire({
+        Swal.fire({
 
-                icon: 'info',
+            icon: 'info',
 
-                title: 'Mulai Aktivitas',
+            title: 'Mulai Aktivitas',
 
-                html: 'Kamu akan memulai aktivitas dengan ID: <strong>' +
-                    id +
-                    '</strong>',
+            html: 'Kamu akan memulai aktivitas dengan ID: <strong>' +
+                id +
+                '</strong>',
 
-                showCancelButton: true,
+            showCancelButton: true,
 
-                confirmButtonText: 'Lanjut',
+            confirmButtonText: 'Lanjut',
 
-                cancelButtonText: 'Batal',
+            cancelButtonText: 'Batal',
 
-                confirmButtonColor: '#198754',
+            confirmButtonColor: '#198754',
 
-                cancelButtonColor: '#6c757d'
+            cancelButtonColor: '#6c757d'
 
-            }).then((result) => {
+        }).then((result) => {
 
-                if (result.isConfirmed) {
+            if (result.isConfirmed) {
 
-                    if (jenisPengerjaan === 'yes') {
+                if (jenisPengerjaan === 'yes') {
 
-                        window.location.href =
-                            `/activity/${id}/group/answer`;
+                    window.location.href =
+                        `/activity/${id}/group/answer`;
 
-                    } else {
+                } else {
 
-                        window.location.href =
-                            `/activity/${id}`;
-
-                    }
+                    window.location.href =
+                        `/activity/${id}`;
 
                 }
 
-            });
+            }
 
-        }
-    </script>
+        });
+
+    }
+</script>
 @endpush
