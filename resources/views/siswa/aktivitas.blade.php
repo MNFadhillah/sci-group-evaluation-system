@@ -1158,299 +1158,289 @@ active
      MODAL INFORMASI AKTIVITAS
      ============================================================= -->
 
-<div
-    class="modal fade"
-    id="modalInfoAktivitas"
-    tabindex="-1"
-    aria-hidden="true">
+    <div class="modal fade" id="modalInfoAktivitas" tabindex="-1" aria-hidden="true">
 
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
 
-        <div class="modal-content">
+            <div class="modal-content">
 
-            <!-- HEADER -->
-            <div class="modal-header">
+                <!-- HEADER -->
+                <div class="modal-header">
 
-                <h5 class="modal-title">
+                    <h5 class="modal-title">
 
-                    <i class="bi bi-info-circle me-2"></i>
+                        <i class="bi bi-info-circle me-2"></i>
 
-                    Informasi Aktivitas
+                        Informasi Aktivitas
 
-                </h5>
+                    </h5>
 
-                <button
-                    type="button"
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal"
-                    aria-label="Tutup">
-                </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup">
+                    </button>
 
-            </div>
+                </div>
 
 
-            <!-- BODY -->
-            <div class="modal-body">
+                <!-- BODY -->
+                <div class="modal-body">
 
-                <!-- AKTIVITAS -->
-                <section>
+                    <!-- AKTIVITAS -->
+                    <section>
 
-                    <h6 class="fw-bold mb-2">
+                        <h6 class="fw-bold mb-2">
 
-                        <i class="bi bi-journal-check"></i>
+                            <i class="bi bi-journal-check"></i>
 
-                        Tentang Aktivitas
+                            Tentang Aktivitas
 
-                    </h6>
+                        </h6>
 
-                    <p class="text-muted mb-0">
+                        <p class="text-muted mb-0">
 
-                        Aktivitas merupakan tugas atau evaluasi pembelajaran
-                        yang diberikan oleh guru. Aktivitas dapat digunakan
-                        untuk mengukur pemahaman siswa terhadap materi yang
-                        telah dipelajari.
+                            Aktivitas merupakan tugas atau evaluasi pembelajaran
+                            yang diberikan oleh guru. Aktivitas dapat digunakan
+                            untuk mengukur pemahaman siswa terhadap materi yang
+                            telah dipelajari.
 
-                    </p>
+                        </p>
 
-                </section>
+                    </section>
 
 
-                <hr>
+                    <hr>
 
 
-                <!-- CARA PENGERJAAN -->
-                <section>
+                    <!-- CARA PENGERJAAN -->
+                    <section>
 
-                    <h6 class="fw-bold mb-2">
+                        <h6 class="fw-bold mb-2">
 
-                        <i class="bi bi-person-workspace"></i>
+                            <i class="bi bi-person-workspace"></i>
 
-                        Jenis Pengerjaan
+                            Jenis Pengerjaan
 
-                    </h6>
+                        </h6>
 
-                    <p class="text-muted mb-2">
+                        <p class="text-muted mb-2">
 
-                        Setiap aktivitas memiliki jenis pengerjaan yang
-                        dapat berupa individu maupun kelompok.
+                            Setiap aktivitas memiliki jenis pengerjaan yang
+                            dapat berupa individu maupun kelompok.
 
-                    </p>
+                        </p>
 
-                    <ul class="text-muted ps-3 mb-0">
+                        <ul class="text-muted ps-3 mb-0">
 
-                        <li>
-                            <strong>Individu</strong> — aktivitas dikerjakan
-                            secara mandiri.
-                        </li>
+                            <li>
+                                <strong>Individu</strong> — aktivitas dikerjakan
+                                secara mandiri.
+                            </li>
 
-                        <li>
-                            <strong>Kelompok</strong> — aktivitas dikerjakan
-                            bersama anggota kelompok.
-                        </li>
+                            <li>
+                                <strong>Kelompok</strong> — aktivitas dikerjakan
+                                bersama anggota kelompok.
+                            </li>
 
-                    </ul>
+                        </ul>
 
-                </section>
+                    </section>
 
 
-                <hr>
+                    <hr>
 
 
-                <!-- DEADLINE -->
-                <section>
+                    <!-- DEADLINE -->
+                    <section>
 
-                    <h6 class="fw-bold mb-2">
+                        <h6 class="fw-bold mb-2">
 
-                        <i class="bi bi-calendar-event"></i>
+                            <i class="bi bi-calendar-event"></i>
 
-                        Deadline
+                            Deadline
 
-                    </h6>
+                        </h6>
 
-                    <p class="text-muted mb-0">
+                        <p class="text-muted mb-0">
 
-                        Perhatikan tanggal dan waktu yang tercantum pada
-                        setiap aktivitas. Aktivitas yang telah melewati
-                        deadline tidak dapat dikerjakan kembali.
+                            Perhatikan tanggal dan waktu yang tercantum pada
+                            setiap aktivitas. Aktivitas yang telah melewati
+                            deadline tidak dapat dikerjakan kembali.
 
-                    </p>
+                        </p>
 
-                </section>
+                    </section>
 
 
-                <hr>
+                    <hr>
 
 
-                <!-- STATUS -->
-                <section>
+                    <!-- STATUS -->
+                    <section>
 
-                    <h6 class="fw-bold mb-2">
+                        <h6 class="fw-bold mb-2">
 
-                        <i class="bi bi-clipboard-check"></i>
+                            <i class="bi bi-clipboard-check"></i>
 
-                        Status Aktivitas
+                            Status Aktivitas
 
-                    </h6>
+                        </h6>
 
-                    <p class="text-muted mb-2">
+                        <p class="text-muted mb-2">
 
-                        Status pada setiap aktivitas menunjukkan kondisi
-                        pengerjaan dan hasil evaluasi siswa.
+                            Status pada setiap aktivitas menunjukkan kondisi
+                            pengerjaan dan hasil evaluasi siswa.
 
-                    </p>
+                        </p>
 
-                    <ul class="text-muted ps-3 mb-0">
+                        <ul class="text-muted ps-3 mb-0">
 
-                        <li>
-                            <strong>Belum dikerjakan</strong> — aktivitas
-                            belum diselesaikan.
-                        </li>
+                            <li>
+                                <strong>Belum dikerjakan</strong> — aktivitas
+                                belum diselesaikan.
+                            </li>
 
-                        <li>
-                            <strong>Pass</strong> — hasil evaluasi telah
-                            memenuhi ketentuan.
-                        </li>
+                            <li>
+                                <strong>Pass</strong> — hasil evaluasi telah
+                                memenuhi ketentuan.
+                            </li>
 
-                        <li>
-                            <strong>Remedial</strong> — siswa perlu mengikuti
-                            evaluasi perbaikan.
-                        </li>
+                            <li>
+                                <strong>Remedial</strong> — siswa perlu mengikuti
+                                evaluasi perbaikan.
+                            </li>
 
-                        <li>
-                            <strong>Belum menilai teman</strong> — pada
-                            aktivitas kelompok, siswa masih perlu memberikan
-                            penilaian kepada anggota kelompok.
-                        </li>
+                            <li>
+                                <strong>Belum menilai teman</strong> — pada
+                                aktivitas kelompok, siswa masih perlu memberikan
+                                penilaian kepada anggota kelompok.
+                            </li>
 
-                    </ul>
+                        </ul>
 
-                </section>
+                    </section>
 
 
-                <hr>
+                    <hr>
 
 
-                <!-- NILAI -->
-                <section>
+                    <!-- NILAI -->
+                    <section>
 
-                    <h6 class="fw-bold mb-2">
+                        <h6 class="fw-bold mb-2">
 
-                        <i class="bi bi-bar-chart-line"></i>
+                            <i class="bi bi-bar-chart-line"></i>
 
-                        Nilai
+                            Nilai
 
-                    </h6>
+                        </h6>
 
-                    <p class="text-muted mb-0">
+                        <p class="text-muted mb-0">
 
-                        Setelah aktivitas dinilai, hasil evaluasi akan
-                        ditampilkan pada bagian <strong>Nilai</strong>.
-                        Jika aktivitas belum dikerjakan atau belum dinilai,
-                        nilai akan ditampilkan sebagai <strong>Belum Ada</strong>.
+                            Setelah aktivitas dinilai, hasil evaluasi akan
+                            ditampilkan pada bagian <strong>Nilai</strong>.
+                            Jika aktivitas belum dikerjakan atau belum dinilai,
+                            nilai akan ditampilkan sebagai <strong>Belum Ada</strong>.
 
-                    </p>
+                        </p>
 
-                </section>
+                    </section>
 
 
-                <hr>
+                    <hr>
 
 
-                <!-- SISTEM ADAPTIF -->
-                <section>
+                    <!-- SISTEM ADAPTIF -->
+                    <section>
 
-                    <h6 class="fw-bold mb-2">
+                        <h6 class="fw-bold mb-2">
 
-                        <i class="bi bi-sliders"></i>
+                            <i class="bi bi-sliders"></i>
 
-                        Aktivitas Adaptif
+                            Aktivitas Adaptif
 
-                    </h6>
+                        </h6>
 
-                    <p class="text-muted mb-0">
+                        <p class="text-muted mb-0">
 
-                        Beberapa aktivitas menggunakan sistem soal adaptif.
-                        Pada aktivitas tersebut, tingkat kesulitan soal dapat
-                        menyesuaikan dengan pola jawaban siswa selama
-                        pengerjaan.
+                            Beberapa aktivitas menggunakan sistem soal adaptif.
+                            Pada aktivitas tersebut, tingkat kesulitan soal dapat
+                            menyesuaikan dengan pola jawaban siswa selama
+                            pengerjaan.
 
-                    </p>
+                        </p>
 
-                </section>
+                    </section>
 
 
-                <hr>
+                    <hr>
 
 
-                <!-- REMEDIAL -->
-                <section>
+                    <!-- REMEDIAL -->
+                    <section>
 
-                    <h6 class="fw-bold mb-2">
+                        <h6 class="fw-bold mb-2">
 
-                        <i class="bi bi-arrow-repeat"></i>
+                            <i class="bi bi-arrow-repeat"></i>
 
-                        Remedial
+                            Remedial
 
-                    </h6>
+                        </h6>
 
-                    <p class="text-muted mb-0">
+                        <p class="text-muted mb-0">
 
-                        Jika hasil evaluasi belum memenuhi ketentuan,
-                        siswa dapat mengikuti remedial apabila aktivitas
-                        tersebut menyediakan kesempatan perbaikan.
-                        Informasi mengenai status remedial akan ditampilkan
-                        pada aktivitas terkait.
+                            Jika hasil evaluasi belum memenuhi ketentuan,
+                            siswa dapat mengikuti remedial apabila aktivitas
+                            tersebut menyediakan kesempatan perbaikan.
+                            Informasi mengenai status remedial akan ditampilkan
+                            pada aktivitas terkait.
 
-                    </p>
+                        </p>
 
-                </section>
+                    </section>
 
 
-                <hr>
+                    <hr>
 
 
-                <!-- LEADERBOARD -->
-                <section>
+                    <!-- LEADERBOARD -->
+                    <section>
 
-                    <h6 class="fw-bold mb-2">
+                        <h6 class="fw-bold mb-2">
 
-                        <i class="bi bi-trophy"></i>
+                            <i class="bi bi-trophy"></i>
 
-                        Leaderboard
+                            Leaderboard
 
-                    </h6>
+                        </h6>
 
-                    <p class="text-muted mb-0">
+                        <p class="text-muted mb-0">
 
-                        Hasil aktivitas tertentu dapat berkontribusi terhadap
-                        perolehan poin siswa. Peringkat poin dapat dilihat
-                        melalui <strong>Leaderboard</strong> pada Dashboard.
+                            Hasil aktivitas tertentu dapat berkontribusi terhadap
+                            perolehan poin siswa. Peringkat poin dapat dilihat
+                            melalui <strong>Leaderboard</strong> pada Dashboard.
 
-                    </p>
+                        </p>
 
-                </section>
+                    </section>
 
-            </div>
+                </div>
 
 
-            <!-- FOOTER -->
-            <div class="modal-footer">
+                <!-- FOOTER -->
+                <div class="modal-footer">
 
-                <button
-                    class="btn btn-secondary rounded-pill px-4"
-                    data-bs-dismiss="modal">
+                    <button class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
 
-                    Tutup
+                        Tutup
 
-                </button>
+                    </button>
+
+                </div>
 
             </div>
 
         </div>
 
     </div>
-
-</div>
 
 
 @endsection

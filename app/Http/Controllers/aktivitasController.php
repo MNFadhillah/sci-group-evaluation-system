@@ -162,7 +162,6 @@ class aktivitasController extends Controller
     {
         $activity = Activity::findOrFail($id);
 
-        // Ambil relasi lengkap berdasarkan id_topic
         $info = DB::table('topics')
             ->join('subject', 'topics.id_subject', '=', 'subject.id')
             ->join('classes', 'subject.id_class', '=', 'classes.id')
@@ -174,6 +173,11 @@ class aktivitasController extends Controller
             )
             ->first();
 
+        // 🔹 KODE DARI TEMAN ANDA (Logika jumlah soal Mode 2)
+        $jumlahSoalTampil = $activity->evaluation_mode === 'mode2'
+            ? ($activity->jumlah_soal ?? 10)
+            : $activity->questions()->where('type', '!=', 'Essay')->count();
+
         return view('siswa.menjawabSoal', [
             'judul' => $activity->title,
             'kelas' => $info->kelas,
@@ -181,9 +185,9 @@ class aktivitasController extends Controller
             'topik' => $info->topik,
             'id_activity' => $activity->id,
             // 'addaptive' => $activity->addaptive, 
-            'addaptive' => 'no', // Paksa menjadi 'no' sementara
+            'addaptive' => 'no', // 🔹 KODE DARI ANDA: Paksa menjadi 'no' sementara
             'durasi' => $activity->durasi_pengerjaan,
-            'jumlah_soal' => $activity->jumlah_soal,
+            'jumlah_soal' => $jumlahSoalTampil, // 🔹 Menggunakan variabel dari teman Anda
         ]);
     }
     public function group($id)
@@ -235,7 +239,7 @@ class aktivitasController extends Controller
         session()->forget("activity.$id");
 
         // 2️⃣ hitung total soal real di DB
-        $totalDB = $activity->questions()->count();
+        $totalDB = $activity->questions()->where('type', '!=', 'Essay')->count();
 
         if ($totalDB === 0) {
             return response()->json([
@@ -605,29 +609,30 @@ class aktivitasController extends Controller
 
         if ($adaptive) {
 
-            $difficulty = session("activity.$id.difficulty", "sedang");
+    $difficulty = session("activity.$id.difficulty", "sedang");
 
-            // Ambil soal sesuai difficulty yang belum pernah dipakai
-            $question = $activity->questions()
-                ->where('difficulty', $difficulty)
-                ->whereNotIn('id', $used)
-                ->inRandomOrder()
-                ->first();
+    $question = $activity->questions()
+        ->where('type', '!=', 'Essay')
+        ->where('difficulty', $difficulty)
+        ->whereNotIn('id', $used)
+        ->inRandomOrder()
+        ->first();
 
-            // Jika soal untuk difficulty ini habis → fallback difficulty lain
-            if (!$question) {
-                $question = $activity->questions()
-                    ->whereNotIn('id', $used)
-                    ->inRandomOrder()
-                    ->first();
-            }
-        } else {
-            // Mode normal urut biasa
-            $question = $activity->questions()
-                ->orderBy('id')
-                ->skip($index)
-                ->first();
-        }
+    if (!$question) {
+        $question = $activity->questions()
+            ->where('type', '!=', 'Essay')
+            ->whereNotIn('id', $used)
+            ->inRandomOrder()
+            ->first();
+    }
+} else {
+    // Mode normal urut biasa
+    $question = $activity->questions()
+        ->where('type', '!=', 'Essay')
+        ->orderBy('id')
+        ->skip($index)
+        ->first();
+}
 
         // Jika benar-benar habis (seharusnya jarang terjadi)
         if (!$question) {
@@ -665,29 +670,24 @@ class aktivitasController extends Controller
         $correct = false;
 
         if ($question->type === 'MultipleChoice') {
-            // Pilihan ganda: Langsung cocokkan huruf (case-insensitive)
-            $correct = strtolower(trim($req->user_answer)) === strtolower(trim($question->MC_answer));
-        } else if ($question->type === 'ShortAnswer') {
-            $answersRaw = $question->SA_answer;
-            $answers = is_string($answersRaw) ? json_decode($answersRaw, true) : $answersRaw;
-            if (!is_array($answers)) {
-                $answers = [];
-            }
+    // Pilihan ganda: Langsung cocokkan huruf (case-insensitive)
+    $correct = strtolower(trim($req->user_answer)) === strtolower(trim($question->MC_answer));
+} else if ($question->type === 'ShortAnswer') {
+    $answersRaw = $question->SA_answer;
+    $answers = is_string($answersRaw) ? json_decode($answersRaw, true) : $answersRaw;
+    if (!is_array($answers)) {
+        $answers = [];
+    }
 
-            // NORMALISASI JAWABAN SISWA: 
-            // 1. Huruf kecil semua 
-            // 2. Hapus spasi di awal/akhir 
-            // 3. Ubah spasi ganda di tengah menjadi 1 spasi saja (preg_replace)
-            $userAnsNormalized = preg_replace('/\s+/', ' ', strtolower(trim($req->user_answer)));
+    // NORMALISASI JAWABAN SISWA
+    $userAnsNormalized = preg_replace('/\s+/', ' ', strtolower(trim($req->user_answer)));
 
-            // Lakukan normalisasi yang sama persis pada array Kunci Jawaban
-            $keysNormalized = array_map(function ($ans) {
-                return preg_replace('/\s+/', ' ', strtolower(trim($ans)));
-            }, $answers);
+    $keysNormalized = array_map(function ($ans) {
+        return preg_replace('/\s+/', ' ', strtolower(trim($ans)));
+    }, $answers);
 
-            // Cek apakah jawaban siswa ada di dalam daftar kunci
-            $correct = in_array($userAnsNormalized, $keysNormalized);
-        }
+    $correct = in_array($userAnsNormalized, $keysNormalized);
+}
 
         // ====================================================
         // SIMPAN JAWABAN SISWA KE DATABASE (Update / Insert)
@@ -764,12 +764,12 @@ class aktivitasController extends Controller
         }
 
         return response()->json([
-            'correct' => $correct,
-            'correct_answer' => $question->type === 'MultipleChoice' ? strtoupper($question->MC_answer) : implode(', ', $saOptions),
-            'explanation' => $question->explanation ?? null,
-            'new_level' => session("activity.$id.difficulty"),
-            'streak_correct' => session("activity.$id.streak_correct")
-        ]);
+    'correct' => $correct,
+    'correct_answer' => $question->type === 'MultipleChoice' ? strtoupper($question->MC_answer) : implode(', ', $saOptions),
+    'explanation' => $question->explanation ?? null,
+    'new_level' => session("activity.$id.difficulty"),
+    'streak_correct' => session("activity.$id.streak_correct")
+]);
     }
 
     public function finishTest(Request $req, $id)
@@ -802,10 +802,10 @@ class aktivitasController extends Controller
 
         // Jumlah soal yang dikerjakan
         $jumlahSoal = session("activity.$id.totalQuestions", null);
-        if ($jumlahSoal === null) {
-            $jumlahSoal = $activity->questions()->count();
-        }
-        $jumlahSoal = (int) $jumlahSoal;
+if ($jumlahSoal === null) {
+    $jumlahSoal = $activity->questions()->where('type', '!=', 'Essay')->count();
+}
+$jumlahSoal = (int) $jumlahSoal;
 
         $statusBenar = ($totalCorrect === $jumlahSoal) ? true : false;
 

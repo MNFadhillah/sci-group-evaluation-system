@@ -177,12 +177,63 @@ class nilaicontroller extends Controller
 
             $resultByClass->push($classData);
         }
+        
 
         // kirim ke view: $resultByClass berisi array per kelas
         return view('guru.datanilai', [
             'grouped' => $resultByClass
         ]);
     }
+    public function hapusNilai($idActivity)
+{
+    $teacherId = Auth::id();
+
+    $activity = Activity::with('topic.subject')->findOrFail($idActivity);
+    $classId = optional(optional($activity->topic)->subject)->id_class;
+
+    // pastikan guru mengajar kelas terkait aktivitas ini
+    $teaches = DB::table('teacher_classes')
+        ->where('id_teacher', $teacherId)
+        ->where('id_class', $classId)
+        ->exists();
+
+    if (!$teaches) {
+        return redirect()->back()->with('error', 'Anda tidak berwenang menghapus nilai aktivitas ini.');
+    }
+
+    DB::beginTransaction();
+    try {
+        // Hapus hasil akhir (sumber badge "X Dinilai")
+        DB::table('activity_result')->where('id_activity', $idActivity)->delete();
+
+        // Bersihkan juga data terkait supaya siswa bisa mengerjakan ulang dari awal
+        DB::table('activity_answers')->where('id_activity', $idActivity)->delete();
+        DB::table('activity_group_ratings')->where('id_activity', $idActivity)->delete();
+        DB::table('user_badge')->where('id_activity', $idActivity)->delete();
+
+        // Untuk Mode 2 kelompok: hapus paket soal & jawaban kelompok supaya soal di-random ulang
+        $packageIds = DB::table('activity_student_packages')
+    ->where('id_activity', $idActivity)
+    ->pluck('id');
+
+if ($packageIds->isNotEmpty()) {
+    DB::table('activity_student_questions')->whereIn('id_package', $packageIds)->delete();
+    DB::table('activity_student_packages')->where('id_activity', $idActivity)->delete();
+}
+
+        DB::commit();
+
+        return redirect()->back()->with('swal', true)->with([
+            'swal.icon' => 'success',
+            'swal.title' => 'Berhasil',
+            'swal.text' => 'Semua nilai untuk aktivitas ' . $activity->title . ' telah dihapus.',
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('hapusNilai error: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Gagal menghapus nilai: ' . $e->getMessage());
+    }
+}
 
     /**
      * Tampilkan detail nilai untuk sebuah activity:

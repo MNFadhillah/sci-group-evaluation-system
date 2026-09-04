@@ -14,8 +14,8 @@
 
     <style>
         /* =======================================
-           GLOBAL & NAVBAR STANDALONE
-           ======================================= */
+            GLOBAL & NAVBAR STANDALONE
+            ======================================= */
         body {
             background-color: #f4f7fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -46,8 +46,8 @@
         }
 
         /* =======================================
-           CUSTOM UI/UX DASHBOARD STYLE (Asli)
-           ======================================= */
+            CUSTOM UI/UX DASHBOARD STYLE (Asli)
+            ======================================= */
         .quiz-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -180,14 +180,14 @@
 
                 <!-- KANAN: Badge Mode (Porsi 1/3 Kanan) -->
                 <div class="col-12 col-lg-4 d-flex justify-content-center justify-content-lg-end px-0">
-                    @if($isMode2)
-                    <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.9rem;">
-                        <i class="fas fa-user-edit me-1"></i> Mode Kuis Individu
-                    </span>
+                    @if ($isMode2)
+                        <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.9rem;">
+                            <i class="fas fa-user-edit me-1"></i> Mode Kelompok (Mode 2)
+                        </span>
                     @else
-                    <span class="badge bg-info text-dark px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.9rem;">
-                        <i class="fas fa-users-cog me-1"></i> Mode Tugas Kelompok
-                    </span>
+                        <span class="badge bg-info text-dark px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.9rem;">
+                            <i class="fas fa-users-cog me-1"></i> Mode Tugas Kelompok
+                        </span>
                     @endif
                 </div>
 
@@ -207,17 +207,76 @@
                     <h3 class="fw-bolder text-dark">Petunjuk Pengerjaan</h3>
                 </div>
 
-                <div class="bg-light p-4 rounded-4 mx-auto mb-4" style="max-width: 900px;">
-                    <ul class="text-muted mb-0" style="line-height: 1.8; font-size: 1.05rem;">
-                        <li>Aktivitas ini terdiri dari <strong class="text-dark">{{ $questions->count() }} butir soal</strong>.</li>
-                        @if($isMode2)
-                        <li>Paket soal ini adalah <strong>milik Anda secara individu</strong>. Nilai akan digabung untuk menjadi rata-rata kelompok.</li>
+                <div class="mx-auto" style="max-width: 720px;">
+
+                    @if ($isMode2)
+                        <div class="instruction-mode-banner mode-individu mb-3 p-3 bg-light rounded-3 d-flex align-items-center gap-3">
+                            <i class="fas fa-user-edit fs-4 text-primary"></i>
+                            <div>
+                                <div class="fw-bold text-dark">Pengerjaan Kelompok (Mode 2)</div>
+                                <div class="fw-normal small text-muted">Paket soal ini milik kamu sendiri, nilai digabung jadi rata-rata kelompok.</div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="instruction-mode-banner mode-kelompok mb-3 p-3 bg-light rounded-3 d-flex align-items-center gap-3">
+                            <i class="fas fa-users-cog fs-4 text-info"></i>
+                            <div>
+                                <div class="fw-bold text-dark">Mode Tugas Kelompok</div>
+                                <div class="fw-normal small text-muted">Kamu bisa lihat progres jawaban teman secara real-time.</div>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="bg-light p-4 rounded-4 mb-4">
+
+                        <div class="instruction-item d-flex align-items-start gap-3 mb-3">
+                            <div class="instruction-icon-badge bg-primary bg-opacity-10 text-primary p-2 rounded-3">
+                                <i class="fas fa-list-ol"></i>
+                            </div>
+                            <div class="text-dark">
+                                Aktivitas ini terdiri dari <strong>{{ $questions->count() }} butir soal</strong>.
+                            </div>
+                        </div>
+
+                        @if ($isMode2)
+                            <div class="instruction-item d-flex align-items-start gap-3 mb-3">
+                                <div class="instruction-icon-badge bg-primary bg-opacity-10 text-primary p-2 rounded-3">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="text-dark">
+                                    Nilai akan digabung menjadi <strong>rata-rata kelompok</strong>.
+                                </div>
+                            </div>
                         @else
-                        <li>Ini adalah <strong>Tugas Kelompok</strong>. Anda dapat melihat progres teman secara <i>real-time</i> di bagian bawah kolom jawaban Anda.</li>
+                            <div class="instruction-item d-flex align-items-start gap-3 mb-3">
+                                <div class="instruction-icon-badge bg-info bg-opacity-10 text-info p-2 rounded-3">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="text-dark">
+                                    Ini adalah <strong>Tugas Kelompok</strong>. Anda dapat melihat progres teman secara <i>real-time</i> di bagian bawah kolom jawaban Anda.
+                                </div>
+                            </div>
                         @endif
-                        <li>Setiap jawaban yang Anda pilih/ketik akan <strong>tersimpan otomatis secara sementara</strong> (Draft).</li>
-                        <li>Jangan lupa menekan tombol <strong>Kumpulkan Jawaban</strong> di akhir agar dapat melanjutkan ke tahap Penilaian Teman (SCI).</li>
-                    </ul>
+
+                        <div class="instruction-item d-flex align-items-start gap-3 mb-2">
+                            <div class="instruction-icon-badge bg-success bg-opacity-10 text-success p-2 rounded-3">
+                                <i class="fas fa-save"></i>
+                            </div>
+                            <div class="text-dark">
+                                Setiap jawaban yang Anda pilih/ketik akan <strong>tersimpan otomatis secara sementara</strong> (Draft).
+                            </div>
+                        </div>
+
+                        <div class="instruction-item d-flex align-items-start gap-3">
+                            <div class="instruction-icon-badge bg-warning bg-opacity-10 text-warning p-2 rounded-3">
+                                <i class="fas fa-paper-plane"></i>
+                            </div>
+                            <div class="text-dark">
+                                Jangan lupa menekan tombol <strong>Kumpulkan Jawaban</strong> di akhir agar dapat melanjutkan ke tahap berikutnya.
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
                 <div class="text-center">
@@ -280,7 +339,7 @@
                 <!-- SISI KANAN: NAVIGASI PALET (HANYA MUNCUL DI MODE 2) -->
                 @if($isMode2)
                 <div class="col-lg-4">
-                    <div class="position-sticky" style="top: 100px;"> <!-- Disesuaikan agar tidak tertutup navbar -->
+                    <div class="position-sticky" style="top: 100px;">
                         <div class="card border-0 shadow-sm rounded-4">
                             <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 rounded-top-4">
                                 <h6 class="fw-bold text-dark mb-0 text-center">Navigasi Soal</h6>
@@ -323,21 +382,12 @@
         data-submiturl="{{ route('activity.group.answer.save', $activity->id) }}"
         data-csrftoken="{{ csrf_token() }}">
     </div>
-    <script id="data-questions" type="application/json">
-        {
-            !!json_encode($questions) !!
-        }
-    </script>
-    <script id="data-answers" type="application/json">
-        {
-            !!json_encode($answers) !!
-        }
-    </script>
-    <script id="data-members" type="application/json">
-        {
-            !!json_encode($group - > members - > load('user')) !!
-        }
-    </script>
+
+    <div id="quizDataBridge" class="d-none"
+        data-questions="{{ base64_encode(json_encode($questions ?? [])) }}"
+        data-answers="{{ base64_encode(json_encode($answers ?? [])) }}"
+        data-members="{{ base64_encode(json_encode($group->members->load('user') ?? [])) }}">
+    </div>
 
     <!-- =======================================
          LIBRARY TAMBAHAN & SCRIPTS
@@ -346,12 +396,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <div id="quizDataBridge" class="d-none"
-        data-questions="{{ base64_encode(json_encode($questions ?? [])) }}"
-        data-answers="{{ base64_encode(json_encode($answers ?? [])) }}"
-        data-members="{{ base64_encode(json_encode($members ?? [])) }}">
-    </div>
 
     <script>
         /* =======================================
@@ -366,14 +410,13 @@
         const SUBMIT_URL = configEl.dataset.submiturl;
         const CSRF_TOKEN = configEl.dataset.csrftoken;
 
-        // Tarik dan terjemahkan data (DIJAMIN 100% BEBAS GARIS MERAH & ANTI ERROR)
+        // Tarik dan terjemahkan data aman
         const dataBridge = document.getElementById('quizDataBridge');
         const rawQuestions = JSON.parse(atob(dataBridge.dataset.questions));
         const existingAnswers = JSON.parse(atob(dataBridge.dataset.answers));
         const groupMembers = JSON.parse(atob(dataBridge.dataset.members));
 
         let timerInterval;
-
 
         // =======================================
         // 2. PARSING DATA SUPER AMAN (ANTI CRASH)
@@ -458,6 +501,20 @@
         let answers = new Array(questions.length).fill(null);
         let flagged = new Array(questions.length).fill(false);
         let idx = 0;
+        const STORAGE_KEY_GROUP = `graflearn_group_progress_${ACTIVITY_ID}_${MY_USER_ID}`;
+
+        function saveGroupDraft() {
+            try {
+                localStorage.setItem(STORAGE_KEY_GROUP, JSON.stringify({
+                    idx,
+                    answers,
+                    flagged,
+                    savedAt: Date.now()
+                }));
+            } catch (e) {
+                console.warn('Gagal menyimpan draf lokal:', e);
+            }
+        }
 
         questions.forEach((q, i) => {
             let key = q.id + '_' + MY_USER_ID;
@@ -468,19 +525,16 @@
            3. FUNGSI TIMER (HITUNG MUNDUR)
            ======================================= */
         function startTimer() {
-            // Jika durasi 0 atau tidak diatur, abaikan timer
             if (!DURATION_MINUTES || DURATION_MINUTES <= 0) return;
 
             const timerKey = `quiz_endtime_${MY_USER_ID}_${ACTIVITY_ID}`;
             let endTime = sessionStorage.getItem(timerKey);
 
-            // Jika belum ada batas waktu di session (baru pertama kali klik mulai)
             if (!endTime) {
                 endTime = new Date().getTime() + (DURATION_MINUTES * 60 * 1000);
                 sessionStorage.setItem(timerKey, endTime);
             }
 
-            // Tampilkan UI Timer
             document.getElementById('timerContainer').classList.remove('d-none');
 
             timerInterval = setInterval(() => {
@@ -488,7 +542,6 @@
                 let distance = endTime - now;
 
                 if (distance <= 0) {
-                    // Waktu Habis!
                     clearInterval(timerInterval);
                     document.getElementById('countdownTimer').innerHTML = "WAKTU HABIS!";
                     sessionStorage.removeItem(timerKey);
@@ -501,15 +554,13 @@
                         showConfirmButton: false,
                         timer: 3000
                     }).then(() => {
-                        submitQuizAction(true); // true = auto submit
+                        submitQuizAction(true);
                     });
                 } else {
-                    // Kalkulasi jam, menit, detik
                     let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                     let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                     let seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-                    // Format angka agar selalu 2 digit (misal 09:05)
                     let m = minutes < 10 ? "0" + minutes : minutes;
                     let s = seconds < 10 ? "0" + seconds : seconds;
 
@@ -527,10 +578,10 @@
             document.getElementById('quizPage').classList.remove('d-none');
             renderQuestion(0);
             updatePalette();
-            startTimer(); // Mulai timer saat tombol Mulai ditekan
+            startTimer();
+            activateExamGuard();
         };
 
-        // Otomatis langsung masuk jika user reload halaman dan waktu masih berjalan di session
         if (sessionStorage.getItem(`quiz_endtime_${MY_USER_ID}_${ACTIVITY_ID}`)) {
             document.getElementById('startBtn').click();
         }
@@ -563,6 +614,7 @@
                         answers[idx] = item.dataset.key;
                         renderQuestion(idx);
                         updatePalette();
+                        saveGroupDraft();
                     };
                 });
             }
@@ -604,16 +656,15 @@
                     html += `
                         <label class="form-label fw-bold text-primary mb-2"><i class="fas fa-pen-alt me-1"></i> Jawaban Singkat Anda:</label>
                         <input type="text" class="form-control form-control-lg bg-light border-0 shadow-sm" placeholder="Ketik jawaban di sini..." 
-                        value="${answers[idx] || ''}" oninput="answers[idx] = this.value; updatePalette();">
+                        value="${answers[idx] || ''}" oninput="answers[idx] = this.value; updatePalette(); saveGroupDraft();">
                     `;
                 }
             } else {
-                // Tampilan Mode 1 (Tugas Kelompok) - SKENARIO INTIP 5 DETIK
                 html += `
                     <div class="mb-4">
                         <label class="form-label fw-bold text-primary mb-2"><i class="fas fa-edit me-1"></i> Area Jawaban Anda:</label>
                         <textarea class="form-control bg-primary bg-opacity-10 border-primary border-opacity-25 shadow-sm" rows="8" placeholder="Tuliskan jawaban untuk pembagian tugasmu di sini..." 
-                        oninput="answers[idx] = this.value; updatePalette();">${answers[idx] || ''}</textarea>
+                        oninput="answers[idx] = this.value; updatePalette(); saveGroupDraft();">${answers[idx] || ''}</textarea>
                     </div>
                     
                     <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded-4 border shadow-sm">
@@ -630,18 +681,14 @@
             return html;
         }
 
-        // FUNGSI UNTUK MUNCULKAN POPUP JAWABAN TEMAN SELAMA 5 DETIK
         window.lihatProgresTeman = function(qId) {
             let htmlContent = '<div style="text-align:left; max-height: 350px; overflow-y: auto;" class="px-2">';
             let hasPeers = false;
 
-            // Looping anggota kelompok
             groupMembers.forEach(member => {
                 if (member.id_user !== MY_USER_ID) {
                     hasPeers = true;
                     let key = qId + '_' + member.id_user;
-
-                    // Ambil jawaban teman dari data yang dimuat saat halaman di-refresh
                     let peerAns = existingAnswers[key] ? existingAnswers[key].answer : '<span class="text-muted fst-italic">Belum ada progres jawaban...</span>';
                     let name = member.user ? member.user.name : 'Anggota';
 
@@ -658,7 +705,6 @@
             }
             htmlContent += '</div>';
 
-            // Panggil SweetAlert dengan timer 5 detik (5000 ms)
             Swal.fire({
                 title: 'Progres Jawaban Teman',
                 html: htmlContent,
@@ -666,7 +712,7 @@
                 timer: 5000,
                 timerProgressBar: true,
                 showConfirmButton: false,
-                allowOutsideClick: false, // cegah ditutup dengan klik luar
+                allowOutsideClick: false,
                 customClass: {
                     popup: 'rounded-4'
                 }
@@ -675,7 +721,7 @@
 
         function updatePalette() {
             const palette = document.getElementById('palette');
-            if (!palette) return; // Mode 1 tidak punya palet
+            if (!palette) return;
 
             palette.innerHTML = '';
             questions.forEach((_, i) => {
@@ -705,9 +751,7 @@
         /* =======================================
            5. LOGIKA PENGUMPULAN (AJAX BATCH)
            ======================================= */
-        // Parameter isAutoSubmit digunakan agar saat waktu habis tidak muncul popup konfirmasi
         const submitQuizAction = async (isAutoSubmit = false) => {
-
             if (!isAutoSubmit) {
                 const belum = answers.filter(a => a === null || String(a).trim() === '').length;
 
@@ -753,8 +797,9 @@
                     return res.json();
                 })
                 .then(data => {
-                    // Hapus session storage timer agar bersih
+                    deactivateExamGuard();
                     sessionStorage.removeItem(`quiz_endtime_${MY_USER_ID}_${ACTIVITY_ID}`);
+                    localStorage.removeItem(STORAGE_KEY_GROUP);
 
                     Swal.fire({
                         title: 'Berhasil!',
@@ -777,29 +822,91 @@
         if (btnMode1) btnMode1.onclick = () => submitQuizAction(false);
 
         /* =======================================
-           FITUR PROTEKSI TOMBOL BACK BROWSER
+           PROTEKSI: REFRESH/TUTUP TAB & PINDAH TAB
            ======================================= */
-        // Mendorong state kosong ke history saat halaman dimuat
+        let examGuardActive = false;
+        let tabSwitchCount = 0;
+        const MAX_TAB_SWITCH = 3;
+
+        function activateExamGuard() {
+            if (examGuardActive) return;
+            examGuardActive = true;
+            window.addEventListener('beforeunload', beforeUnloadHandler);
+            window.addEventListener('keydown', blockRefreshKeys);
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+        }
+
+        function deactivateExamGuard() {
+            examGuardActive = false;
+            window.removeEventListener('beforeunload', beforeUnloadHandler);
+            window.removeEventListener('keydown', blockRefreshKeys);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        }
+
+        function beforeUnloadHandler(e) {
+            if (!examGuardActive) return;
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
+        }
+
+        function blockRefreshKeys(e) {
+            if (!examGuardActive) return;
+            const isRefreshCombo = e.key === 'F5' ||
+                ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R'));
+
+            if (isRefreshCombo) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Jangan Refresh Halaman',
+                    text: 'Kuis sedang berjalan. Memuat ulang halaman bisa mengganggu pengerjaanmu.',
+                    confirmButtonText: 'Mengerti'
+                });
+            }
+        }
+
+        function handleVisibilityChange() {
+            if (!examGuardActive) return;
+            if (document.hidden) {
+                tabSwitchCount++;
+
+                if (tabSwitchCount >= MAX_TAB_SWITCH) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Pelanggaran Terdeteksi',
+                        text: `Anda telah berpindah tab/aplikasi sebanyak ${tabSwitchCount} kali. Jawaban akan dikumpulkan secara otomatis.`,
+                        confirmButtonText: 'OK',
+                        allowOutsideClick: false
+                    }).then(() => {
+                        submitQuizAction(true);
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan!',
+                        text: `Anda terdeteksi berpindah tab/aplikasi (${tabSwitchCount}/${MAX_TAB_SWITCH}). Jangan diulangi, atau jawaban akan otomatis dikumpulkan.`,
+                        confirmButtonText: 'Mengerti',
+                        timer: 4000
+                    });
+                }
+            }
+        }
+
         history.pushState(null, null, location.href);
 
         window.addEventListener('popstate', function(event) {
-            // Begitu tombol back ditekan, kita dorong lagi state-nya agar tidak benar-benar kembali
+            if (!examGuardActive) return;
+
             history.pushState(null, null, location.href);
 
             Swal.fire({
-                title: 'Ingin meninggalkan kuis?',
-                text: "Selesaikan kuis terlebih dahulu agar jawaban Anda tersimpan dengan aman.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Keluar',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Jika dikonfirmasi, arahkan ke route aktivitas
-                    window.location.href = "{{ route('siswa.aktivitas') }}";
-                }
+                icon: 'error',
+                title: 'Tidak Diizinkan',
+                text: 'Anda tidak dapat meninggalkan halaman ini sebelum mengumpulkan jawaban.',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#d33',
+                allowOutsideClick: false
             });
         });
     </script>

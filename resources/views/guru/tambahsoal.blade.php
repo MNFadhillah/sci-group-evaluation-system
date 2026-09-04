@@ -3,8 +3,8 @@
 
 @section('content')
     <div id="tambahSoalWrap" class="container-fluid px-3 px-md-4 py-3 d-flex flex-column">
-    <div class="card shadow-sm border-0 rounded-4 flex-grow-1">
-        <div class="card-body p-3 p-md-4 d-flex flex-column">
+        <div class="card shadow-sm border-0 rounded-4 flex-grow-1">
+            <div class="card-body p-3 p-md-4 d-flex flex-column">
 
                 {{-- HEADER --}}
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
@@ -13,8 +13,8 @@
                     </h4>
                     <button type="button"
                         class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
-                        style="width:30px;height:30px" data-bs-toggle="modal"
-                        data-bs-target="#modalInfoTambahSoal" title="Informasi Tambah Soal">
+                        style="width:30px;height:30px" data-bs-toggle="modal" data-bs-target="#modalInfoTambahSoal"
+                        title="Informasi Tambah Soal">
                         <i class="bi bi-info-lg"></i>
                     </button>
                 </div>
@@ -36,8 +36,8 @@
                 @endif
 
                 {{-- FORM START --}}
-                <form id="soalForm" action="{{ route('simpanSoal') }}" method="POST"
-                    enctype="multipart/form-data" class="d-flex flex-column flex-grow-1">
+                <form id="soalForm" action="{{ route('simpanSoal') }}" method="POST" enctype="multipart/form-data"
+                    class="d-flex flex-column flex-grow-1">
                     @csrf
 
                     {{-- baris 1: info dasar soal --}}
@@ -63,7 +63,7 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold mb-1">Topik (opsional)</label>
+                            <label class="form-label fw-semibold mb-1">Topik</label>
                             <select name="id_topic" class="form-select" id="id_topic">
                                 <option value="">-- Pilih Topik --</option>
                                 @if (isset($topics) && $topics->count())
@@ -72,6 +72,28 @@
                                     @endforeach
                                 @endif
                             </select>
+                            <div class="form-text">
+                                Tidak menemukan topiknya?
+                                <a href="#" id="toggleNewTopic" class="link-primary">+ Buat topik baru</a>
+                            </div>
+
+                            <div id="newTopicArea" class="mt-2 d-none">
+                                <select name="new_topic_subject" id="new_topic_subject"
+                                    class="form-select form-select-sm mb-2">
+                                    <option value="">-- Pilih Mata Pelajaran --</option>
+                                    @if (isset($subjects) && $subjects->count())
+                                        @foreach ($subjects as $s)
+                                            <option value="{{ $s->id }}">{{ $s->name }}</option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                                <input type="text" name="new_topic_title" id="new_topic_title"
+                                    class="form-control form-control-sm" placeholder="Judul topik baru">
+                                <div class="form-text">
+                                    <a href="#" id="cancelNewTopic" class="link-secondary">Batal, pilih topik yang
+                                        sudah ada</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -85,8 +107,8 @@
                         <div class="col-md-6">
                             <label class="form-label fw-semibold mb-1">Gambar Soal (opsional)</label>
                             <div class="d-flex gap-2">
-                                <input type="file" name="question_image" class="form-control" accept="image/*"
-                                    id="questionImageInput">
+                                <input type="file" name="question_image" class="form-control"
+                                    accept="image/*" id="questionImageInput">
                                 <input type="text" name="question_url" id="question_url" class="form-control"
                                     placeholder="Atau URL gambar">
                             </div>
@@ -168,7 +190,8 @@
                         <hr class="my-2">
                         <div class="alert alert-info py-2 mb-0 small">
                             <i class="bi bi-info-circle me-1"></i>
-                            Soal essay/uraian tidak memerlukan kunci jawaban — jawaban diberikan siswa saat mengerjakan aktivitas.
+                            Soal essay/uraian tidak memerlukan kunci jawaban — jawaban diberikan siswa saat
+                            mengerjakan aktivitas.
                         </div>
                     </div>
 
@@ -235,6 +258,14 @@
             const previewQuestionImage = document.getElementById('previewQuestionImage');
             const form = document.getElementById('soalForm');
             const submitBtn = document.getElementById('submitBtn');
+
+            // Variabel topik — dideklarasikan di atas SEBELUM dipakai di manapun
+            const idTopicSelect = document.getElementById('id_topic');
+            const toggleNewTopic = document.getElementById('toggleNewTopic');
+            const newTopicArea = document.getElementById('newTopicArea');
+            const newTopicSubject = document.getElementById('new_topic_subject');
+            const newTopicTitle = document.getElementById('new_topic_title');
+            const cancelNewTopic = document.getElementById('cancelNewTopic');
 
             // Isi ruang kosong antara card dan footer secara dinamis,
             // tanpa perlu tahu tinggi header/sidebar/footer dari layout.
@@ -359,7 +390,35 @@
                     }
                 }
 
+                // Validasi topik — di dalam submit handler, memakai variabel yang sudah dideklarasikan di atas
+                const usingNewTopic = !newTopicArea.classList.contains('d-none');
+                if (usingNewTopic) {
+                    if (!newTopicSubject.value) {
+                        return fail('Pilih Mata Pelajaran untuk topik baru.', newTopicSubject);
+                    }
+                    if (!newTopicTitle.value.trim()) {
+                        return fail('Isi judul topik baru.', newTopicTitle);
+                    }
+                } else if (!idTopicSelect.value) {
+                    return fail('Pilih topik, atau buat topik baru dulu.', idTopicSelect);
+                }
+
                 submitBtn.innerHTML = 'Menyimpan...';
+            });
+
+            toggleNewTopic?.addEventListener('click', function(e) {
+                e.preventDefault();
+                newTopicArea.classList.remove('d-none');
+                idTopicSelect.value = '';
+                idTopicSelect.disabled = true;
+            });
+
+            cancelNewTopic?.addEventListener('click', function(e) {
+                e.preventDefault();
+                newTopicArea.classList.add('d-none');
+                idTopicSelect.disabled = false;
+                newTopicSubject.value = '';
+                newTopicTitle.value = '';
             });
 
             adjustWrapHeight();

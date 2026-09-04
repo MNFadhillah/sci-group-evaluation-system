@@ -47,11 +47,11 @@ class aturAktivitasController extends Controller
         // Karena kamu mau soal walau dibuat guru lain tetap tersedia selama topiknya sama
         $questionsQuery = Question::where('id_topic', $idTopic);
 
-        if ($aktivitas->evaluation_mode === 'mode1') {
-            $questionsQuery->where('type', 'Essay');
-        } elseif ($aktivitas->evaluation_mode === 'mode2') {
-            $questionsQuery->whereIn('type', ['MultipleChoice', 'ShortAnswer']);
-        }
+        if ($aktivitas->evaluation_mode === 'mode1' && $aktivitas->is_group_activity === 'yes') {
+    $questionsQuery->where('type', 'Essay');
+} else {
+    $questionsQuery->whereIn('type', ['MultipleChoice', 'ShortAnswer']);
+}
 
         $questions = $questionsQuery->orderBy('created_at', 'desc')->get();
 
@@ -149,11 +149,11 @@ class aturAktivitasController extends Controller
         // Base query: semua soal yang punya topik sama (tanpa membatasi created_by)
         $baseQuery = Question::where('id_topic', $idTopic);
 
-        if ($aktivitas->evaluation_mode === 'mode1') {
-            $baseQuery->where('type', 'Essay');
-        } elseif ($aktivitas->evaluation_mode === 'mode2') {
-            $baseQuery->whereIn('type', ['MultipleChoice', 'ShortAnswer']);
-        }
+        if ($aktivitas->evaluation_mode === 'mode1' && $aktivitas->is_group_activity === 'yes') {
+    $baseQuery->where('type', 'Essay');
+} else {
+    $baseQuery->whereIn('type', ['MultipleChoice', 'ShortAnswer']);
+}
 
         if ($isAdaptive) {
             $easyCount = max(0, $n - 2);
@@ -222,30 +222,28 @@ class aturAktivitasController extends Controller
     $aktivitas = Activity::findOrFail($idAktivitas);
     $questions = Question::whereIn('id', array_map('intval', $ids))->get();
 
-    if ($aktivitas->evaluation_mode === 'mode1') {
-        if (count($ids) !== 1) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Mode 1 hanya boleh memiliki tepat 1 soal.'
-            ], 422);
-        }
-
-        if ($questions->isEmpty() || $questions->first()->type !== 'Essay') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Mode 1 hanya menerima soal bertipe Essay.'
-            ], 422);
-        }
-    } elseif ($aktivitas->evaluation_mode === 'mode2') {
-        $invalidTypes = $questions->pluck('type')->diff(['MultipleChoice', 'ShortAnswer']);
-
-        if ($invalidTypes->isNotEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Mode 2 hanya menerima soal Pilihan Ganda atau Isian Singkat (Essay tidak diperbolehkan).'
-            ], 422);
-        }
+    if ($aktivitas->evaluation_mode === 'mode1' && $aktivitas->is_group_activity === 'yes') {
+    if (count($ids) !== 1) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Mode 1 (Kelompok) hanya boleh memiliki tepat 1 soal.'
+        ], 422);
     }
+    if ($questions->isEmpty() || $questions->first()->type !== 'Essay') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Mode 1 (Kelompok) hanya menerima soal bertipe Essay.'
+        ], 422);
+    }
+} else {
+    $invalidTypes = $questions->pluck('type')->diff(['MultipleChoice', 'ShortAnswer']);
+    if ($invalidTypes->isNotEmpty()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Hanya menerima soal Pilihan Ganda atau Isian Singkat (Essay tidak diperbolehkan).'
+        ], 422);
+    }
+}
 
         DB::beginTransaction();
         try {
@@ -300,20 +298,20 @@ class aturAktivitasController extends Controller
         return response()->json(['success' => false, 'message' => 'Soal tidak ditemukan.'], 404);
     }
 
-    if ($aktivitas->evaluation_mode === 'mode1') {
-        $existingCount = DB::table('activity_question')->where('id_activity', $idAktivitas)->count();
+    if ($aktivitas->evaluation_mode === 'mode1' && $aktivitas->is_group_activity === 'yes') {
+    $existingCount = DB::table('activity_question')->where('id_activity', $idAktivitas)->count();
 
-        if ($existingCount >= 1) {
-            return response()->json(['success' => false, 'message' => 'Mode 1 hanya boleh memiliki 1 soal.'], 422);
-        }
-        if ($question->type !== 'Essay') {
-            return response()->json(['success' => false, 'message' => 'Mode 1 hanya menerima soal Essay.'], 422);
-        }
-    } elseif ($aktivitas->evaluation_mode === 'mode2') {
-        if (!in_array($question->type, ['MultipleChoice', 'ShortAnswer'])) {
-            return response()->json(['success' => false, 'message' => 'Mode 2 tidak menerima soal Essay.'], 422);
-        }
+    if ($existingCount >= 1) {
+        return response()->json(['success' => false, 'message' => 'Mode 1 (Kelompok) hanya boleh memiliki 1 soal.'], 422);
     }
+    if ($question->type !== 'Essay') {
+        return response()->json(['success' => false, 'message' => 'Mode 1 (Kelompok) hanya menerima soal Essay.'], 422);
+    }
+} else {
+    if (!in_array($question->type, ['MultipleChoice', 'ShortAnswer'])) {
+        return response()->json(['success' => false, 'message' => 'Soal Essay tidak diperbolehkan.'], 422);
+    }
+}
 
     DB::table('activity_question')->insert([
         'id_activity' => $idAktivitas,

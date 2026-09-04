@@ -203,12 +203,12 @@
 
                 {{-- Aktivitas --}}
                 <li class="nav-item">
-    <a class="nav-link {{ request()->is('aktivitassiswa') ? 'active' : '' }}"
-       href="{{ url('/aktivitassiswa') }}">
-        <i class="fas fa-fw fa-tasks"></i>
-        <span>Aktivitas</span>
-    </a>
-</li>
+                    <a class="nav-link {{ request()->is('aktivitassiswa') ? 'active' : '' }}"
+                        href="{{ url('/aktivitassiswa') }}">
+                        <i class="fas fa-fw fa-tasks"></i>
+                        <span>Aktivitas</span>
+                    </a>
+                </li>
             @endif
 
             @if (Auth::user()->role === 'teacher')
@@ -226,6 +226,12 @@
                     <a class="nav-link @yield('dataKelas')" href="{{ url('/datakelas') }}">
                         <i class="fas fa-fw fa-school"></i>
                         <span>Kelas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @yield('dataSubject')" href="{{ route('guru.dataSubject') }}">
+                        <i class="fas fa-fw fa-book"></i>
+                        <span>Mata Pelajaran</span>
                     </a>
                 </li>
 
